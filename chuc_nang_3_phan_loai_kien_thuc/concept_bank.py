@@ -7,6 +7,7 @@ Quy tắc bắt buộc:
 - Bản đồ khái niệm do đội biên soạn là NGUỒN CHÍNH THỨC DUY NHẤT.
 - LLM chỉ được CHỌN tối đa 3 khái niệm từ danh sách này, TUYỆT ĐỐI KHÔNG TỰ BỊA.
 - Mỗi bài toán có sẵn khái niệm, công thức và lỗi thường gặp để neo hội thoại.
+- Bao phủ đầy đủ 12 bài mẫu KHTN 7 chuẩn SGK chia đều 3 mạch.
 """
 
 from typing import Dict, List
@@ -14,12 +15,20 @@ from .classifier_model import KnowledgeStrand, CoreConcept
 
 # Bản đồ khái niệm chính thức chuẩn SGK KHTN 7
 CONCEPT_MAP: Dict[str, CoreConcept] = {
-    # --- MẠCH 1: CƠ HỌC / ĐẠI LƯỢNG VẬT LÝ ---
+    # =========================================================================
+    # MẠCH 1: CƠ HỌC / ĐẠI LƯỢNG VẬT LÝ
+    # =========================================================================
     "toc_do": CoreConcept(
         name="Tốc độ chuyển động",
         formula="v = s / t",
         description="Đặc trưng cho mức độ nhanh hay chậm của chuyển động, tính bằng quãng đường đi được trong một đơn vị thời gian.",
         common_pitfalls=["Quên đổi đơn vị thời gian (phút sang giờ hoặc giây)", "Lấy quãng đường nhân thời gian thay vì chia"]
+    ),
+    "quang_duong_chuyen_dong": CoreConcept(
+        name="Quãng đường chuyển động thẳng đều",
+        formula="s = v * t",
+        description="Quãng đường đi được bằng tích của tốc độ chuyển động và thời gian đi.",
+        common_pitfalls=["Lấy tốc độ chia cho thời gian", "Không quy đổi thời gian phút về cùng hệ đo của tốc độ (km/h sang giờ)"]
     ),
     "doi_don_vi_toc_do": CoreConcept(
         name="Đổi đơn vị tốc độ (km/h ↔ m/s)",
@@ -37,7 +46,7 @@ CONCEPT_MAP: Dict[str, CoreConcept] = {
         name="Lực ma sát",
         formula="F_ms",
         description="Lực xuất hiện ở bề mặt tiếp xúc giữa hai vật và cản trở chuyển động của vật.",
-        common_pitfalls=["Nghĩ rằng ma sát luôn có hại mà quên vai trò giúp người đi lại được"]
+        common_pitfalls=["Nghĩ rằng ma sát luôn có hại mà quên vai trò giúp người đi lại được", "Nhầm giữa ma sát nghỉ và ma sát trượt"]
     ),
     "phan_xa_anh_sang": CoreConcept(
         name="Định luật phản xạ ánh sáng trên gương phẳng",
@@ -46,7 +55,9 @@ CONCEPT_MAP: Dict[str, CoreConcept] = {
         common_pitfalls=["Nghĩ rằng ánh sáng đi xuyên qua gương phẳng như qua kính trong suốt", "Nhầm lẫn góc tới là góc hợp bởi tia tới với mặt gương thay vì với pháp tuyến"]
     ),
 
-    # --- MẠCH 2: BIẾN ĐỔI CHẤT / PHẢN ỨNG HÓA HỌC ---
+    # =========================================================================
+    # MẠCH 2: BIẾN ĐỔI CHẤT / PHẢN ỨNG HÓA HỌC
+    # =========================================================================
     "hien_tuong_vat_ly_hoa_hoc": CoreConcept(
         name="Hiện tượng vật lý và Hiện tượng hóa học",
         formula="Chất ban đầu → Chất mới",
@@ -65,8 +76,22 @@ CONCEPT_MAP: Dict[str, CoreConcept] = {
         description="Cách biểu diễn phản ứng hóa học bằng tên các chất.",
         common_pitfalls=["Viết ngược vế sản phẩm sang chất tham gia", "Nhầm lẫn chất xúc tác với chất tham gia"]
     ),
+    "nung_da_voi": CoreConcept(
+        name="Phản ứng phân hủy đá vôi do nhiệt",
+        formula="CaCO₃ → CaO + CO₂",
+        description="Quá trình nung đá vôi (calcium carbonate) sinh ra vôi sống (calcium oxide) và giải phóng khí carbon dioxide.",
+        common_pitfalls=["Quên khối lượng khí CO₂ thoát ra khi áp dụng bảo toàn khối lượng", "Nhầm phản ứng phân hủy với sự nóng chảy"]
+    ),
+    "nong_do_phan_tram": CoreConcept(
+        name="Nồng độ phần trăm dung dịch (C%)",
+        formula="C% = (m_ct / m_dd) * 100%",
+        description="Cho biết số gam chất tan có trong 100 gam dung dịch. Khối lượng dung dịch bằng khối lượng chất tan cộng khối lượng dung môi.",
+        common_pitfalls=["Lấy khối lượng chất tan chia cho khối lượng nước (dung môi) thay vì khối lượng dung dịch", "Quên nhân với 100%"]
+    ),
 
-    # --- MẠCH 3: CƠ THỂ SỐNG / MÔI TRƯỜNG ---
+    # =========================================================================
+    # MẠCH 3: CƠ THỂ SỐNG / MÔI TRƯỜNG
+    # =========================================================================
     "quang_hop": CoreConcept(
         name="Quang hợp ở thực vật",
         formula="6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂",
@@ -84,6 +109,18 @@ CONCEPT_MAP: Dict[str, CoreConcept] = {
         formula="Đồng hóa ↔ Dị hóa",
         description="Tập hợp các biến đổi hóa học giúp sinh vật tiếp nhận chất từ môi trường và thải chất cặn bã ra ngoài.",
         common_pitfalls=["Tách rời trao đổi chất và chuyển hóa năng lượng"]
+    ),
+    "thoat_hoi_nuoc": CoreConcept(
+        name="Thoát hơi nước qua khí khổng",
+        formula="Nước bốc hơi qua bề mặt lá",
+        description="Động lực đầu trên của dòng mạch gỗ, giúp vận chuyển nước và ion khoáng từ rễ lên lá, đồng thời hạ nhiệt độ bề mặt lá.",
+        common_pitfalls=["Nghĩ rằng thoát hơi nước chỉ làm cây mất nước", "Quên vai trò đóng mở của tế bào hình hạt đậu ở khí khổng"]
+    ),
+    "cam_ung_thuc_vat": CoreConcept(
+        name="Tính hướng sáng và Cảm ứng ở thực vật",
+        formula="Ngọn cây uốn cong về nguồn sáng",
+        description="Phản ứng sinh trưởng của thực vật đối với tác nhân kích thích ánh sáng từ một phía, giúp lá cây tiếp nhận tối đa năng lượng mặt trời.",
+        common_pitfalls=["Nhầm lẫn giữa tính hướng sáng dương của thân và tính hướng trọng lực của rễ"]
     )
 }
 

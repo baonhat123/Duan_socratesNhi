@@ -137,9 +137,9 @@ class TestChucNang1(unittest.TestCase):
 
     # --- 5. KIỂM THỬ BÀI TOÁN MẪU KHTN 7 ---
     def test_sample_bank_loading(self):
-        """Kiểm tra danh mục đề mẫu KHTN 7 đủ 3 mạch kiến thức."""
+        """Kiểm tra danh mục đề mẫu KHTN 7 đủ 3 mạch kiến thức và 12 bài chuẩn SGK."""
         samples = get_all_samples()
-        self.assertGreaterEqual(len(samples), 6)
+        self.assertEqual(len(samples), 12, "Ngân hàng đề mẫu KHTN 7 phải có đúng 12 bài chuẩn SGK theo mục 2.2")
         strands = {s["strand"] for s in samples}
         self.assertIn("Cơ học / Đại lượng vật lý", strands)
         self.assertIn("Biến đổi chất / Phản ứng hóa học", strands)
@@ -149,6 +149,21 @@ class TestChucNang1(unittest.TestCase):
         self.assertIsNotNone(first_sample)
         self.assertTrue(len(first_sample["content"]) > 10)
 
+    def test_process_sample_input_valid(self):
+        """Kiểm tra tiếp nhận và đóng gói đề bài mẫu KHTN 7 qua process_sample_input."""
+        from chuc_nang_1_nhap_de.validator import process_sample_input
+        result = process_sample_input("VL01")
+        self.assertEqual(result.input_type, InputType.SAMPLE)
+        self.assertEqual(result.sample_id, "VL01")
+        self.assertIn("xe đạp", result.text_content)
+        self.assertFalse(result.is_confirmed, "Quy tắc FR-01: Chưa xác nhận thì is_confirmed = False")
+        self.assertTrue(result.is_valid)
+
+        # Kiểm tra alias tương thích ngược
+        alias_result = process_sample_input("co_hoc_01")
+        self.assertEqual(alias_result.sample_id, "VL01")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+

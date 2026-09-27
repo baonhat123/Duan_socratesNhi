@@ -19,9 +19,11 @@ from .input_model import ProblemInput, InputType
 from .validator import (
     process_image_input,
     process_text_input,
+    process_sample_input,
     MAX_FILE_SIZE_BYTES
 )
-from .sample_bank import get_all_samples, get_sample_by_id
+from .sample_bank import get_all_samples, get_sample_by_id, get_samples_by_strand
+
 
 
 class ProblemInputView:
@@ -39,6 +41,8 @@ class ProblemInputView:
         self.is_standalone = is_standalone
         self.current_input: Optional[ProblemInput] = None
         self.active_mode = "text"  # "text", "image", "sample"
+        self.selected_sample_id: Optional[str] = "VL01"
+        self.sample_filter_strand: str = "Tất cả"
 
         # Thiết lập FilePicker đúng chuẩn Service trong Flet 1.0 (Tuyệt đối không đưa vào overlay)
         self.file_picker = ft.FilePicker(on_result=self._on_file_selected)
@@ -48,6 +52,7 @@ class ProblemInputView:
 
         # Xây dựng giao diện
         self._build_controls()
+
 
     def _build_controls(self):
         # 1. Header độc lập (Chỉ hiển thị khi chạy riêng lẻ Chức năng 1)
@@ -189,46 +194,28 @@ class ProblemInputView:
             visible=False
         )
 
-        # 6. KHU VỰC 3: Chọn bài mẫu KHTN 7
-        samples = get_all_samples()
-        sample_cards = []
-        for s in samples[:3]:
-            strand_color = ft.Colors.BLUE_700 if "Cơ học" in s["strand"] else (ft.Colors.TEAL_700 if "Biến đổi" in s["strand"] else ft.Colors.GREEN_700)
-            card = ft.Container(
-                content=ft.Column([
-                    ft.Row([
-                        ft.Container(
-                            content=ft.Text(s["strand"], size=10, weight=ft.FontWeight.BOLD, color=strand_color),
-                            bgcolor=ft.Colors.INDIGO_50,
-                            padding=ft.Padding(6, 2, 6, 2),
-                            border_radius=4
-                        ),
-                        ft.Text(f"Độ khó: {s['difficulty']}", size=11, color=ft.Colors.GREY_600)
-                    ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-                    ft.Text(s["title"], weight=ft.FontWeight.BOLD, size=13, color=ft.Colors.INDIGO_900),
-                    ft.Text(s["content"], size=11, color=ft.Colors.GREY_700, max_lines=2, overflow=ft.TextOverflow.ELLIPSIS),
-                    ft.FilledButton(
-                        "Chọn bài này",
-                        icon=ft.Icons.CHECK,
-                        style=ft.ButtonStyle(padding=8, bgcolor=ft.Colors.INDIGO_600),
-                        on_click=lambda _, sid=s["id"]: self._select_sample(sid)
-                    )
-                ], spacing=6),
-                bgcolor=ft.Colors.WHITE,
-                padding=12,
-                border_radius=12,
-                border=ft.Border.all(1, ft.Colors.GREY_200),
-                expand=True
-            )
-            sample_cards.append(card)
+        # 6. KHU VỰC 3: Chọn bài mẫu KHTN 7 (Đầy đủ 12 bài chuẩn 3 mạch)
+        self.sample_cards_column = ft.Column(spacing=8, scroll=ft.ScrollMode.AUTO, height=270)
+        self.filter_chips_row = ft.Row(spacing=8, wrap=True)
+        self._build_sample_section()
 
         self.sample_container = ft.Container(
             content=ft.Column([
-                ft.Text("Chọn nhanh một bài tập mẫu trong chương trình KHTN 7:", size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_800),
-                ft.Row(sample_cards, spacing=10)
+                ft.Row([
+                    ft.Text("Ngân hàng 12 bài tập mẫu KHTN 7 chuẩn SGK:", size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_800),
+                    self.filter_chips_row
+                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN, vertical_alignment=ft.CrossAxisAlignment.CENTER),
+                ft.Container(
+                    content=self.sample_cards_column,
+                    border=ft.Border.all(1, ft.Colors.INDIGO_100),
+                    border_radius=12,
+                    padding=8,
+                    bgcolor=ft.Colors.GREY_50
+                )
             ], spacing=8),
             visible=False
         )
+
 
         # 7. Banner bảo vệ quyền riêng tư PII (Thiết kế nhẹ nhàng)
         self.privacy_card = ft.Container(
@@ -313,12 +300,127 @@ class ProblemInputView:
         self.alert_box.visible = False
         self.page.update()
 
-    def _select_sample(self, sample_id: str):
-        """Khi học sinh bấm chọn 1 bài mẫu."""
+    def _build_sample_section(self):
+        """Xây dựng bộ lọc và danh sách thẻ bài mẫu 12 bài KHTN 7."""
+        # 1. Bộ lọc Mạch kiến thức
+        filter_tabs = [
+            ("Tất cả", "Tất cả (12)"),
+            ("Vật lý", "Vật lý (4)"),
+            ("Hóa học", "Hóa học (4)"),
+            ("Sinh học", "Sinh học (4)")
+        ]
+        self.filter_chips_row.controls.clear()
+        for strand_key, label in filter_tabs:
+            is_active = (self.sample_filter_strand == strand_key)
+            chip = ft.Container(
+                content=ft.Text(
+                    label,
+                    size=11,
+                    weight=ft.FontWeight.BOLD if is_active else ft.FontWeight.W_500,
+                    color=ft.Colors.WHITE if is_active else ft.Colors.INDIGO_900
+                ),
+                bgcolor=ft.Colors.INDIGO_600 if is_active else ft.Colors.WHITE,
+                border=ft.Border.all(1, ft.Colors.INDIGO_600 if is_active else ft.Colors.GREY_300),
+                padding=ft.Padding(10, 4, 10, 4),
+                border_radius=16,
+                on_click=lambda _, sk=strand_key: self._on_filter_strand_click(sk)
+            )
+            self.filter_chips_row.controls.append(chip)
+
+        # 2. Thẻ bài mẫu theo mạch kiến thức
+        filtered = get_samples_by_strand(self.sample_filter_strand)
+        self.sample_cards_column.controls.clear()
+
+        for s in filtered:
+            sid = s["id"]
+            is_selected = (self.selected_sample_id == sid)
+            strand_short = s.get("strand_short", "KHTN")
+            if strand_short == "Vật lý":
+                tag_bg, tag_color = ft.Colors.BLUE_50, ft.Colors.BLUE_700
+            elif strand_short == "Hóa học":
+                tag_bg, tag_color = ft.Colors.AMBER_50, ft.Colors.AMBER_900
+            else:
+                tag_bg, tag_color = ft.Colors.GREEN_50, ft.Colors.GREEN_800
+
+            card = ft.Container(
+                content=ft.Column([
+                    ft.Row([
+                        ft.Row([
+                            ft.Container(
+                                content=ft.Text(f"{sid} • {strand_short}", size=11, weight=ft.FontWeight.BOLD, color=tag_color),
+                                bgcolor=tag_bg,
+                                padding=ft.Padding(6, 2, 6, 2),
+                                border_radius=4
+                            ),
+                            ft.Container(
+                                content=ft.Text(f"Độ khó: {s['difficulty']}", size=10, color=ft.Colors.GREY_700),
+                                bgcolor=ft.Colors.GREY_100,
+                                padding=ft.Padding(6, 2, 6, 2),
+                                border_radius=4
+                            )
+                        ], spacing=6),
+                        ft.Text("✓ Đang chọn" if is_selected else "", size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_700)
+                    ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+                    ft.Text(s["title"], weight=ft.FontWeight.BOLD, size=13, color=ft.Colors.INDIGO_900),
+                    ft.Text(s["content"], size=11, color=ft.Colors.GREY_700, max_lines=2, overflow=ft.TextOverflow.ELLIPSIS),
+                    ft.Row([
+                        ft.Text(f"💡 {', '.join(s['concepts'])}", size=10, color=ft.Colors.INDIGO_700, expand=True, overflow=ft.TextOverflow.ELLIPSIS),
+                        ft.Row([
+                            ft.OutlinedButton(
+                                "Tùy chỉnh đề ✏️",
+                                style=ft.ButtonStyle(padding=6),
+                                on_click=lambda _, sid=sid: self._customize_sample(sid)
+                            ),
+                            ft.FilledButton(
+                                "Hỏi Gia sư ngay 🚀",
+                                style=ft.ButtonStyle(padding=8, bgcolor=ft.Colors.INDIGO_600),
+                                on_click=lambda _, sid=sid: self._confirm_sample_immediately(sid)
+                            )
+                        ], spacing=6)
+                    ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
+                ], spacing=4),
+                bgcolor=ft.Colors.INDIGO_50 if is_selected else ft.Colors.WHITE,
+                padding=10,
+                border_radius=10,
+                border=ft.Border.all(1.5 if is_selected else 1, ft.Colors.INDIGO_500 if is_selected else ft.Colors.GREY_200),
+                on_click=lambda _, sid=sid: self._on_sample_card_click(sid)
+            )
+            self.sample_cards_column.controls.append(card)
+
+    def _on_filter_strand_click(self, strand_key: str):
+        """Lọc bài mẫu theo mạch kiến thức."""
+        self.sample_filter_strand = strand_key
+        self._build_sample_section()
+        self.page.update()
+
+    def _on_sample_card_click(self, sample_id: str):
+        """Chọn bài mẫu và xem trước nội dung."""
+        self.selected_sample_id = sample_id
+        sample = get_sample_by_id(sample_id)
+        self.txt_content.value = sample["content"]
+        self._build_sample_section()
+        self.page.update()
+
+    def _customize_sample(self, sample_id: str):
+        """Chuyển bài mẫu sang chế độ gõ văn bản để học sinh tùy chỉnh đề bài."""
+        self.selected_sample_id = sample_id
         sample = get_sample_by_id(sample_id)
         self.txt_content.value = sample["content"]
         self._switch_mode("text")
         self._on_text_change(None)
+
+    def _confirm_sample_immediately(self, sample_id: str):
+        """Bắt đầu phiên học ngay với bài tập mẫu đã chọn."""
+        self.selected_sample_id = sample_id
+        final_input = process_sample_input(sample_id)
+        final_input.is_confirmed = True
+        self.current_input = final_input
+        if self.on_confirm:
+            self.on_confirm(final_input)
+
+    def _select_sample(self, sample_id: str):
+        """Bí danh tương thích ngược."""
+        self._customize_sample(sample_id)
 
     def _on_text_change(self, e):
         count = len(self.txt_content.value or "")
@@ -374,8 +476,11 @@ class ProblemInputView:
                 return
             final_input = self.current_input
         elif self.active_mode == "sample":
-            raw_text = self.txt_content.value or ""
-            final_input = process_text_input(raw_text)
+            if self.selected_sample_id:
+                final_input = process_sample_input(self.selected_sample_id)
+            else:
+                self._show_alert("Em hãy bấm chọn một bài tập mẫu ở trên để tiếp tục nhé!")
+                return
 
         if not final_input or final_input.validation_error:
             self._show_alert(final_input.validation_error if final_input else "Dữ liệu chưa hợp lệ!")
@@ -385,6 +490,7 @@ class ProblemInputView:
         self.current_input = final_input
         if self.on_confirm:
             self.on_confirm(final_input)
+
 
     def build(self) -> ft.Control:
         return ft.Container(

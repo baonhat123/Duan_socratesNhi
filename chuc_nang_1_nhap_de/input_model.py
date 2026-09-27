@@ -28,6 +28,8 @@ class ProblemInput:
     text_content: str = ""
     file_path: Optional[str] = None
     file_name: Optional[str] = None
+    sample_id: Optional[str] = None
+    sample_title: Optional[str] = None
     file_size_bytes: int = 0
     is_confirmed: bool = False
     validation_error: Optional[str] = None
@@ -50,6 +52,8 @@ class ProblemInput:
             "text_content": self.text_content,
             "file_path": self.file_path,
             "file_name": self.file_name,
+            "sample_id": self.sample_id,
+            "sample_title": self.sample_title,
             "file_size_bytes": self.file_size_bytes,
             "file_size_mb": round(self.file_size_mb, 2),
             "is_confirmed": self.is_confirmed,
@@ -57,3 +61,4 @@ class ProblemInput:
             "safety_warnings": self.safety_warnings,
             "created_at": self.created_at.isoformat()
         }
+

@@ -157,6 +157,19 @@ class SocratesIntegratedApp:
             on_click=lambda _: self._open_guardrail_dashboard()
         )
 
+        self.rubric_btn = ft.Container(
+            content=ft.Row([
+                ft.Icon(ft.Icons.ASSESSMENT_ROUNDED, color=ft.Colors.PURPLE_700, size=14),
+                ft.Text("Đánh Giá Sư Phạm 📊", size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.PURPLE_900)
+            ]),
+            bgcolor=ft.Colors.PURPLE_50,
+            padding=ft.Padding(10, 5, 10, 5),
+            border_radius=12,
+            border=ft.Border.all(1, ft.Colors.PURPLE_300),
+            tooltip="Bấm để mở Bảng đánh giá Rubric tiến bộ lập luận 0-6đ & 5 Chỉ số khoa học MVP (Mục 16.3 & 3)",
+            on_click=lambda _: self._open_rubric_dashboard()
+        )
+
         # 3 Bước Khám phá Thân thiện với Học sinh
         self.pill_step_1 = self._create_station_pill(1, "Bước 1: Đặt câu hỏi", "Gõ câu hỏi / Mẫu / Chụp ảnh")
         self.pill_step_2 = self._create_station_pill(2, "Bước 2: Gia sư Socratic", "Gợi mở & Trao đổi trực tiếp 💬")
@@ -193,7 +206,7 @@ class SocratesIntegratedApp:
             content=ft.Column([
                 ft.Row([
                     self.app_brand,
-                    ft.Row([self.pedagogy_badge, self.offline_btn, self.guardrail_btn], spacing=8)
+                    ft.Row([self.pedagogy_badge, self.offline_btn, self.guardrail_btn, self.rubric_btn], spacing=8)
                 ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
                 ft.Container(height=2),
                 self.stepper_bar
@@ -370,6 +383,74 @@ class SocratesIntegratedApp:
             dialog.open = True
             self.page.update()
 
+    def _open_rubric_dashboard(self):
+        """Mở Bảng Điều Khiển Đánh Giá Sư Phạm & 5 Chỉ Số Khoa Học (Mục 16.3 & Mục 3)."""
+        from chuc_nang_8_rubric_danh_gia_tien_bo.rubric_view import RubricDashboardView
+        from chuc_nang_8_rubric_danh_gia_tien_bo.rubric_engine import GLOBAL_RUBRIC_ENGINE
+
+        problem_title = "Bài toán KHTN 7"
+        problem_text = ""
+        if self.state.confirmed_problem:
+            problem_text = self.state.confirmed_problem.confirmed_text
+            problem_title = self.state.classification_result.topic if self.state.classification_result else "Khoa học Tự nhiên 7"
+
+        # Đánh giá dựa trên tiến trình hội thoại thực tế
+        student_answers = []
+        if hasattr(self, "socratic_view") and hasattr(self.socratic_view, "engine"):
+            for m in self.socratic_view.engine.conversation_history:
+                if m.sender == "student":
+                    student_answers.append(m.content)
+
+        if not student_answers:
+            student_answers = [
+                "Tia sáng bị hắt ngược trở lại chứ không đi qua",
+                "Góc phản xạ luôn bằng góc tới i' = i",
+                "Nó sẽ bị bật thẳng ngược trở lại theo phương tới"
+            ]
+
+        assessment = GLOBAL_RUBRIC_ENGINE.evaluate_session(
+            problem_title=problem_title,
+            problem_text=problem_text,
+            student_answers=student_answers,
+            turn_count=len(student_answers) + 1,
+            unknown_count=0
+        )
+
+        dashboard = RubricDashboardView(page=self.page, assessment=assessment, is_standalone=False)
+
+        def close_dialog(_):
+            if hasattr(self.page, "close"):
+                self.page.close(dialog)
+            else:
+                dialog.open = False
+                self.page.update()
+
+        dialog = ft.AlertDialog(
+            title=ft.Row([
+                ft.Icon(ft.Icons.ASSESSMENT_ROUNDED, color=ft.Colors.PURPLE_800, size=24),
+                ft.Text("Bảng Đánh Giá Tiến Bộ Sư Phạm (Rubric 0-6đ) & 5 Chỉ Số MVP (Mục 16.3 & 3)", size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900)
+            ], spacing=8),
+            content=ft.Container(
+                content=dashboard.build(),
+                width=920,
+                height=600,
+            ),
+            actions=[
+                ft.FilledButton(
+                    "Đóng bảng đánh giá",
+                    on_click=close_dialog,
+                    style=ft.ButtonStyle(bgcolor=ft.Colors.INDIGO_700, color=ft.Colors.WHITE)
+                )
+            ],
+            actions_alignment=ft.MainAxisAlignment.END,
+        )
+        if hasattr(self.page, "open"):
+            self.page.open(dialog)
+        else:
+            self.page.dialog = dialog
+            dialog.open = True
+            self.page.update()
+
     def navigate_to_step_1(self):
         """Hiển thị Bước 1: Tiếp nhận đề bài."""
         self.state.current_step = AppStep.STEP_1_INPUT
@@ -397,13 +478,14 @@ class SocratesIntegratedApp:
             self.state.confirmed_problem = ConfirmedProblem(
                 original_text=problem.text_content,
                 confirmed_text=normalized_text,
-                source_type="text"
+                source_type="sample" if problem.input_type == InputType.SAMPLE else "text"
             )
             from chuc_nang_3_phan_loai_kien_thuc.classifier_engine import KnowledgeClassifier
             self.state.classification_result = KnowledgeClassifier().classify_problem(normalized_text)
 
             # VÀO THẲNG PHÒNG TRAO ĐỔI VỚI GIA SƯ SOCRATIC!
             self.navigate_to_step_4()
+
 
     def navigate_to_step_2(self):
         """Hiển thị Xác nhận chữ nhận dạng từ ảnh chụp (Chỉ dành cho tải ảnh)."""
@@ -505,7 +587,7 @@ class SocratesIntegratedApp:
 
         problem_text = self.state.confirmed_problem.confirmed_text if self.state.confirmed_problem else ""
 
-        chat_view = SocraticChatView(
+        self.socratic_view = SocraticChatView(
             page=self.page,
             problem_text=problem_text,
             on_session_complete=self._on_socratic_session_complete,
@@ -550,11 +632,12 @@ class SocratesIntegratedApp:
             [
                 ft.Row([btn_back_to_1, btn_to_summary], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
                 info_badge,
-                chat_view.build()
+                self.socratic_view.build()
             ],
             spacing=8,
             expand=True
         )
+
 
         self.content_area.content = step_4_container
         self.page.update()
@@ -597,9 +680,16 @@ class SocratesIntegratedApp:
             on_click=lambda _: self.navigate_to_step_4()
         )
 
+        btn_view_rubric = ft.FilledButton(
+            "Xem Phiếu Chấm Rubric Tiến Bộ (0-6đ) 📊",
+            icon=ft.Icons.ASSESSMENT_ROUNDED,
+            style=ft.ButtonStyle(bgcolor=ft.Colors.PURPLE_700, color=ft.Colors.WHITE),
+            on_click=lambda _: self._open_rubric_dashboard()
+        )
+
         step_5_container = ft.Column(
             [
-                ft.Row([btn_back_to_4], alignment=ft.MainAxisAlignment.START),
+                ft.Row([btn_back_to_4, btn_view_rubric], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
                 view_5.build()
             ],
             spacing=8,

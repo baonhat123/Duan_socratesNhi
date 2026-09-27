@@ -52,52 +52,96 @@ class KnowledgeClassifier:
         selected_concepts = []
         common_mistakes = []
 
-        # Kiểm tra Quang học / Ánh sáng / Gương phẳng (Vật lý)
-        if any(w in text_lower for w in ["gương", "gương phẳng", "phản xạ", "khúc xạ", "tia sáng", "nguồn sáng"]) or ("ánh sáng" in text_lower and not any(b in text_lower for b in ["quang hợp", "lá cây", "diệp lục"])):
+        # 1. Kiểm tra Quang học / Ánh sáng / Gương phẳng (Vật lý)
+        if any(w in text_lower for w in ["gương", "gương phẳng", "phản xạ", "khúc xạ", "tia sáng", "nguồn sáng"]) or ("ánh sáng" in text_lower and not any(b in text_lower for b in ["quang hợp", "lá cây", "diệp lục", "hướng sáng", "chậu cây"])):
             strand = KnowledgeStrand.MECHANICS
             topic = "Vật lý – Ánh sáng và Định luật phản xạ ánh sáng"
             c1 = CONCEPT_MAP["phan_xa_anh_sang"]
             selected_concepts = [c1.name]
             common_mistakes = c1.common_pitfalls
 
-        # Kiểm tra Hóa học
-        elif any(w in text_lower for w in ["hóa học", "phản ứng", "chất mới", "đốt cháy", "than", "khí", "o₂", "o2", "co₂", "co2", "h₂o", "h2o", "bảo toàn khối lượng", "muối", "dung dịch", "nồng độ"]):
-            strand = KnowledgeStrand.CHEMISTRY
-            topic = "Hóa học – Biến đổi chất và Phản ứng hóa học"
-            if "bảo toàn" in text_lower or "khối lượng" in text_lower:
-                c1 = CONCEPT_MAP["bao_toan_khoi_luong"]
-                c2 = CONCEPT_MAP["phuong_trinh_chu"]
-                selected_concepts = [c1.name, c2.name]
-                common_mistakes = c1.common_pitfalls + c2.common_pitfalls
-            else:
-                c1 = CONCEPT_MAP["hien_tuong_vat_ly_hoa_hoc"]
-                c2 = CONCEPT_MAP["phuong_trinh_chu"]
+        # 2. Kiểm tra Sinh học (Quang hợp, Hô hấp tế bào, Thoát hơi nước, Cảm ứng hướng sáng)
+        elif any(w in text_lower for w in [
+            "quang hợp", "hô hấp", "tế bào", "thực vật", "lá cây", "diệp lục",
+            "khí khổng", "thoát hơi nước", "hướng sáng", "cảm ứng", "uốn cong", "cây xanh"
+        ]):
+            strand = KnowledgeStrand.BIOLOGY
+            if any(w in text_lower for w in ["hướng sáng", "cảm ứng", "bậu cửa sổ", "uốn cong"]):
+                topic = "Sinh học – Cảm ứng và Tính hướng sáng ở thực vật"
+                c1 = CONCEPT_MAP["cam_ung_thuc_vat"]
+                selected_concepts = [c1.name]
+                common_mistakes = c1.common_pitfalls
+            elif any(w in text_lower for w in ["khí khổng", "thoát hơi nước"]):
+                topic = "Sinh học – Thoát hơi nước qua khí khổng ở lá cây"
+                c1 = CONCEPT_MAP["thoat_hoi_nuoc"]
+                c2 = CONCEPT_MAP["trao_doi_chat"]
                 selected_concepts = [c1.name, c2.name]
                 common_mistakes = c1.common_pitfalls
-
-        # Kiểm tra Sinh học
-        elif any(w in text_lower for w in ["quang hợp", "hô hấp", "tế bào", "thực vật", "lá cây", "diệp lục", "khí khổng", "thoát hơi nước"]):
-            strand = KnowledgeStrand.BIOLOGY
-            topic = "Sinh học – Trao đổi chất và Chuyển hóa năng lượng"
-            if "hô hấp" in text_lower:
+            elif "hô hấp" in text_lower or any(w in text_lower for w in ["nhịp thở", "nhịp tim", "vận động"]):
+                topic = "Sinh học – Hô hấp tế bào và Chuyển hóa năng lượng"
                 c1 = CONCEPT_MAP["ho_hap_te_bao"]
                 c2 = CONCEPT_MAP["trao_doi_chat"]
                 selected_concepts = [c1.name, c2.name]
                 common_mistakes = c1.common_pitfalls
             else:
+                topic = "Sinh học – Quá trình quang hợp ở thực vật"
                 c1 = CONCEPT_MAP["quang_hop"]
                 c2 = CONCEPT_MAP["trao_doi_chat"]
                 selected_concepts = [c1.name, c2.name]
                 common_mistakes = c1.common_pitfalls
 
-        # Mặc định Cơ học (Vật lý)
+        # 3. Kiểm tra Hóa học (Biến đổi chất, Bảo toàn khối lượng, Nồng độ phần trăm, Nung đá vôi)
+        elif any(w in text_lower for w in [
+            "hóa học", "phản ứng", "chất mới", "đốt cháy", "bột than", "than",
+            "o₂", "o2", "co₂", "co2", "h₂o", "h2o", "bảo toàn khối lượng",
+            "muối", "dung dịch", "nồng độ", "c%", "chất tan", "dung môi",
+            "đá vôi", "nung", "vôi sống", "caco3", "caco₃", "cao", "chất khí"
+        ]):
+            strand = KnowledgeStrand.CHEMISTRY
+            if any(w in text_lower for w in ["nồng độ", "dung dịch", "muối ăn", "chất tan", "nước cất", "c%"]):
+                topic = "Hóa học – Dung dịch và Nồng độ phần trăm (C%)"
+                c1 = CONCEPT_MAP["nong_do_phan_tram"]
+                selected_concepts = [c1.name]
+                common_mistakes = c1.common_pitfalls
+            elif any(w in text_lower for w in ["đá vôi", "nung", "vôi sống", "caco3", "caco₃"]):
+                topic = "Hóa học – Phản ứng nung đá vôi và Bảo toàn khối lượng"
+                c1 = CONCEPT_MAP["nung_da_voi"]
+                c2 = CONCEPT_MAP["bao_toan_khoi_luong"]
+                selected_concepts = [c1.name, c2.name]
+                common_mistakes = c1.common_pitfalls + c2.common_pitfalls
+            elif "bảo toàn" in text_lower or ("khối lượng" in text_lower and any(k in text_lower for k in ["oxygen", "carbon", "o2", "co2"])):
+                topic = "Hóa học – Định luật bảo toàn khối lượng"
+                c1 = CONCEPT_MAP["bao_toan_khoi_luong"]
+                c2 = CONCEPT_MAP["phuong_trinh_chu"]
+                selected_concepts = [c1.name, c2.name]
+                common_mistakes = c1.common_pitfalls + c2.common_pitfalls
+            else:
+                topic = "Hóa học – Biến đổi chất và Hiện tượng hóa học"
+                c1 = CONCEPT_MAP["hien_tuong_vat_ly_hoa_hoc"]
+                c2 = CONCEPT_MAP["phuong_trinh_chu"]
+                selected_concepts = [c1.name, c2.name]
+                common_mistakes = c1.common_pitfalls
+
+        # 4. Mạch Cơ học / Đại lượng vật lý (Tốc độ, Quãng đường, Khối lượng/Trọng lượng, Ma sát)
+
         else:
             strand = KnowledgeStrand.MECHANICS
-            if "trọng lượng" in text_lower or "newton" in text_lower or "p = 10m" in text_lower or "khối lượng m" in text_lower:
+            if any(w in text_lower for w in ["ma sát", "kéo bàn", "lực cản"]):
+                topic = "Vật lý – Lực ma sát và Chuyển động"
+                c1 = CONCEPT_MAP["luc_ma_sat"]
+                selected_concepts = [c1.name]
+                common_mistakes = c1.common_pitfalls
+            elif "trọng lượng" in text_lower or "newton" in text_lower or "p = 10m" in text_lower or "khối lượng m" in text_lower:
                 topic = "Vật lý – Khối lượng và Trọng lượng"
                 c1 = CONCEPT_MAP["khoi_luong_trong_luong"]
                 selected_concepts = [c1.name]
                 common_mistakes = c1.common_pitfalls
+            elif any(w in text_lower for w in ["quãng đường s", "tính quãng đường", "đoàn tàu", "s = v * t"]):
+                topic = "Vật lý – Quãng đường chuyển động thẳng đều"
+                c1 = CONCEPT_MAP["quang_duong_chuyen_dong"]
+                c2 = CONCEPT_MAP["doi_don_vi_toc_do"]
+                selected_concepts = [c1.name, c2.name]
+                common_mistakes = c1.common_pitfalls + c2.common_pitfalls
             else:
                 topic = "Vật lý – Chuyển động và Tốc độ"
                 c1 = CONCEPT_MAP["toc_do"]
@@ -110,9 +154,9 @@ class KnowledgeClassifier:
 
         # 3. Ước lượng cấp độ nhận thức
         difficulty = DifficultyLevel.BASIC
-        if len(given_facts) >= 2 and ("đổi" in text_lower or "km/h" in text_lower and "m/s" in text_lower):
+        if len(given_facts) >= 2 and ("đổi" in text_lower or ("km/h" in text_lower and "m/s" in text_lower) or "c%" in text_lower):
             difficulty = DifficultyLevel.APPLICATION
-        elif len(given_facts) >= 2 or "vì sao" in text_lower or "giải thích" in text_lower:
+        elif len(given_facts) >= 2 or any(w in text_lower for w in ["vì sao", "giải thích", "tại sao", "ý nghĩa"]):
             difficulty = DifficultyLevel.UNDERSTANDING
 
         return ClassificationResult(
@@ -131,13 +175,13 @@ class KnowledgeClassifier:
         facts = []
         target = "Đại lượng theo yêu cầu đề bài"
 
-        # Tìm các con số kèm đơn vị KHTN: ví dụ 12 km, 30 phút, 45 kg, 6 g, 22 g
+        # Tìm các con số kèm đơn vị KHTN: ví dụ 12 km, 30 phút, 45 kg, 6 g, 22 g, 100 kg, 15 gam, 85 gam
         patterns = [
             r"([sS]\s*=\s*\d+(?:[\.,]\d+)?\s*(?:km|m))",
             r"([tT]\s*=\s*\d+(?:[\.,]\d+)?\s*(?:phút|h|giây|s))",
-            r"([mM]\s*=\s*\d+(?:[\.,]\d+)?\s*(?:kg|g))",
+            r"([mM]\s*=\s*\d+(?:[\.,]\d+)?\s*(?:kg|g|gam))",
             r"([vV]\s*=\s*\d+(?:[\.,]\d+)?\s*(?:km/h|m/s))",
-            r"(\d+(?:[\.,]\d+)?\s*(?:km|m|kg|g|phút|h|giây|s|N|°C))"
+            r"(\d+(?:[\.,]\d+)?\s*(?:km/h|m/s|km|m|kg|gam|g|phút|h|giây|s|N|°C|%))"
         ]
         for p in patterns:
             matches = re.findall(p, text)
@@ -147,16 +191,29 @@ class KnowledgeClassifier:
 
         # Tìm mục tiêu cần tính
         text_lower = text.lower()
-        if "tốc độ" in text_lower or "vận tốc" in text_lower:
+        if any(w in text_lower for w in ["nồng độ", "c%"]):
+            target = "Khối lượng dung dịch và Nồng độ phần trăm C% của dung dịch"
+        elif any(w in text_lower for w in ["khí co2", "khí co₂", "đá vôi", "nung"]):
+            target = "Khối lượng khí carbon dioxide (CO₂) sinh ra"
+        elif "quãng đường" in text_lower and any(w in text_lower for w in ["tính quãng đường", "đoàn tàu", "tìm s"]):
+            target = "Quãng đường chuyển động s (km hoặc m)"
+        elif "tốc độ" in text_lower or "vận tốc" in text_lower:
             target = "Tốc độ chuyển động v (km/h, m/s)"
         elif "trọng lượng" in text_lower:
             target = "Trọng lượng P (Newton)"
+        elif "ma sát" in text_lower:
+            target = "Lực ma sát cản trở chuyển động và nguyên nhân vật khó kéo"
         elif "khối lượng" in text_lower and ("oxygen" in text_lower or "o2" in text_lower):
-            target = "Khối lượng khí oxygen đã phản ứng (g)"
+            target = "Khối lượng khí oxygen đã tham gia phản ứng (g)"
+        elif any(w in text_lower for w in ["hướng sáng", "uốn cong"]):
+            target = "Hiện tượng tính hướng sáng và ý nghĩa sinh học"
+        elif any(w in text_lower for w in ["khí khổng", "thoát hơi nước"]):
+            target = "Cơ chế đóng mở khí khổng và vai trò thoát hơi nước"
         elif "chất tham gia" in text_lower:
             target = "Chất tham gia và chất sản phẩm của phản ứng"
 
         return facts[:5], target
+
 
     def _classify_via_openai(self, text: str) -> Optional[ClassificationResult]:
         """Gọi OpenAI-compatible API với JSON response format nếu có cấu hình."""

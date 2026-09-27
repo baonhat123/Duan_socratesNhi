@@ -9,10 +9,10 @@ Socrates Nhí được xây dựng trên nguyên tắc sư phạm cốt lõi: **
 
 ---
 
-## 📂 Kiến Trúc Dự Án (7 Module Độc Lập & App Tích Hợp)
+## 📂 Kiến Trúc Dự Án (8 Module Độc Lập & App Tích Hợp)
 
 1. **[Chức năng 1: Nhập đề bài (FR-01)](file:///c:/Users/hienp/Desktop/Socrates/chuc_nang_1_nhap_de/)**
-   - 3 Chế độ tiếp nhận: Gõ văn bản trực tiếp, Tải ảnh bài tập (JPG/PNG $\le$ 5MB), Chọn đề mẫu KHTN 7.
+   - 3 Chế độ tiếp nhận: Gõ văn bản trực tiếp, Tải ảnh bài tập (JPG/PNG $\le$ 5MB), Chọn đề mẫu KHTN 7 (đủ 12 bài chuẩn SGK chia đều 3 mạch kiến thức).
    - Runner độc lập: `python chuc_nang_1_nhap_de/run_chuc_nang_1.py`
 
 2. **[Chức năng 2: Trích xuất & Soát công thức OCR (FR-02)](file:///c:/Users/hienp/Desktop/Socrates/chuc_nang_2_ocr_xac_nhan/)**
@@ -43,10 +43,20 @@ Socrates Nhí được xây dựng trên nguyên tắc sư phạm cốt lõi: **
    - Tự động chuyển đổi khi API timeout (> 20s), mất mạng, hoặc bật cưỡng chế khi thi.
    - Runner độc lập: `python chuc_nang_7_demo_offline_cache/run_chuc_nang_7.py`
 
-8. **[App Tích Hợp Toàn Diện (Socrates Nhí App)](file:///c:/Users/hienp/Desktop/Socrates/app_tich_hop_socrates/)**
-   - Hành trình học tập 5 trạm thông suốt: Trạm 1: Nhập đề ➜ Trạm 2: Soát OCR ➜ Trạm 3: Bản đồ Khái niệm ➜ Trạm 4: Vấn đáp Socratic ➜ Trạm 5: Tổng kết.
-   - Tích hợp 2 bảng điều khiển chuyên sâu cho Giám khảo: `Khiên An Toàn 3 Tầng 🛡️` và `⚡ Demo Offline (12 Bài) 📚`.
+8. **[Chức năng 8: Rubric Đánh giá Tiến bộ Lập luận (0-6 điểm) & 5 Chỉ số Đo lường Sư phạm (Mục 16.3 & Mục 3)](file:///c:/Users/hienp/Desktop/Socrates/chuc_nang_8_rubric_danh_gia_tien_bo/)**
+   - Phiếu chấm Rubric 3 tiêu chí Mục 16.3: Nêu dữ kiện (0-2đ), Nêu khái niệm (0-2đ), Nêu bước tiếp theo (0-2đ). Đạt chuẩn khi $\ge 4/6$ điểm.
+   - Bảng 5 Chỉ số Đo lường Khoa học thành công MVP chính thức (Mục 3).
+   - Xuất Báo cáo Minh chứng phục vụ Hồ sơ Dự thi Bảng A.
+   - Runner độc lập: `python chuc_nang_8_rubric_danh_gia_tien_bo/run_chuc_nang_8.py`
+
+9. **[App Tích Hợp Toàn Diện (Socrates Nhí App)](file:///c:/Users/hienp/Desktop/Socrates/app_tich_hop_socrates/)**
+   - Lộ trình 3 bước trực quan: `Bước 1: Đặt câu hỏi` ➜ `Bước 2: Gia sư Socratic` ➜ `Bước 3: Sơ đồ & Đúc kết`.
+   - Tích hợp 3 bảng điều khiển chuyên sâu cho Giám khảo: `Khiên An Toàn 3 Tầng 🛡️`, `⚡ Demo Offline (12 Bài) 📚`, và `Đánh Giá Sư Phạm 📊`.
    - Khởi chạy chính thức: `python main.py`
+
+10. **Tài liệu & Hồ sơ Dự thi Bảng A chuẩn hóa:**
+    - [PROMPT_LOG.md](file:///c:/Users/hienp/Desktop/Socrates/PROMPT_LOG.md): Nhật ký lệnh AI versioned (v0.1 ➜ v0.2 ➜ v1.0), báo cáo kiểm thử 40 test jailbreak, bảng 5 chỉ số đo lường thực nghiệm.
+    - [.env.example](file:///c:/Users/hienp/Desktop/Socrates/.env.example): Tệp mẫu cấu hình OpenAI-compatible API an toàn phục vụ nộp hồ sơ.
 
 ---
 
@@ -57,7 +67,8 @@ Socrates Nhí được xây dựng trên nguyên tắc sư phạm cốt lõi: **
 python main.py
 ```
 
-### 2. Chạy Toàn Bộ Bộ Test Suite (59/59 Tests Passed 100%)
+### 2. Chạy Toàn Bộ Bộ Test Suite (72/72 Tests Passed 100%)
 ```bash
 python -m unittest discover -s . -p "test_*.py"
 ```
+

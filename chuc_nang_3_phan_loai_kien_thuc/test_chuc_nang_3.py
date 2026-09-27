@@ -50,6 +50,27 @@ class TestChucNang3(unittest.TestCase):
         self.assertEqual(result.strand, KnowledgeStrand.BIOLOGY)
         self.assertIn("Sinh học", result.topic)
 
+    def test_classify_solution_concentration(self):
+        """Phân loại bài toán nồng độ phần trăm vào mạch Hóa học."""
+        text = "Hòa tan 15 gam muối ăn vào 85 gam nước cất. Tính nồng độ phần trăm C% của dung dịch."
+        result = self.classifier.classify_problem(text)
+        self.assertEqual(result.strand, KnowledgeStrand.CHEMISTRY)
+        self.assertIn("Nồng độ phần trăm", result.topic)
+        self.assertTrue(any("Nồng độ" in c for c in result.core_concepts))
+
+    def test_classify_plant_transpiration_and_tropism(self):
+        """Phân loại bài toán thoát hơi nước và tính hướng sáng vào mạch Sinh học."""
+        text1 = "Giải thích cơ chế thoát hơi nước qua khí khổng ở bề mặt lá cây."
+        result1 = self.classifier.classify_problem(text1)
+        self.assertEqual(result1.strand, KnowledgeStrand.BIOLOGY)
+        self.assertIn("Thoát hơi nước", result1.topic)
+
+        text2 = "Quan sát ngọn cây uốn cong về phía có ánh sáng ở bậu cửa sổ. Đây là hiện tượng cảm ứng hướng sáng."
+        result2 = self.classifier.classify_problem(text2)
+        self.assertEqual(result2.strand, KnowledgeStrand.BIOLOGY)
+        self.assertIn("Tính hướng sáng", result2.topic)
+
+
     # --- 2. KIỂM THỬ RÀNG BUỘC SƯ PHẠM FR-03 ---
     def test_max_three_core_concepts(self):
         """Tiêu chí FR-03: AI chỉ được trả TỐI ĐA 3 khái niệm cốt lõi."""

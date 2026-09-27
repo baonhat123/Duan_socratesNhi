@@ -16,13 +16,14 @@ from .input_model import ProblemInput, InputType
 from .validator import (
     process_image_input,
     process_text_input,
+    process_sample_input,
     validate_file_size,
     validate_file_format,
     check_pii_and_safety,
     MAX_FILE_SIZE_BYTES,
     ALLOWED_EXTENSIONS
 )
-from .sample_bank import get_all_samples, get_sample_by_id
+from .sample_bank import get_all_samples, get_sample_by_id, get_samples_by_strand
 from .ui_component import ProblemInputView
 
 __all__ = [
@@ -31,11 +32,14 @@ __all__ = [
     "ProblemInputView",
     "process_image_input",
     "process_text_input",
+    "process_sample_input",
     "validate_file_size",
     "validate_file_format",
     "check_pii_and_safety",
     "MAX_FILE_SIZE_BYTES",
     "ALLOWED_EXTENSIONS",
     "get_all_samples",
-    "get_sample_by_id"
+    "get_sample_by_id",
+    "get_samples_by_strand"
 ]
+

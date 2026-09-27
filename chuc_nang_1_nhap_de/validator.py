@@ -164,3 +164,20 @@ def process_text_input(text_content: str) -> ProblemInput:
         is_confirmed=False,  # Chưa xác nhận -> Chưa được gửi AI
         safety_warnings=warnings
     )
+
+
+def process_sample_input(sample_id: str) -> ProblemInput:
+    """
+    Tiếp nhận và đóng gói đề bài mẫu từ Ngân hàng 12 bài chuẩn KHTN 7.
+    """
+    from .sample_bank import get_sample_by_id
+    sample = get_sample_by_id(sample_id)
+    return ProblemInput(
+        input_type=InputType.SAMPLE,
+        text_content=sample["content"],
+        sample_id=sample["id"],
+        sample_title=sample["title"],
+        is_confirmed=False,
+        safety_warnings=[]
+    )
+
