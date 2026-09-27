@@ -1,14 +1,15 @@
 """
 Module: main_app.py
-Ứng dụng Tích hợp Hoàn chỉnh Socrates Nhí (Kết hợp Đầy đủ Chức năng 1, 2, 3 & 4)
+Ứng dụng Tích hợp Hoàn chỉnh Socrates Nhí (Kết hợp Đầy đủ Chức năng 1, 2, 3, 4 & 5)
 Phiên bản Giao diện Ed-Tech 2.0 Thân thiện Học sinh THCS
 Đặc tả dự án: Socrates Nhí v3.0 (Bảng A - Cuộc thi Sáng tạo trẻ Quốc gia AI 2026)
 
-Hành trình tương tác hoàn chỉnh xuyên suốt 4 Trạm:
+Hành trình tương tác hoàn chỉnh xuyên suốt 5 Trạm Khám Phá:
 1. Trạm 1: Tiếp nhận đề bài (Văn bản, Tải ảnh JPG/PNG <= 5MB, hoặc Đề mẫu KHTN 7).
 2. Trạm 2: Trích xuất OCR & Soát lỗi công thức KHTN (Đo độ nét, Đối chiếu 2 cột, Thanh ký hiệu nhanh).
 3. Trạm 3: Phân loại kiến thức bài toán & Bản đồ khái niệm cốt lõi (Cơ học, Hóa học, Sinh học, Lỗi thường gặp).
 4. Trạm 4: Hội thoại Socratic gợi mở tư duy 5 pha (clarify -> recall -> reason -> check -> generalize) không phát đáp án sẵn!
+5. Trạm 5: Sơ đồ Tư duy 3–6 nút & Khung tự đúc kết 3 dòng, Khảo sát 1–5 sao, Nhật ký ẩn danh (FR-06, FR-08, FR-09).
 """
 
 import sys
@@ -33,6 +34,8 @@ from chuc_nang_3_phan_loai_kien_thuc.classifier_view import KnowledgeClassifierV
 
 from chuc_nang_4_hoi_thoai_socratic.socratic_view import SocraticChatView
 from chuc_nang_4_hoi_thoai_socratic.socratic_model import SocraticPhase
+
+from chuc_nang_5_so_do_tong_ket.mindmap_view import MindmapSummaryView
 
 from app_tich_hop_socrates.app_state import SessionState, AppStep
 
@@ -67,25 +70,25 @@ class SocratesIntegratedApp:
         self.navigate_to_step_1()
 
     def _create_station_pill(self, step_num: int, title: str, subtitle: str) -> ft.Container:
-        """Tạo thẻ giao diện cho một Trạm trong lộ trình 4 bước."""
+        """Tạo thẻ giao diện cho một Trạm trong lộ trình 5 bước."""
         circle_badge = ft.Container(
-            content=ft.Text(str(step_num), size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_700),
-            width=26,
-            height=26,
-            border_radius=13,
+            content=ft.Text(str(step_num), size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_700),
+            width=24,
+            height=24,
+            border_radius=12,
             bgcolor=ft.Colors.GREY_200,
             alignment=ft.Alignment.CENTER
         )
 
-        title_text = ft.Text(title, size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_800)
-        subtitle_text = ft.Text(subtitle, size=10, color=ft.Colors.GREY_500)
+        title_text = ft.Text(title, size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_800)
+        subtitle_text = ft.Text(subtitle, size=9, color=ft.Colors.GREY_500)
 
         pill = ft.Container(
             content=ft.Row([
                 circle_badge,
                 ft.Column([title_text, subtitle_text], spacing=0)
-            ], spacing=8, vertical_alignment=ft.CrossAxisAlignment.CENTER),
-            padding=ft.Padding(10, 6, 12, 6),
+            ], spacing=6, vertical_alignment=ft.CrossAxisAlignment.CENTER),
+            padding=ft.Padding(8, 6, 8, 6),
             border_radius=10,
             border=ft.Border.all(1, ft.Colors.GREY_300),
             bgcolor=ft.Colors.WHITE,
@@ -94,7 +97,7 @@ class SocratesIntegratedApp:
         return pill
 
     def _build_global_navigation(self):
-        """Xây dựng thanh tiêu đề và thanh tiến trình lộ trình 4 trạm sinh động."""
+        """Xây dựng thanh tiêu đề và thanh tiến trình lộ trình 5 trạm sinh động."""
         self.app_brand = ft.Row(
             [
                 ft.CircleAvatar(
@@ -136,15 +139,22 @@ class SocratesIntegratedApp:
             border=ft.Border.all(1, ft.Colors.AMBER_200)
         )
 
-        # 4 Trạm Khám phá trong Lộ trình
+        # 5 Trạm Khám phá trong Lộ trình học tập
         self.pill_step_1 = self._create_station_pill(1, "Trạm 1: Nhập đề", "Gõ chữ / Tải ảnh / Mẫu")
         self.pill_step_2 = self._create_station_pill(2, "Trạm 2: Soát OCR", "Kiểm tra & Chuẩn hóa")
-        self.pill_step_3 = self._create_station_pill(3, "Trạm 3: Bản đồ Khái niệm", "Dữ kiện & Mạch KHTN")
+        self.pill_step_3 = self._create_station_pill(3, "Trạm 3: Bản đồ Khái niệm", "Dữ kiện & 3 Mạch KHTN")
         self.pill_step_4 = self._create_station_pill(4, "Trạm 4: Vấn đáp Socratic", "5 Pha gợi mở tư duy")
+        self.pill_step_5 = self._create_station_pill(5, "Trạm 5: Tổng kết", "Sơ đồ & Đúc kết 🌟")
 
-        self.station_pills = [self.pill_step_1, self.pill_step_2, self.pill_step_3, self.pill_step_4]
+        self.station_pills = [
+            self.pill_step_1,
+            self.pill_step_2,
+            self.pill_step_3,
+            self.pill_step_4,
+            self.pill_step_5
+        ]
 
-        arrow_icon = lambda: ft.Icon(ft.Icons.CHEVRON_RIGHT_ROUNDED, color=ft.Colors.INDIGO_300, size=18)
+        arrow_icon = lambda: ft.Icon(ft.Icons.CHEVRON_RIGHT_ROUNDED, color=ft.Colors.INDIGO_300, size=16)
 
         self.stepper_bar = ft.Container(
             content=ft.Row(
@@ -156,9 +166,11 @@ class SocratesIntegratedApp:
                     self.pill_step_3,
                     arrow_icon(),
                     self.pill_step_4,
+                    arrow_icon(),
+                    self.pill_step_5,
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
-                spacing=6
+                spacing=4
             ),
             bgcolor=ft.Colors.WHITE,
             padding=ft.Padding(10, 8, 10, 8),
@@ -180,9 +192,23 @@ class SocratesIntegratedApp:
         )
 
     def _update_stepper_visuals(self, active_step: str):
-        """Cập nhật giao diện Stepper theo phong cách Gamified hiện đại."""
-        step_order = [AppStep.STEP_1_INPUT, AppStep.STEP_2_OCR, AppStep.STEP_3_CLASSIFIER, AppStep.STEP_4_SOCRATIC]
+        """Cập nhật giao diện Stepper theo phong cách Gamified hiện đại 5 bước."""
+        step_order = [
+            AppStep.STEP_1_INPUT,
+            AppStep.STEP_2_OCR,
+            AppStep.STEP_3_CLASSIFIER,
+            AppStep.STEP_4_SOCRATIC,
+            AppStep.STEP_5_MINDMAP
+        ]
         active_idx = step_order.index(active_step)
+
+        orig_subs = [
+            "Gõ chữ / Tải ảnh / Mẫu",
+            "Kiểm tra & Chuẩn hóa",
+            "Dữ kiện & 3 Mạch KHTN",
+            "5 Pha gợi mở tư duy",
+            "Sơ đồ & Đúc kết 🌟"
+        ]
 
         for idx, pill in enumerate(self.station_pills):
             row = pill.content
@@ -197,7 +223,7 @@ class SocratesIntegratedApp:
                 pill.border = ft.Border.all(1.5, ft.Colors.GREEN_300)
                 pill.shadow = None
                 badge.bgcolor = ft.Colors.GREEN_600
-                badge.content = ft.Icon(ft.Icons.CHECK_ROUNDED, color=ft.Colors.WHITE, size=15)
+                badge.content = ft.Icon(ft.Icons.CHECK_ROUNDED, color=ft.Colors.WHITE, size=14)
                 title_text.color = ft.Colors.GREEN_900
                 title_text.weight = ft.FontWeight.BOLD
                 sub_text.color = ft.Colors.GREEN_700
@@ -209,13 +235,11 @@ class SocratesIntegratedApp:
                 pill.border = ft.Border.all(1.5, ft.Colors.INDIGO_700)
                 pill.shadow = ft.BoxShadow(blur_radius=10, color=ft.Colors.with_opacity(0.25, ft.Colors.INDIGO_700), offset=ft.Offset(0, 2))
                 badge.bgcolor = ft.Colors.WHITE
-                badge.content = ft.Text(str(idx + 1), size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_800)
+                badge.content = ft.Text(str(idx + 1), size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_800)
                 title_text.color = ft.Colors.WHITE
                 title_text.weight = ft.FontWeight.BOLD
                 sub_text.color = ft.Colors.INDIGO_100
-                # Giữ nguyên subtitle gốc
-                orig_subs = ["Gõ chữ / Tải ảnh / Mẫu", "Kiểm tra & Chuẩn hóa", "Dữ kiện & Mạch KHTN", "5 Pha gợi mở tư duy"]
-                sub_text.value = f"🎯 Đang học • {orig_subs[idx]}"
+                sub_text.value = f"🎯 Đang ở đây"
 
             else:
                 # Chưa tới (Upcoming) -> Xám nhạt thanh lịch
@@ -223,11 +247,10 @@ class SocratesIntegratedApp:
                 pill.border = ft.Border.all(1, ft.Colors.GREY_300)
                 pill.shadow = None
                 badge.bgcolor = ft.Colors.GREY_100
-                badge.content = ft.Text(str(idx + 1), size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_600)
+                badge.content = ft.Text(str(idx + 1), size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_600)
                 title_text.color = ft.Colors.GREY_700
                 title_text.weight = ft.FontWeight.W_500
                 sub_text.color = ft.Colors.GREY_500
-                orig_subs = ["Gõ chữ / Tải ảnh / Mẫu", "Kiểm tra & Chuẩn hóa", "Dữ kiện & Mạch KHTN", "5 Pha gợi mở tư duy"]
                 sub_text.value = orig_subs[idx]
 
         self.page.update()
@@ -338,9 +361,16 @@ class SocratesIntegratedApp:
             on_click=lambda _: self.navigate_to_step_3(self.state.confirmed_problem)
         )
 
+        btn_to_summary = ft.FilledButton(
+            "Xem Sơ đồ Tư duy & Đúc kết (Trạm 5) 🌟",
+            icon=ft.Icons.WORKSPACE_PREMIUM_ROUNDED,
+            style=ft.ButtonStyle(bgcolor=ft.Colors.GREEN_700, color=ft.Colors.WHITE),
+            on_click=lambda _: self.navigate_to_step_5()
+        )
+
         step_4_container = ft.Column(
             [
-                ft.Row([btn_back_to_3], alignment=ft.MainAxisAlignment.START),
+                ft.Row([btn_back_to_3, btn_to_summary], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
                 chat_view.build()
             ],
             spacing=8,
@@ -351,8 +381,54 @@ class SocratesIntegratedApp:
         self.page.update()
 
     def _on_socratic_session_complete(self, summary_data: dict):
-        """Xử lý khi học sinh hoàn thành toàn bộ chu trình Socratic."""
+        """Xử lý khi học sinh hoàn thành toàn bộ chu trình Socratic -> Tự động chuyển sang Trạm 5!"""
         print(f"[Hoàn thành toàn bộ phiên] Lượt: {summary_data.get('turn_count')} - Pha: {summary_data.get('next_phase')}")
+        self.navigate_to_step_5(turn_count=summary_data.get("turn_count", 4))
+
+    def navigate_to_step_5(self, turn_count: int = 4):
+        """Hiển thị Bước 5: Sơ đồ Tư duy & Tổng kết Khép phiên Học tập (Chức năng 5)."""
+        self.state.current_step = AppStep.STEP_5_MINDMAP
+        self._update_stepper_visuals(AppStep.STEP_5_MINDMAP)
+
+        problem_text = self.state.confirmed_problem.confirmed_text if self.state.confirmed_problem else ""
+        c_res = self.state.classification_result
+
+        topic = c_res.topic if c_res else "Vật lý – Chuyển động và Tốc độ"
+        strand = c_res.strand.value if c_res else "Vật lý THCS"
+        facts = c_res.given_facts if c_res else ["s = 12 km", "t = 30 phút"]
+        concepts = c_res.core_concepts if c_res else ["Tốc độ chuyển động"]
+        target = c_res.target_variable if c_res else "Tốc độ v"
+
+        view_5 = MindmapSummaryView(
+            page=self.page,
+            problem_text=problem_text,
+            topic=topic,
+            strand_name=strand,
+            given_facts=facts,
+            core_concepts=concepts,
+            target_variable=target,
+            total_turns=turn_count,
+            on_restart=self.navigate_to_step_1,
+            is_standalone=False
+        )
+
+        btn_back_to_4 = ft.OutlinedButton(
+            "Quay lại Trạm 4 (Xem lại Hội thoại)",
+            icon=ft.Icons.ARROW_BACK_ROUNDED,
+            on_click=lambda _: self.navigate_to_step_4()
+        )
+
+        step_5_container = ft.Column(
+            [
+                ft.Row([btn_back_to_4], alignment=ft.MainAxisAlignment.START),
+                view_5.build()
+            ],
+            spacing=8,
+            scroll=ft.ScrollMode.AUTO
+        )
+
+        self.content_area.content = step_5_container
+        self.page.update()
 
     def build(self) -> ft.Control:
         """Trả về toàn bộ khung ứng dụng hoàn chỉnh."""
