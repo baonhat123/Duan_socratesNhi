@@ -58,7 +58,7 @@ class SocraticChatView:
             visible=self.is_standalone
         )
 
-        # 2. Thẻ chỉ dẫn nhiệm vụ Trạm 4 (Mission Briefing Card)
+        # 2. Thẻ gia sư Socrates Nhí đồng hành
         self.mission_card = ft.Container(
             content=ft.Row([
                 ft.CircleAvatar(
@@ -67,10 +67,9 @@ class SocraticChatView:
                     radius=20
                 ),
                 ft.Column([
-                    ft.Text("Trạm 4: Hội thoại Gợi mở Socratic 5 Pha", weight=ft.FontWeight.BOLD, size=15, color=ft.Colors.INDIGO_900),
+                    ft.Text("Gia sư Socrates Nhí 💡 Đồng hành cùng em", weight=ft.FontWeight.BOLD, size=15, color=ft.Colors.INDIGO_900),
                     ft.Text(
-                        "Socrates Nhí không đưa đáp án sẵn. Em hãy tự tin trả lời từng câu hỏi gợi mở "
-                        "để từng bước tự mình chinh phục bài toán này nhé!",
+                        "Socrates Nhí ở đây để cùng em trao đổi và gợi mở từng bước. Em hãy tự tin nêu suy nghĩ của mình nhé!",
                         size=12,
                         color=ft.Colors.GREY_700
                     )
@@ -120,7 +119,7 @@ class SocraticChatView:
                 content=ft.Column([
                     ft.Row([
                         ft.Icon(ft.Icons.DESCRIPTION_OUTLINED, size=14, color=ft.Colors.INDIGO_700),
-                        ft.Text("Đề bài đang học:", size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900)
+                        ft.Text("Vấn đề / Câu hỏi đang trao đổi:", size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900)
                     ]),
                     self.problem_preview_text
                 ], spacing=4),
@@ -135,14 +134,38 @@ class SocraticChatView:
             auto_scroll=True
         )
 
-        # 4. Dải gợi ý trả lời nhanh 1-chạm (Quick Reply Chips)
-        quick_replies = [
-            ("Em chưa biết bắt đầu từ đâu", "Em chưa biết bắt đầu từ đâu"),
-            ("Cho em đáp án luôn đi", "Cho em đáp án luôn đi"),
-            ("Dữ kiện là s = 12 km và t = 30 phút", "Dữ kiện là s = 12 km và t = 30 phút"),
-            ("Dùng công thức v = s/t", "Dùng công thức v = s/t"),
-            ("Đổi 30 phút = 0.5 h", "Đổi 30 phút = 0.5 h")
-        ]
+        # 4. Dải gợi ý trả lời nhanh thích ứng theo chủ đề (Adaptive Quick Reply Chips)
+        prob_lower = self.problem_text.lower()
+        if any(w in prob_lower for w in ["gương", "gương phẳng", "phản xạ", "ánh sáng"]):
+            quick_replies = [
+                ("Tia sáng bị hắt ngược lại", "Tia sáng bị hắt ngược lại"),
+                ("Tia sáng đi xuyên qua gương", "Tia sáng đi xuyên qua gương"),
+                ("Em chưa biết bắt đầu từ đâu", "Em chưa biết bắt đầu từ đâu"),
+                ("Gợi ý thêm cho em với", "Gợi ý thêm cho em với"),
+                ("Cho em đáp án luôn đi", "Cho em đáp án luôn đi")
+            ]
+        elif any(w in prob_lower for w in ["quang hợp", "lá cây", "diệp lục"]):
+            quick_replies = [
+                ("Hút nước và hấp thụ khí CO₂", "Hút nước và hấp thụ khí CO₂"),
+                ("Lấy khí oxygen từ không khí", "Lấy khí oxygen từ không khí"),
+                ("Em chưa nhớ rõ", "Em chưa nhớ rõ"),
+                ("Cho em đáp án đi", "Cho em đáp án đi")
+            ]
+        elif any(w in prob_lower for w in ["12 km", "30 phút", "tốc độ", "xe đạp"]):
+            quick_replies = [
+                ("Dữ kiện là s = 12 km và t = 30 phút", "Dữ kiện là s = 12 km và t = 30 phút"),
+                ("Dùng công thức v = s/t", "Dùng công thức v = s/t"),
+                ("Đổi 30 phút = 0.5 h", "Đổi 30 phút = 0.5 h"),
+                ("Em chưa biết bắt đầu từ đâu", "Em chưa biết bắt đầu từ đâu"),
+                ("Cho em đáp án luôn đi", "Cho em đáp án luôn đi")
+            ]
+        else:
+            quick_replies = [
+                ("Em chưa biết bắt đầu từ đâu", "Em chưa biết bắt đầu từ đâu"),
+                ("Gợi ý thêm cho em một chút", "Gợi ý thêm cho em một chút"),
+                ("Em hiểu rồi, bước tiếp là gì?", "Em hiểu rồi, bước tiếp là gì?"),
+                ("Cho em đáp án luôn đi", "Cho em đáp án luôn đi")
+            ]
         self.quick_chips = [
             ft.TextButton(
                 q[0],

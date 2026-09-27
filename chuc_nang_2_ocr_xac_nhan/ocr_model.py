@@ -39,14 +39,22 @@ class ConfirmedProblem:
     Đối tượng đề bài hoàn chỉnh sau khi học sinh đã kiểm tra và xác nhận/sửa lỗi.
     Sẵn sàng chuyển giao cho Chức năng 3 (Phân loại kiến thức) & Chức năng 4 (Socratic State Machine).
     """
-    original_text: str                         # Văn bản OCR ban đầu
-    confirmed_text: str                        # Văn bản cuối cùng sau khi học sinh đã sửa
-    was_edited: bool = False                   # Học sinh có chỉnh sửa chữ nào không
+    original_text: str = ""                         # Văn bản OCR ban đầu
+    confirmed_text: str = ""                        # Văn bản cuối cùng sau khi học sinh đã sửa
+    was_edited: bool = False                        # Học sinh có chỉnh sửa chữ nào không
     formulas: List[str] = field(default_factory=list)
     units: List[str] = field(default_factory=list)
-    source_type: str = "image"                 # "image" hoặc "text"
+    source_type: str = "image"                      # "image", "text", hoặc "sample"
     image_path: Optional[str] = None
     confirmed_at: datetime = field(default_factory=datetime.now)
+    confidence_score: float = 1.0                   # Độ tin cậy OCR / chuẩn hóa
+    original_ocr_text: Optional[str] = None         # Bí danh tương thích ngược
+
+    def __post_init__(self):
+        if self.original_ocr_text and not self.original_text:
+            self.original_text = self.original_ocr_text
+        elif self.original_text and not self.original_ocr_text:
+            self.original_ocr_text = self.original_text
 
     def to_dict(self) -> Dict[str, Any]:
         return {

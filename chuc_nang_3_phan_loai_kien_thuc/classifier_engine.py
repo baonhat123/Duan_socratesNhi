@@ -52,8 +52,16 @@ class KnowledgeClassifier:
         selected_concepts = []
         common_mistakes = []
 
+        # Kiểm tra Quang học / Ánh sáng / Gương phẳng (Vật lý)
+        if any(w in text_lower for w in ["gương", "gương phẳng", "phản xạ", "khúc xạ", "tia sáng", "nguồn sáng"]) or ("ánh sáng" in text_lower and not any(b in text_lower for b in ["quang hợp", "lá cây", "diệp lục"])):
+            strand = KnowledgeStrand.MECHANICS
+            topic = "Vật lý – Ánh sáng và Định luật phản xạ ánh sáng"
+            c1 = CONCEPT_MAP["phan_xa_anh_sang"]
+            selected_concepts = [c1.name]
+            common_mistakes = c1.common_pitfalls
+
         # Kiểm tra Hóa học
-        if any(w in text_lower for w in ["hóa học", "phản ứng", "chất mới", "đốt cháy", "than", "khí", "o₂", "o2", "co₂", "co2", "h₂o", "h2o", "bảo toàn khối lượng"]):
+        elif any(w in text_lower for w in ["hóa học", "phản ứng", "chất mới", "đốt cháy", "than", "khí", "o₂", "o2", "co₂", "co2", "h₂o", "h2o", "bảo toàn khối lượng", "muối", "dung dịch", "nồng độ"]):
             strand = KnowledgeStrand.CHEMISTRY
             topic = "Hóa học – Biến đổi chất và Phản ứng hóa học"
             if "bảo toàn" in text_lower or "khối lượng" in text_lower:
@@ -68,7 +76,7 @@ class KnowledgeClassifier:
                 common_mistakes = c1.common_pitfalls
 
         # Kiểm tra Sinh học
-        elif any(w in text_lower for w in ["quang hợp", "hô hấp", "tế bào", "thực vật", "lá cây", "diệp lục", "ánh sáng", "năng lượng"]):
+        elif any(w in text_lower for w in ["quang hợp", "hô hấp", "tế bào", "thực vật", "lá cây", "diệp lục", "khí khổng", "thoát hơi nước"]):
             strand = KnowledgeStrand.BIOLOGY
             topic = "Sinh học – Trao đổi chất và Chuyển hóa năng lượng"
             if "hô hấp" in text_lower:
@@ -82,7 +90,7 @@ class KnowledgeClassifier:
                 selected_concepts = [c1.name, c2.name]
                 common_mistakes = c1.common_pitfalls
 
-        # Mặc định Cơ học
+        # Mặc định Cơ học (Vật lý)
         else:
             strand = KnowledgeStrand.MECHANICS
             if "trọng lượng" in text_lower or "newton" in text_lower or "p = 10m" in text_lower or "khối lượng m" in text_lower:

@@ -129,6 +129,21 @@ class TestChucNang4(unittest.TestCase):
         is_leak = self.engine._detect_answer_leak(text_with_leak)
         self.assertTrue(is_leak)
 
+    # --- 8. KIỂM THỬ HỘI THOẠI KHÁI NIỆM QUANG HỌC & ÁNH SÁNG ---
+    def test_optics_conceptual_question_flow(self):
+        """Kiểm tra đối thoại sư phạm gợi mở câu hỏi quang học (gương phẳng, ánh sáng)."""
+        prob = "ánh sáng đi qua gương phẳng như thế nào"
+        g = self.engine.get_initial_greeting(prob)
+        self.assertIn("gương", g.feedback.lower())
+        self.assertIn("xuyên qua", g.next_question.lower())
+
+        # Học sinh trả lời đúng bản chất hiện tượng phản xạ
+        res1 = self.engine.generate_turn_response(prob, "Tia sáng bị hắt ngược lại chứ không đi qua")
+        self.assertEqual(res1.phase, SocraticPhase.CLARIFY)
+        self.assertEqual(res1.next_phase, SocraticPhase.RECALL)
+        self.assertIn("phản xạ", res1.feedback.lower())
+        self.assertIn("góc phản xạ", res1.next_question.lower())
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

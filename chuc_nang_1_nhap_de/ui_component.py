@@ -263,8 +263,8 @@ class ProblemInputView:
 
         # 9. Nút hành động chính
         self.btn_confirm = ft.FilledButton(
-            "Xác nhận đề bài & Tiếp tục sang Soát OCR 🚀",
-            icon=ft.Icons.ARROW_FORWARD_ROUNDED,
+            "Hỏi Gia sư Socrates Nhí ngay 💬",
+            icon=ft.Icons.CHAT_BUBBLE_ROUNDED,
             style=ft.ButtonStyle(
                 bgcolor=ft.Colors.INDIGO_700,
                 color=ft.Colors.WHITE,
@@ -296,6 +296,16 @@ class ProblemInputView:
                 btn.content.controls[0].color = ft.Colors.GREY_700
                 btn.content.controls[1].color = ft.Colors.GREY_800
                 btn.content.controls[1].weight = ft.FontWeight.W_500
+
+        if mode == "text":
+            self.btn_confirm.text = "Hỏi Gia sư Socrates Nhí ngay 💬"
+            self.btn_confirm.icon = ft.Icons.CHAT_BUBBLE_ROUNDED
+        elif mode == "image":
+            self.btn_confirm.text = "Tiếp tục nhận diện chữ từ ảnh 📷"
+            self.btn_confirm.icon = ft.Icons.ARROW_FORWARD_ROUNDED
+        elif mode == "sample":
+            self.btn_confirm.text = "Khám phá bài học này cùng Gia sư 🚀"
+            self.btn_confirm.icon = ft.Icons.AUTO_AWESOME_ROUNDED
 
         self.text_container.visible = (mode == "text")
         self.image_container.visible = (mode == "image")

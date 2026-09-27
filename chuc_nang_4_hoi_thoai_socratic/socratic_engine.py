@@ -17,15 +17,28 @@ from typing import Tuple, Optional, Dict, Any, List
 from .socratic_model import SocraticPhase, StudentState, TurnResponse, ChatMessage
 from .state_machine import SocraticStateMachine
 
+try:
+    from chuc_nang_6_guardrail_chong_ro_dap_an.guardrail_engine import ThreeTierGuardrail
+except (ImportError, ModuleNotFoundError):
+    ThreeTierGuardrail = None
+
+try:
+    from chuc_nang_7_demo_offline_cache.offline_engine import GLOBAL_OFFLINE_ENGINE
+except (ImportError, ModuleNotFoundError):
+    GLOBAL_OFFLINE_ENGINE = None
+
 # Các mẫu câu xin đáp án (Jailbreak / Answer Plea) cần chặn theo FR-05 & FR-07
 ANSWER_PLEA_PATTERNS = [
-    r"(?:cho|xin|biết|hỏi)\s+(?:đáp\s+án|kết\s+quả|đáp\s+số|lời\s+giải)",
+    r"(?:cho|xin|biết|hỏi)(?:\s+(?:em|mình|tớ|tôi|bạn|thầy|cô|nhanh))*\s+(?:đáp\s+án|kết\s+quả|đáp\s+số|lời\s+giải)",
     r"(?:giải|làm)\s+(?:hộ|giúp|luôn|hết|toàn\s+bộ)",
     r"(?:kết\s+quả|đáp\s+số)\s+là\s+gì",
     r"kết\s+quả\s+cuối\s+cùng",
     r"ra\s+bao\s+nhiêu",
     r"giải\s+chi\s+tiết\s+ra",
-    r"đóng\s+vai\s+thầy\s+cô\s+giải"
+    r"đóng\s+vai\s+thầy\s+cô\s+giải",
+    r"chỉ\s+bài\s+đi",
+    r"làm\s+hộ\s+đi",
+    r"cho\s+đáp\s+án"
 ]
 
 # Các mẫu câu thể hiện sự bối rối / không biết (Unknown)
@@ -57,6 +70,7 @@ class SocraticEngine:
         self.state_machine = SocraticStateMachine(max_turns=max_turns)
         self.fallback_index = 0
         self.conversation_history: List[ChatMessage] = []
+        self.guardrail = ThreeTierGuardrail() if ThreeTierGuardrail else None
 
     def reset(self):
         """Khởi động lại toàn bộ phiên hội thoại."""
@@ -64,9 +78,15 @@ class SocraticEngine:
         self.conversation_history = []
         self.fallback_index = 0
 
-    def classify_student_answer(self, user_text: str, current_phase: SocraticPhase) -> StudentState:
+    def classify_student_answer(
+        self,
+        user_text: str,
+        current_phase: SocraticPhase,
+        problem_text: str = ""
+    ) -> StudentState:
         """
         Phân loại câu trả lời của học sinh vào 6 trạng thái (Mục 5.1).
+        Hỗ trợ đa dạng các chủ đề KHTN 7 (Cơ học, Quang học, Hóa học, Sinh học).
         """
         text = user_text.strip().lower()
 
@@ -85,26 +105,64 @@ class SocraticEngine:
 
         # 4. Kiểm tra đúng / đúng một phần theo từng pha
         if current_phase == SocraticPhase.CLARIFY:
-            # Nhắc được các dữ kiện s, t, km, h, m, kg
-            if any(k in text for k in ["s =", "t =", "m =", "km", "phút", "giây", "dữ kiện", "quãng đường", "thời gian"]):
+            clarify_keywords = [
+                # Cơ học
+                "s =", "t =", "m =", "km", "phút", "giây", "dữ kiện", "quãng đường", "thời gian", "tốc độ", "vận tốc",
+                # Quang học (Ánh sáng & Gương)
+                "hắt", "bật lại", "phản xạ", "không đi qua", "không xuyên", "đổi hướng", "bị hắt", "dội lại", "ngược lại", "quay lại", "bật ngược",
+                # Sinh học (Quang hợp & Tế bào)
+                "nước", "h2o", "co2", "cacbonic", "ánh sáng", "diệp lục", "khí", "rễ",
+                # Hóa học
+                "carbon", "oxi", "oxygen", "caco3", "chất tham gia", "sản phẩm"
+            ]
+            if any(k in text for k in clarify_keywords):
+                return StudentState.CORRECT
+            if len(text.split()) >= 3:
                 return StudentState.CORRECT
             return StudentState.PARTIAL
 
         elif current_phase == SocraticPhase.RECALL:
-            # Nhắc được công thức v = s/t, P = 10m, quang hợp
-            if any(k in text for k in ["v = s/t", "s/t", "10m", "p = 10m", "quang hợp", "nước", "co2", "oxygen"]):
+            recall_keywords = [
+                # Cơ học
+                "v = s/t", "s/t", "10m", "p = 10m", "công thức",
+                # Quang học
+                "bằng", "bằng nhau", "i' = i", "i = i'", "góc phản xạ bằng góc tới", "phản xạ", "mặt phẳng tới",
+                # Sinh học & Hóa học
+                "quang hợp", "glucozo", "tinh bột", "bảo toàn", "khối lượng"
+            ]
+            if any(k in text for k in recall_keywords):
+                return StudentState.CORRECT
+            if len(text.split()) >= 3:
                 return StudentState.CORRECT
             return StudentState.PARTIAL
 
         elif current_phase == SocraticPhase.REASON:
-            # Nêu được bước làm, đổi đơn vị
-            if any(k in text for k in ["đổi", "thay số", "chia", "nhân", "bước", "trước"]):
+            reason_keywords = [
+                # Cơ học
+                "đổi", "thay số", "chia", "nhân", "bước", "trước",
+                # Quang học
+                "bật lại", "bật ngược", "trùng", "phương cũ", "vuông góc", "0 độ", "0°", "ngược chiều", "thẳng lại", "bật thẳng",
+                # Sinh học & Hóa học
+                "tổng", "khối lượng", "tăng", "giảm", "phương trình"
+            ]
+            if any(k in text for k in reason_keywords):
+                return StudentState.CORRECT
+            if len(text.split()) >= 3:
                 return StudentState.CORRECT
             return StudentState.PARTIAL
 
         elif current_phase == SocraticPhase.CHECK:
-            # Kiểm tra đơn vị km/h, m/s, N
-            if any(k in text for k in ["đơn vị", "km/h", "m/s", "hợp lý", "newton", "n"]):
+            check_keywords = [
+                # Cơ học
+                "đơn vị", "km/h", "m/s", "hợp lý", "newton", "n",
+                # Quang học
+                "ảnh ảo", "bằng", "bằng nhau", "bằng vật", "đối xứng", "không hứng được",
+                # Sinh học & Hóa học
+                "cân bằng", "đúng", "hợp lý", "chính xác"
+            ]
+            if any(k in text for k in check_keywords):
+                return StudentState.CORRECT
+            if len(text.split()) >= 2:
                 return StudentState.CORRECT
             return StudentState.PARTIAL
 
@@ -123,7 +181,7 @@ class SocraticEngine:
         """
         # Bước 1: Phân loại câu trả lời của học sinh
         current_phase = self.state_machine.current_phase
-        student_state = self.classify_student_answer(student_message, current_phase)
+        student_state = self.classify_student_answer(student_message, current_phase, problem_text=problem_text)
 
         # Lưu tin nhắn của học sinh vào lịch sử
         self.conversation_history.append(
@@ -149,13 +207,26 @@ class SocraticEngine:
             turn_num=turn_num
         )
 
-        # Bước 4: Hậu kiểm Guardrail chống rò rỉ đáp số (FR-07)
+        # Bước 4: Hậu kiểm Guardrail chống rò rỉ đáp số 3 Tầng (FR-07)
         safety_flags = []
-        if self._detect_answer_leak(next_question) or self._detect_answer_leak(micro_hint or ""):
-            safety_flags.append("answer_leak")
-            feedback = "Mình cùng suy nghĩ từng bước nhé!"
-            next_question = self._get_safe_fallback()
-            micro_hint = "Em hãy chú ý các đại lượng đề bài đã cho trước."
+        if self.guardrail:
+            audit_q = self.guardrail.inspect_response(next_question)
+            if not audit_q.is_safe:
+                safety_flags.extend(audit_q.safety_flags)
+                feedback = "Mình cùng suy nghĩ từng bước nhé!"
+                next_question = audit_q.sanitized_text
+                micro_hint = "Em hãy chú ý các đại lượng đề bài đã cho trước."
+            elif micro_hint:
+                audit_h = self.guardrail.inspect_response(micro_hint)
+                if not audit_h.is_safe:
+                    safety_flags.extend(audit_h.safety_flags)
+                    micro_hint = "Em hãy chú ý các đại lượng đề bài đã cho trước."
+        else:
+            if self._detect_answer_leak(next_question) or self._detect_answer_leak(micro_hint or ""):
+                safety_flags.append("answer_leak")
+                feedback = "Mình cùng suy nghĩ từng bước nhé!"
+                next_question = self._get_safe_fallback()
+                micro_hint = "Em hãy chú ý các đại lượng đề bài đã cho trước."
 
         # Cắt gọt micro_hint đảm bảo <= 140 ký tự
         if micro_hint and len(micro_hint) > 140:
@@ -199,19 +270,49 @@ class SocraticEngine:
         student_text: str,
         turn_num: int
     ) -> Tuple[str, str, Optional[str]]:
-        """
-        Soạn thảo 1 câu phản hồi + 1 câu hỏi chính + tối đa 1 gợi ý vi mô.
-        """
+        prob_lower = problem_text.lower()
+
         # Xử lý khi bị ép xin đáp án (Answer Plea)
         if student_state == StudentState.ANSWER_PLEA:
             fb = "Socrates Nhí ở đây để đồng hành giúp em tự hiểu bản chất, chứ không đưa đáp số sẵn đâu nè!"
-            q = "Để bắt đầu, em hãy nhìn lại đề bài và cho mình biết: Đề bài đang hỏi đại lượng nào cần tìm?"
-            hint = "Đọc kỹ câu hỏi cuối cùng của đề bài nhé."
+            if any(w in prob_lower for w in ["gương", "gương phẳng", "phản xạ", "ánh sáng"]):
+                q = "Chúng mình cùng làm từng bước nhé! Theo em, khi ánh sáng gặp mặt gương, nó đi tiếp xuyên qua hay hắt trở lại?"
+                hint = "Gợi ý: Mặt gương nhẵn bóng và tráng bạc phía sau."
+            else:
+                q = "Để bắt đầu, em hãy nhìn lại đề bài và cho mình biết: Đề bài đang hỏi đại lượng nào cần tìm?"
+                hint = "Đọc kỹ câu hỏi cuối cùng của đề bài nhé."
             return fb, q, hint
 
         # Xử lý khi học sinh nói 'em không biết' (Unknown)
         if student_state == StudentState.UNKNOWN:
             fb = "Không sao cả, ai mới học cũng có lúc bối rối! Mình cùng chia nhỏ vấn đề ra nhé."
+            if any(w in prob_lower for w in ["gương", "gương phẳng", "phản xạ", "ánh sáng"]):
+                if start_phase == SocraticPhase.CLARIFY:
+                    q = "Em hãy thử nhớ lại: Khi em soi gương mỗi sáng, em thấy ảnh mình ở trước gương đúng không? Nếu ánh sáng đi xuyên qua như tấm kính trong suốt thì ta có nhìn thấy ảnh mình không?"
+                    hint = "Gương soi giữ lại và hắt ánh sáng trở lại mắt ta."
+                elif start_phase == SocraticPhase.RECALL:
+                    q = "Tia sáng chiếu tới mặt gương gọi là tia tới. Em đoán xem tia sáng bị hắt ngược lại sẽ mang tên là tia gì nào?"
+                    hint = "Đó là tia phản xạ, và góc phản xạ luôn bằng góc tới đấy."
+                elif start_phase == SocraticPhase.REASON:
+                    q = "Nếu góc tới là 0 độ (chiếu vuông góc với mặt gương), thì góc phản xạ cũng bằng bao nhiêu độ theo định luật trên?"
+                    hint = "Góc phản xạ i' = i = 0 độ, tức là tia sáng bật thẳng ngược trở lại theo phương cũ."
+                elif start_phase == SocraticPhase.CHECK:
+                    q = "Khi em đứng trước gương phẳng, ảnh của em nhìn thấy trong gương có độ lớn bằng em hay to hơn/nhỏ hơn?"
+                    hint = "Ảnh trong gương phẳng có độ lớn bằng đúng vật thật."
+                else:
+                    q = "Em hãy nhắc lại ngắn gọn: Ánh sáng khi gặp gương phẳng sẽ xảy ra hiện tượng gì?"
+                    hint = "Hiện tượng phản xạ ánh sáng (bị hắt ngược trở lại)."
+                return fb, q, hint
+
+            elif any(w in prob_lower for w in ["quang hợp", "lá cây", "diệp lục"]):
+                if start_phase == SocraticPhase.CLARIFY:
+                    q = "Lá cây cần những nguyên liệu đầu vào nào lấy từ đất và không khí để thực hiện quang hợp?"
+                    hint = "Nước (H2O) từ rễ và khí Carbon dioxide (CO2) qua khí khổng của lá."
+                else:
+                    q = "Nhờ ánh sáng mặt trời, lá cây tạo ra chất hữu cơ và giải phóng khí gì cho chúng ta thở?"
+                    hint = "Giải phóng khí Oxygen (O2)."
+                return fb, q, hint
+
             if start_phase == SocraticPhase.CLARIFY:
                 q = "Đề bài có nhắc đến những con số nào kèm đơn vị đo? Em hãy liệt kê các con số đó ra giúp mình nhé."
                 hint = "Ví dụ: quãng đường là bao nhiêu km, thời gian là bao nhiêu phút?"
@@ -228,6 +329,105 @@ class SocraticEngine:
                 q = "Em hãy tóm tắt lại 1 công thức quan trọng nhất vừa dùng trong bài toán này nhé."
                 hint = "Viết lại công thức tổng quát mà em ghi nhớ."
             return fb, q, hint
+
+        # Thử gọi OpenAI API nếu có cấu hình OPENAI_API_KEY
+        if os.getenv("OPENAI_API_KEY") and not (GLOBAL_OFFLINE_ENGINE and GLOBAL_OFFLINE_ENGINE.is_offline() and GLOBAL_OFFLINE_ENGINE.match_problem_from_text(problem_text, strict=True)):
+            try:
+                import json
+                from openai import OpenAI
+                client = OpenAI(base_url=os.getenv("OPENAI_BASE_URL") or None, api_key=os.getenv("OPENAI_API_KEY"))
+                sys_prompt = (
+                    "Bạn là Gia sư Socrates Nhí đồng hành cùng học sinh THCS học KHTN 7. "
+                    "NGUYÊN TẮC BẮT BUỘC: Tuyệt đối không làm bài hộ hay cho đáp số. "
+                    "Hãy phản hồi câu trả lời của học sinh, đưa ra ĐÚNG 1 CÂU HỎI dẫn dắt cho pha tiếp theo và 1 gợi ý vi mô (<= 140 ký tự). "
+                    "Trả về JSON: {\"feedback\": str, \"question\": str, \"micro_hint\": str}"
+                )
+                user_prompt = (
+                    f"Bài toán/Câu hỏi: {problem_text}\n"
+                    f"Pha tiếp theo: {next_phase.value}\n"
+                    f"Trạng thái học sinh: {student_state.value}\n"
+                    f"Học sinh vừa nói: '{student_text}'"
+                )
+                res = client.chat.completions.create(
+                    model=os.getenv("SOCRATES_MODEL", "gpt-4o-mini"),
+                    messages=[
+                        {"role": "system", "content": sys_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    response_format={"type": "json_object"},
+                    temperature=0.3,
+                    timeout=15.0
+                )
+                data = json.loads(res.choices[0].message.content)
+                if data.get("question"):
+                    return data.get("feedback", "Rất tốt!"), data.get("question"), data.get("micro_hint")
+            except Exception:
+                pass
+
+        # Xử lý chuyên sâu cho câu hỏi Quang học / Ánh sáng / Gương phẳng
+        if any(w in prob_lower for w in ["gương", "gương phẳng", "phản xạ", "ánh sáng"]):
+            if next_phase == SocraticPhase.CLARIFY:
+                fb = "Em đang quan sát rất đúng hướng đó! Cùng suy nghĩ thêm một chút nhé."
+                q = "Khi em rọi đèn pin vào một tấm gương soi phẳng nhẵn bóng, chùm sáng sẽ đi xuyên qua phòng bên kia hay bị mặt gương hắt ngược trở lại phía em?"
+                hint = "Gương phẳng có lớp tráng bạc phía sau giúp phản xạ lại ánh sáng chứ không cho ánh sáng truyền xuyên qua."
+                return fb, q, hint
+            elif next_phase == SocraticPhase.RECALL:
+                fb = "Rất chính xác! Ánh sáng không đi xuyên qua mà bị hắt ngược trở lại môi trường cũ, hiện tượng đó gọi là 'Sự phản xạ ánh sáng'."
+                q = "Em có nhớ định luật phản xạ ánh sáng phát biểu về mối liên hệ giữa góc phản xạ (i') và góc tới (i) như thế nào không?"
+                hint = "Góc phản xạ i' luôn bằng góc tới i (i' = i)."
+                return fb, q, hint
+            elif next_phase == SocraticPhase.REASON:
+                fb = "Rất chuẩn! Góc phản xạ luôn bằng góc tới (i' = i) và cùng nằm trong mặt phẳng tới."
+                q = "Vậy nếu em chiếu một tia sáng vuông góc với mặt gương phẳng (góc tới i = 0°), tia phản xạ sẽ bị bật ngược lại theo hướng nào?"
+                hint = "Tia sáng sẽ bị bật thẳng ngược trở lại theo đúng phương truyền tới."
+                return fb, q, hint
+            elif next_phase == SocraticPhase.CHECK:
+                fb = "Lập luận rất sắc bén! Em nắm hiện tượng rất chắc."
+                q = "Khi em đứng trước gương phẳng, ảnh của em nhìn thấy trong gương có đặc điểm gì (ảnh thật hay ảnh ảo, lớn hơn hay bằng em)?"
+                hint = "Ảnh trong gương phẳng là ảnh ảo, không hứng được trên màn và có độ lớn bằng đúng vật."
+                return fb, q, hint
+            elif next_phase == SocraticPhase.GENERALIZE:
+                fb = "Tuyệt đỉnh! Em đã hiểu trọn vẹn quy luật đường truyền của ánh sáng khi gặp gương phẳng!"
+                q = "Em hãy tóm tắt lại 2 quy luật quan trọng nhất của định luật phản xạ ánh sáng trên gương phẳng nhé."
+                hint = "1. Tia phản xạ nằm trong mặt phẳng tới; 2. Góc phản xạ bằng góc tới (i' = i)."
+                return fb, q, hint
+
+        # Xử lý chuyên sâu cho câu hỏi Sinh học / Quang hợp
+        if any(w in prob_lower for w in ["quang hợp", "lá cây", "diệp lục"]):
+            if next_phase == SocraticPhase.CLARIFY:
+                fb = "Đúng hướng rồi! Quá trình quang hợp diễn ra chủ yếu ở lá cây."
+                q = "Lá cây cần những nguyên liệu đầu vào nào lấy từ đất và không khí để quang hợp?"
+                hint = "Nước từ rễ và khí Carbon dioxide (CO2) qua khí khổng của lá."
+                return fb, q, hint
+            elif next_phase == SocraticPhase.RECALL:
+                fb = "Chính xác! Cây lấy nước và khí CO2 để quang hợp."
+                q = "Nhờ năng lượng ánh sáng mặt trời, lá cây biến đổi nước và CO2 thành những chất nào?"
+                hint = "Tạo ra chất hữu cơ (Glucose/tinh bột) và giải phóng khí Oxygen (O2)."
+                return fb, q, hint
+            elif next_phase == SocraticPhase.REASON:
+                fb = "Rất chuẩn! Cây tổng hợp chất hữu cơ nuôi cây và tạo ra O2 cho sự sống."
+                q = "Vì sao vào ban đêm khi không có ánh sáng, chúng ta không nên để nhiều chậu hoa cây cảnh trong phòng ngủ đóng kín cửa?"
+                hint = "Ban đêm không có ánh sáng để quang hợp, cây chỉ hô hấp hút O2 và thải CO2."
+                return fb, q, hint
+            elif next_phase == SocraticPhase.CHECK:
+                fb = "Lập luận rất thực tế và chính xác!"
+                q = "Em hãy kiểm tra lại: Quá trình quang hợp có ý nghĩa gì đối với việc điều hòa khí hậu Trái Đất?"
+                hint = "Quang hợp giúp giảm hiệu ứng nhà kính bằng cách hấp thụ bớt khí CO2."
+                return fb, q, hint
+            elif next_phase == SocraticPhase.GENERALIZE:
+                fb = "Tuyệt vời! Em đã nắm vững bản chất của quá trình quang hợp."
+                q = "Em hãy tự đúc kết phương trình chữ của quá trình quang hợp ở thực vật nhé."
+                hint = "Nước + Carbon dioxide + Ánh sáng -> Chất hữu cơ + Oxygen."
+                return fb, q, hint
+
+        # Nếu đang ở Chế độ Demo Offline (FR-10): Dùng lời thoại chuẩn đã duyệt sư phạm CHỈ KHI khớp bài mẫu
+        if GLOBAL_OFFLINE_ENGINE and GLOBAL_OFFLINE_ENGINE.is_offline():
+            matched_prob = GLOBAL_OFFLINE_ENGINE.match_problem_from_text(problem_text, strict=True)
+            if matched_prob:
+                phase_key = next_phase.value.lower()
+                if phase_key in matched_prob.cached_phases:
+                    cached_dlg = matched_prob.cached_phases[phase_key]
+                    return cached_dlg.feedback, cached_dlg.question, cached_dlg.micro_hint
 
         # Xử lý theo Pha kế tiếp bình thường
         if next_phase == SocraticPhase.RECALL:
@@ -288,6 +488,64 @@ class SocraticEngine:
             "Đề bài đã cho trước những dữ kiện hoặc đại lượng nào?"
         )
         greeting_hint = "Hãy tìm các con số kèm đơn vị đo lường trong đề bài nhé."
+
+        # Nhận diện chuyên sâu theo thể loại câu hỏi
+        prob_lower = problem_text.lower()
+        if any(w in prob_lower for w in ["gương", "gương phẳng", "phản xạ", "ánh sáng"]):
+            greeting_fb = "Chào em! Đây là một câu hỏi rất hay về sự truyền ánh sáng và gương phẳng trong KHTN 7."
+            greeting_q = (
+                "Khi một tia sáng chiếu tới mặt gương phẳng nhẵn bóng, theo em tia sáng có đi xuyên qua như tấm kính trong suốt không, "
+                "hay nó sẽ bị đổi hướng và hắt ngược trở lại môi trường cũ?"
+            )
+            greeting_hint = "Em hãy liên tưởng đến hiện tượng khi soi gương mỗi ngày nhé."
+        elif any(w in prob_lower for w in ["quang hợp", "lá cây", "diệp lục"]):
+            greeting_fb = "Chào em! Chúng mình cùng tìm hiểu về quá trình quang hợp kỳ diệu của thực vật nhé."
+            greeting_q = "Để bắt đầu, em hãy nhớ lại xem lá cây cần hấp thụ những chất gì từ đất và không khí để thực hiện quang hợp?"
+            greeting_hint = "Cây hút chất gì từ rễ dưới đất và lấy khí gì từ không khí qua lá?"
+        elif any(w in prob_lower for w in ["đốt than", "cháy", "bảo toàn khối lượng"]):
+            greeting_fb = "Chào em! Đây là một phản ứng hóa học thú vị tuân theo định luật bảo toàn khối lượng."
+            greeting_q = "Em hãy đọc kỹ đề bài và chỉ ra: Những chất nào là chất tham gia ban đầu và chất nào là sản phẩm tạo thành?"
+            greeting_hint = "Chất tham gia nằm trước mũi tên phản ứng, sản phẩm nằm sau mũi tên."
+
+        # Thử gọi OpenAI API nếu có cấu hình OPENAI_API_KEY
+        if os.getenv("OPENAI_API_KEY") and not (GLOBAL_OFFLINE_ENGINE and GLOBAL_OFFLINE_ENGINE.is_offline() and GLOBAL_OFFLINE_ENGINE.match_problem_from_text(problem_text, strict=True)):
+            try:
+                import json
+                from openai import OpenAI
+                client = OpenAI(base_url=os.getenv("OPENAI_BASE_URL") or None, api_key=os.getenv("OPENAI_API_KEY"))
+                sys_prompt = (
+                    "Bạn là Gia sư Socrates Nhí đồng hành cùng học sinh THCS học KHTN 7. "
+                    "NGUYÊN TẮC BẮT BUỘC: Tuyệt đối không làm bài hộ hay cho đáp số. "
+                    "Hãy chào đón học sinh và đưa ra ĐÚNG 1 CÂU HỎI gợi mở dẫn dắt đầu tiên (Pha 1: Làm rõ hiện tượng/dữ kiện) "
+                    "và 1 gợi ý vi mô (<= 140 ký tự). "
+                    "Trả về JSON: {\"feedback\": str, \"question\": str, \"micro_hint\": str}"
+                )
+                res = client.chat.completions.create(
+                    model=os.getenv("SOCRATES_MODEL", "gpt-4o-mini"),
+                    messages=[
+                        {"role": "system", "content": sys_prompt},
+                        {"role": "user", "content": f"Đề bài/Câu hỏi của học sinh: '{problem_text}'"}
+                    ],
+                    response_format={"type": "json_object"},
+                    temperature=0.3,
+                    timeout=15.0
+                )
+                data = json.loads(res.choices[0].message.content)
+                if data.get("question"):
+                    greeting_fb = data.get("feedback", greeting_fb)
+                    greeting_q = data.get("question", greeting_q)
+                    greeting_hint = data.get("micro_hint", greeting_hint)
+            except Exception:
+                pass
+
+        elif GLOBAL_OFFLINE_ENGINE and GLOBAL_OFFLINE_ENGINE.is_offline():
+            matched_prob = GLOBAL_OFFLINE_ENGINE.match_problem_from_text(problem_text, strict=True)
+            # Chỉ nạp cache nếu đề bài thực sự khớp với 1 trong 12 bài mẫu
+            if matched_prob and "clarify" in matched_prob.cached_phases:
+                dlg = matched_prob.cached_phases["clarify"]
+                greeting_fb = dlg.feedback
+                greeting_q = dlg.question
+                greeting_hint = dlg.micro_hint
 
         response = TurnResponse(
             phase=SocraticPhase.CLARIFY,

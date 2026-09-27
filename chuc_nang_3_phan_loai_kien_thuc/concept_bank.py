@@ -39,6 +39,12 @@ CONCEPT_MAP: Dict[str, CoreConcept] = {
         description="Lực xuất hiện ở bề mặt tiếp xúc giữa hai vật và cản trở chuyển động của vật.",
         common_pitfalls=["Nghĩ rằng ma sát luôn có hại mà quên vai trò giúp người đi lại được"]
     ),
+    "phan_xa_anh_sang": CoreConcept(
+        name="Định luật phản xạ ánh sáng trên gương phẳng",
+        formula="i' = i (Góc phản xạ = Góc tới)",
+        description="Khi tia sáng gặp mặt gương phẳng, tia sáng bị phản xạ hắt trở lại môi trường cũ. Tia phản xạ nằm trong mặt phẳng tới và góc phản xạ bằng góc tới.",
+        common_pitfalls=["Nghĩ rằng ánh sáng đi xuyên qua gương phẳng như qua kính trong suốt", "Nhầm lẫn góc tới là góc hợp bởi tia tới với mặt gương thay vì với pháp tuyến"]
+    ),
 
     # --- MẠCH 2: BIẾN ĐỔI CHẤT / PHẢN ỨNG HÓA HỌC ---
     "hien_tuong_vat_ly_hoa_hoc": CoreConcept(
