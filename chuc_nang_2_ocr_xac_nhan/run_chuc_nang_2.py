@@ -42,7 +42,7 @@ def main(page: ft.Page):
         print("Sẵn sàng chuyển giao dữ liệu sang Chức năng 3 (Phân loại kiến thức)!")
         print("=" * 60 + "\n")
 
-    ocr_view = OcrConfirmationView(page, on_confirm=on_problem_confirmed)
+    ocr_view = OcrConfirmationView(page, on_confirm=on_problem_confirmed, is_standalone=True)
     page.add(ocr_view.build())
 
 

@@ -1,32 +1,38 @@
 """
 Module: main_app.py
-Ứng dụng Tích hợp Hoàn chỉnh Socrates Nhí (Kết hợp Chức năng 1 & Chức năng 2)
-Đặc tả dự án: Socrates Nhí v3.0 (Tương thích Flet 1.0+)
+Ứng dụng Tích hợp Hoàn chỉnh Socrates Nhí (Kết hợp Đầy đủ Chức năng 1, 2, 3 & 4)
+Phiên bản Giao diện Ed-Tech 2.0 Thân thiện Học sinh THCS
+Đặc tả dự án: Socrates Nhí v3.0 (Bảng A - Cuộc thi Sáng tạo trẻ Quốc gia AI 2026)
 
-Luồng trải nghiệm liền mạch:
-1. Màn hình 1: Học sinh gõ đề văn bản, tải ảnh JPG/PNG qua FilePicker, hoặc chọn bài mẫu KHTN 7.
-2. Học sinh nhấn "Xác nhận đề bài" -> Ứng dụng tự động chuyển cảnh mượt mà sang Màn hình 2.
-3. Màn hình 2: Tự động chạy OCR + Đánh giá độ nét (nếu là ảnh) hoặc hiển thị văn bản công thức chuẩn hóa.
-4. Học sinh sử dụng thanh ký hiệu KHTN nhanh (H₂O, CO₂, v², km/h, N, →) để sửa trực tiếp từng chỗ sai.
-5. Học sinh nhấn "Xác nhận đề bài để bắt đầu học" -> Hoàn tất đề bài chuẩn hóa, sẵn sàng cho pha Socratic!
+Hành trình tương tác hoàn chỉnh xuyên suốt 4 Trạm:
+1. Trạm 1: Tiếp nhận đề bài (Văn bản, Tải ảnh JPG/PNG <= 5MB, hoặc Đề mẫu KHTN 7).
+2. Trạm 2: Trích xuất OCR & Soát lỗi công thức KHTN (Đo độ nét, Đối chiếu 2 cột, Thanh ký hiệu nhanh).
+3. Trạm 3: Phân loại kiến thức bài toán & Bản đồ khái niệm cốt lõi (Cơ học, Hóa học, Sinh học, Lỗi thường gặp).
+4. Trạm 4: Hội thoại Socratic gợi mở tư duy 5 pha (clarify -> recall -> reason -> check -> generalize) không phát đáp án sẵn!
 """
 
 import sys
 from pathlib import Path
 
-# Thêm thư mục gốc vào PYTHONPATH
 WORKSPACE_ROOT = Path(__file__).resolve().parent.parent
 if str(WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(WORKSPACE_ROOT))
 
 import flet as ft
 
-# Nhập các thành phần từ 2 thư mục chức năng riêng biệt
+# Nhập các thành phần từ các thư mục chức năng độc lập
 from chuc_nang_1_nhap_de.input_model import ProblemInput, InputType
 from chuc_nang_1_nhap_de.ui_component import ProblemInputView
+
 from chuc_nang_2_ocr_xac_nhan.ocr_model import ConfirmedProblem
 from chuc_nang_2_ocr_xac_nhan.ocr_view import OcrConfirmationView
 from chuc_nang_2_ocr_xac_nhan.formula_normalizer import normalize_khtn_text
+
+from chuc_nang_3_phan_loai_kien_thuc.classifier_model import ClassificationResult
+from chuc_nang_3_phan_loai_kien_thuc.classifier_view import KnowledgeClassifierView
+
+from chuc_nang_4_hoi_thoai_socratic.socratic_view import SocraticChatView
+from chuc_nang_4_hoi_thoai_socratic.socratic_model import SocraticPhase
 
 from app_tich_hop_socrates.app_state import SessionState, AppStep
 
@@ -42,11 +48,12 @@ class SocratesIntegratedApp:
         # Cấu hình cửa sổ ứng dụng
         self.page.title = "Socrates Nhí 💡 - Trợ lý AI gợi mở tư duy KHTN (Bảng A - AI 2026)"
         self.page.theme_mode = ft.ThemeMode.LIGHT
+        self.page.bgcolor = ft.Colors.GREY_50
 
         if hasattr(self.page, "window") and self.page.window is not None:
             try:
-                self.page.window.width = 1000
-                self.page.window.height = 900
+                self.page.window.width = 1140
+                self.page.window.height = 920
             except Exception:
                 pass
 
@@ -56,148 +63,208 @@ class SocratesIntegratedApp:
         # Xây dựng thanh định vị toàn cục (Global Stepper)
         self._build_global_navigation()
 
-        # Hiển thị màn hình 1 ban đầu
+        # Khởi đầu ở Bước 1: Nhập đề bài
         self.navigate_to_step_1()
 
+    def _create_station_pill(self, step_num: int, title: str, subtitle: str) -> ft.Container:
+        """Tạo thẻ giao diện cho một Trạm trong lộ trình 4 bước."""
+        circle_badge = ft.Container(
+            content=ft.Text(str(step_num), size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_700),
+            width=26,
+            height=26,
+            border_radius=13,
+            bgcolor=ft.Colors.GREY_200,
+            alignment=ft.Alignment.CENTER
+        )
+
+        title_text = ft.Text(title, size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_800)
+        subtitle_text = ft.Text(subtitle, size=10, color=ft.Colors.GREY_500)
+
+        pill = ft.Container(
+            content=ft.Row([
+                circle_badge,
+                ft.Column([title_text, subtitle_text], spacing=0)
+            ], spacing=8, vertical_alignment=ft.CrossAxisAlignment.CENTER),
+            padding=ft.Padding(10, 6, 12, 6),
+            border_radius=10,
+            border=ft.Border.all(1, ft.Colors.GREY_300),
+            bgcolor=ft.Colors.WHITE,
+            expand=True
+        )
+        return pill
+
     def _build_global_navigation(self):
-        """Xây dựng thanh tiêu đề và thanh tiến trình xuyên suốt các bước."""
+        """Xây dựng thanh tiêu đề và thanh tiến trình lộ trình 4 trạm sinh động."""
         self.app_brand = ft.Row(
             [
-                ft.Icon(ft.Icons.LIGHTBULB_ROUNDED, color=ft.Colors.AMBER_600, size=32),
+                ft.CircleAvatar(
+                    content=ft.Icon(ft.Icons.LIGHTBULB_ROUNDED, color=ft.Colors.AMBER_600, size=24),
+                    bgcolor=ft.Colors.AMBER_100,
+                    radius=20
+                ),
                 ft.Column(
                     [
                         ft.Text("SOCRATES NHÍ 💡", size=20, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900),
-                        ft.Text("Trợ lý AI hướng dẫn tự học KHTN • Cuộc thi Sáng tạo trẻ Quốc gia AI 2026", size=11, color=ft.Colors.GREY_700)
+                        ft.Text("Trợ lý AI gợi mở tư duy KHTN THCS • Cuộc thi Sáng tạo trẻ Quốc gia AI 2026", size=11, color=ft.Colors.GREY_700)
                     ],
-                    spacing=2
+                    spacing=1
                 )
             ],
-            vertical_alignment=ft.CrossAxisAlignment.CENTER
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            spacing=10
+        )
+
+        self.pedagogy_badge = ft.Container(
+            content=ft.Row([
+                ft.Icon(ft.Icons.AUTO_AWESOME_ROUNDED, color=ft.Colors.INDIGO_700, size=14),
+                ft.Text("Gia sư Socratic 5 Pha", size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900)
+            ]),
+            bgcolor=ft.Colors.INDIGO_50,
+            padding=ft.Padding(10, 5, 10, 5),
+            border_radius=12,
+            border=ft.Border.all(1, ft.Colors.INDIGO_200)
         )
 
         self.offline_badge = ft.Container(
             content=ft.Row([
-                ft.Icon(ft.Icons.SHIELD_ROUNDED, color=ft.Colors.GREEN_700, size=14),
-                ft.Text("Chế độ Chuẩn: OpenAI-Compatible / Offline Ready", size=11, weight=ft.FontWeight.W_500, color=ft.Colors.GREEN_900)
+                ft.Icon(ft.Icons.LOCK_ROUNDED, color=ft.Colors.AMBER_800, size=14),
+                ft.Text("Khóa Đáp Số: Em Tự Tư Duy", size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.AMBER_900)
             ]),
-            bgcolor=ft.Colors.GREEN_50,
-            padding=ft.Padding(8, 4, 8, 4),
+            bgcolor=ft.Colors.AMBER_50,
+            padding=ft.Padding(10, 5, 10, 5),
             border_radius=12,
-            border=ft.Border.all(1, ft.Colors.GREEN_300)
+            border=ft.Border.all(1, ft.Colors.AMBER_200)
         )
 
-        # Các bước trong Stepper
-        self.step_1_indicator = ft.Row([
-            ft.Icon(ft.Icons.RADIO_BUTTON_CHECKED, color=ft.Colors.INDIGO_700, size=16),
-            ft.Text("Bước 1: Nhập đề bài", weight=ft.FontWeight.BOLD, size=12, color=ft.Colors.INDIGO_900)
-        ])
+        # 4 Trạm Khám phá trong Lộ trình
+        self.pill_step_1 = self._create_station_pill(1, "Trạm 1: Nhập đề", "Gõ chữ / Tải ảnh / Mẫu")
+        self.pill_step_2 = self._create_station_pill(2, "Trạm 2: Soát OCR", "Kiểm tra & Chuẩn hóa")
+        self.pill_step_3 = self._create_station_pill(3, "Trạm 3: Bản đồ Khái niệm", "Dữ kiện & Mạch KHTN")
+        self.pill_step_4 = self._create_station_pill(4, "Trạm 4: Vấn đáp Socratic", "5 Pha gợi mở tư duy")
 
-        self.step_2_indicator = ft.Row([
-            ft.Icon(ft.Icons.RADIO_BUTTON_UNCHECKED, color=ft.Colors.GREY_500, size=16),
-            ft.Text("Bước 2: Trích xuất & Sửa OCR", size=12, color=ft.Colors.GREY_600)
-        ])
+        self.station_pills = [self.pill_step_1, self.pill_step_2, self.pill_step_3, self.pill_step_4]
 
-        self.step_3_indicator = ft.Row([
-            ft.Icon(ft.Icons.LOCK_OUTLINE, color=ft.Colors.GREY_400, size=16),
-            ft.Text("Bước 3: Gợi mở Socratic", size=12, color=ft.Colors.GREY_400)
-        ])
+        arrow_icon = lambda: ft.Icon(ft.Icons.CHEVRON_RIGHT_ROUNDED, color=ft.Colors.INDIGO_300, size=18)
 
         self.stepper_bar = ft.Container(
             content=ft.Row(
                 [
-                    self.step_1_indicator,
-                    ft.Icon(ft.Icons.CHEVRON_RIGHT, color=ft.Colors.GREY_400, size=18),
-                    self.step_2_indicator,
-                    ft.Icon(ft.Icons.CHEVRON_RIGHT, color=ft.Colors.GREY_400, size=18),
-                    self.step_3_indicator,
+                    self.pill_step_1,
+                    arrow_icon(),
+                    self.pill_step_2,
+                    arrow_icon(),
+                    self.pill_step_3,
+                    arrow_icon(),
+                    self.pill_step_4,
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
-                spacing=12
+                spacing=6
             ),
-            bgcolor=ft.Colors.INDIGO_50,
-            padding=10,
-            border_radius=8,
-            border=ft.Border.all(1, ft.Colors.INDIGO_100)
+            bgcolor=ft.Colors.WHITE,
+            padding=ft.Padding(10, 8, 10, 8),
+            border_radius=14,
+            border=ft.Border.all(1, ft.Colors.INDIGO_100),
+            shadow=ft.BoxShadow(blur_radius=10, color=ft.Colors.with_opacity(0.03, ft.Colors.BLACK), offset=ft.Offset(0, 2))
         )
 
         self.header_panel = ft.Container(
             content=ft.Column([
-                ft.Row([self.app_brand, self.offline_badge], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-                ft.Container(height=5),
+                ft.Row([
+                    self.app_brand,
+                    ft.Row([self.pedagogy_badge, self.offline_badge], spacing=8)
+                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+                ft.Container(height=2),
                 self.stepper_bar
-            ], spacing=8),
-            padding=ft.Padding(20, 15, 20, 5)
+            ], spacing=6),
+            padding=ft.Padding(20, 12, 20, 6)
         )
 
     def _update_stepper_visuals(self, active_step: str):
-        """Cập nhật giao diện Stepper theo bước hiện tại."""
-        if active_step == AppStep.STEP_1_INPUT:
-            self.step_1_indicator.controls[0].name = ft.Icons.RADIO_BUTTON_CHECKED
-            self.step_1_indicator.controls[0].color = ft.Colors.INDIGO_700
-            self.step_1_indicator.controls[1].weight = ft.FontWeight.BOLD
-            self.step_1_indicator.controls[1].color = ft.Colors.INDIGO_900
+        """Cập nhật giao diện Stepper theo phong cách Gamified hiện đại."""
+        step_order = [AppStep.STEP_1_INPUT, AppStep.STEP_2_OCR, AppStep.STEP_3_CLASSIFIER, AppStep.STEP_4_SOCRATIC]
+        active_idx = step_order.index(active_step)
 
-            self.step_2_indicator.controls[0].name = ft.Icons.RADIO_BUTTON_UNCHECKED
-            self.step_2_indicator.controls[0].color = ft.Colors.GREY_500
-            self.step_2_indicator.controls[1].weight = ft.FontWeight.NORMAL
-            self.step_2_indicator.controls[1].color = ft.Colors.GREY_600
+        for idx, pill in enumerate(self.station_pills):
+            row = pill.content
+            badge = row.controls[0]
+            texts = row.controls[1]
+            title_text = texts.controls[0]
+            sub_text = texts.controls[1]
 
-        elif active_step == AppStep.STEP_2_OCR:
-            self.step_1_indicator.controls[0].name = ft.Icons.CHECK_CIRCLE
-            self.step_1_indicator.controls[0].color = ft.Colors.GREEN_600
-            self.step_1_indicator.controls[1].color = ft.Colors.GREEN_800
+            if idx < active_idx:
+                # Đã hoàn thành (Completed) -> Xanh ngọc tươi sáng
+                pill.bgcolor = ft.Colors.GREEN_50
+                pill.border = ft.Border.all(1.5, ft.Colors.GREEN_300)
+                pill.shadow = None
+                badge.bgcolor = ft.Colors.GREEN_600
+                badge.content = ft.Icon(ft.Icons.CHECK_ROUNDED, color=ft.Colors.WHITE, size=15)
+                title_text.color = ft.Colors.GREEN_900
+                title_text.weight = ft.FontWeight.BOLD
+                sub_text.color = ft.Colors.GREEN_700
+                sub_text.value = "✓ Đã hoàn thành"
 
-            self.step_2_indicator.controls[0].name = ft.Icons.RADIO_BUTTON_CHECKED
-            self.step_2_indicator.controls[0].color = ft.Colors.INDIGO_700
-            self.step_2_indicator.controls[1].weight = ft.FontWeight.BOLD
-            self.step_2_indicator.controls[1].color = ft.Colors.INDIGO_900
+            elif idx == active_idx:
+                # Đang hoạt động (Active) -> Màu Indigo nổi bật có bóng mờ
+                pill.bgcolor = ft.Colors.INDIGO_600
+                pill.border = ft.Border.all(1.5, ft.Colors.INDIGO_700)
+                pill.shadow = ft.BoxShadow(blur_radius=10, color=ft.Colors.with_opacity(0.25, ft.Colors.INDIGO_700), offset=ft.Offset(0, 2))
+                badge.bgcolor = ft.Colors.WHITE
+                badge.content = ft.Text(str(idx + 1), size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_800)
+                title_text.color = ft.Colors.WHITE
+                title_text.weight = ft.FontWeight.BOLD
+                sub_text.color = ft.Colors.INDIGO_100
+                # Giữ nguyên subtitle gốc
+                orig_subs = ["Gõ chữ / Tải ảnh / Mẫu", "Kiểm tra & Chuẩn hóa", "Dữ kiện & Mạch KHTN", "5 Pha gợi mở tư duy"]
+                sub_text.value = f"🎯 Đang học • {orig_subs[idx]}"
 
-        elif active_step == AppStep.STEP_3_SOCRATIC:
-            self.step_2_indicator.controls[0].name = ft.Icons.CHECK_CIRCLE
-            self.step_2_indicator.controls[0].color = ft.Colors.GREEN_600
-            self.step_2_indicator.controls[1].color = ft.Colors.GREEN_800
-
-            self.step_3_indicator.controls[0].name = ft.Icons.RADIO_BUTTON_CHECKED
-            self.step_3_indicator.controls[0].color = ft.Colors.INDIGO_700
-            self.step_3_indicator.controls[1].weight = ft.FontWeight.BOLD
-            self.step_3_indicator.controls[1].color = ft.Colors.INDIGO_900
+            else:
+                # Chưa tới (Upcoming) -> Xám nhạt thanh lịch
+                pill.bgcolor = ft.Colors.WHITE
+                pill.border = ft.Border.all(1, ft.Colors.GREY_300)
+                pill.shadow = None
+                badge.bgcolor = ft.Colors.GREY_100
+                badge.content = ft.Text(str(idx + 1), size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_600)
+                title_text.color = ft.Colors.GREY_700
+                title_text.weight = ft.FontWeight.W_500
+                sub_text.color = ft.Colors.GREY_500
+                orig_subs = ["Gõ chữ / Tải ảnh / Mẫu", "Kiểm tra & Chuẩn hóa", "Dữ kiện & Mạch KHTN", "5 Pha gợi mở tư duy"]
+                sub_text.value = orig_subs[idx]
 
         self.page.update()
 
     def navigate_to_step_1(self):
-        """Hiển thị Màn hình 1: Nhập đề bài (sử dụng component chuc_nang_1_nhap_de)."""
+        """Hiển thị Bước 1: Tiếp nhận đề bài."""
         self.state.current_step = AppStep.STEP_1_INPUT
         self._update_stepper_visuals(AppStep.STEP_1_INPUT)
 
-        # Tạo view từ chức năng 1 với callback tiếp nhận dữ liệu
         view_1 = ProblemInputView(
             page=self.page,
-            on_confirm=self._on_step_1_confirmed
+            on_confirm=self._on_step_1_confirmed,
+            is_standalone=False
         )
         self.content_area.content = view_1.build()
         self.page.update()
 
     def _on_step_1_confirmed(self, problem: ProblemInput):
-        """Xử lý khi học sinh hoàn thành Bước 1 -> Tự động chuyển tiếp sang Bước 2."""
+        """Khi học sinh hoàn thành Bước 1 -> Chuyển sang Bước 2 (Trích xuất OCR)."""
         self.state.problem_input = problem
         self.navigate_to_step_2()
 
     def navigate_to_step_2(self):
-        """Hiển thị Màn hình 2: Trích xuất OCR & Xác nhận (sử dụng component chuc_nang_2_ocr_xac_nhan)."""
+        """Hiển thị Bước 2: Trích xuất OCR & Xác nhận/Biên tập công thức."""
         self.state.current_step = AppStep.STEP_2_OCR
         self._update_stepper_visuals(AppStep.STEP_2_OCR)
 
         problem = self.state.problem_input
         img_path = problem.file_path if (problem and problem.file_path) else None
 
-        # Khởi tạo view từ chức năng 2
         view_2 = OcrConfirmationView(
             page=self.page,
             image_path=img_path,
-            on_confirm=self._on_step_2_confirmed
+            on_confirm=self._on_step_2_confirmed,
+            is_standalone=False
         )
 
-        # Nếu học sinh gõ đề bằng văn bản (không có ảnh), nạp thẳng nội dung vào editor của view 2
         if problem and problem.input_type in [InputType.TEXT, InputType.SAMPLE] and problem.text_content:
             normalized = normalize_khtn_text(problem.text_content)
             view_2.txt_editor.value = normalized
@@ -205,10 +272,9 @@ class SocratesIntegratedApp:
             view_2.btn_confirm.disabled = False
             view_2.sharpness_badge.content.controls[1].value = "Đầu vào: Văn bản trực tiếp"
 
-        # Bổ sung nút quay lại Bước 1
         btn_back_to_1 = ft.OutlinedButton(
-            "Quay lại Bước 1 (Chọn lại đề bài)",
-            icon=ft.Icons.ARROW_BACK,
+            "Quay lại Trạm 1 (Chọn lại đề bài)",
+            icon=ft.Icons.ARROW_BACK_ROUNDED,
             on_click=lambda _: self.navigate_to_step_1()
         )
 
@@ -217,7 +283,7 @@ class SocratesIntegratedApp:
                 ft.Row([btn_back_to_1], alignment=ft.MainAxisAlignment.START),
                 view_2.build()
             ],
-            spacing=10,
+            spacing=8,
             scroll=ft.ScrollMode.AUTO
         )
 
@@ -225,50 +291,68 @@ class SocratesIntegratedApp:
         self.page.update()
 
     def _on_step_2_confirmed(self, confirmed_problem: ConfirmedProblem):
-        """Xử lý khi học sinh hoàn thành Bước 2 (Chốt đề bài đã sửa đúng)."""
+        """Khi học sinh hoàn thành Bước 2 -> Chuyển tiếp sang Bước 3 (Phân loại kiến thức)!"""
         self.state.confirmed_problem = confirmed_problem
-        self._update_stepper_visuals(AppStep.STEP_3_SOCRATIC)
+        self.navigate_to_step_3(confirmed_problem)
 
-        # Hiển thị hộp thông báo chào đón chuyển sang Chức năng 3 & 4
-        modal = ft.AlertDialog(
-            title=ft.Row([
-                ft.Icon(ft.Icons.CELEBRATION, color=ft.Colors.AMBER_600),
-                ft.Text("Xác nhận đề bài thành công!", weight=ft.FontWeight.BOLD)
-            ]),
-            content=ft.Column([
-                ft.Text("Đề bài chuẩn hóa đã được lưu trữ an toàn trong phiên học:", size=13),
-                ft.Container(
-                    content=ft.Text(f"\"{confirmed_problem.confirmed_text}\"", italic=True, size=13),
-                    bgcolor=ft.Colors.GREY_100,
-                    padding=10,
-                    border_radius=8
-                ),
-                ft.Container(height=5),
-                ft.Text("📐 Công thức nhận diện: " + (", ".join(confirmed_problem.formulas) or "Đã chuẩn hóa"), size=12, color=ft.Colors.INDIGO_900),
-                ft.Text("📏 Đơn vị đo: " + (", ".join(confirmed_problem.units) or "Chuẩn KHTN"), size=12, color=ft.Colors.GREEN_900),
-                ft.Divider(),
-                ft.Text("Sẵn sàng bước vào Bước 3: Phân loại kiến thức & Gợi mở Socratic 5 pha!", weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_800)
-            ], tight=True, spacing=6),
-            actions=[
-                ft.FilledButton(
-                    "Bắt đầu học Socratic",
-                    icon=ft.Icons.ROCKET_LAUNCH,
-                    style=ft.ButtonStyle(bgcolor=ft.Colors.INDIGO_700),
-                    on_click=lambda e: self._close_dialog()
-                )
-            ]
+    def navigate_to_step_3(self, confirmed_problem: ConfirmedProblem):
+        """Hiển thị Bước 3: Phân loại kiến thức bài toán & Bản đồ khái niệm (Chức năng 3)."""
+        self.state.current_step = AppStep.STEP_3_CLASSIFIER
+        self._update_stepper_visuals(AppStep.STEP_3_CLASSIFIER)
+
+        problem_text = confirmed_problem.confirmed_text
+
+        view_3 = KnowledgeClassifierView(
+            page=self.page,
+            problem_text=problem_text,
+            on_proceed_to_socratic=self._on_step_3_proceed,
+            on_back=self.navigate_to_step_2,
+            is_standalone=False
         )
-        if hasattr(self.page, "show_dialog"):
-            self.page.show_dialog(modal)
-        else:
-            self.page.overlay.append(modal)
-            modal.open = True
-            self.page.update()
 
-    def _close_dialog(self):
-        if hasattr(self.page, "pop_dialog"):
-            self.page.pop_dialog()
+        self.content_area.content = view_3.build()
         self.page.update()
+
+    def _on_step_3_proceed(self, classification_result: ClassificationResult):
+        """Khi học sinh bấm bắt đầu Socratic ở Bước 3 -> Chuyển sang Bước 4 (Hội thoại Socratic 5 pha)!"""
+        self.state.classification_result = classification_result
+        self.navigate_to_step_4()
+
+    def navigate_to_step_4(self):
+        """Hiển thị Bước 4: Chu trình gợi mở Socratic 5 pha (Chức năng 4)."""
+        self.state.current_step = AppStep.STEP_4_SOCRATIC
+        self._update_stepper_visuals(AppStep.STEP_4_SOCRATIC)
+
+        problem_text = self.state.confirmed_problem.confirmed_text if self.state.confirmed_problem else ""
+
+        chat_view = SocraticChatView(
+            page=self.page,
+            problem_text=problem_text,
+            on_session_complete=self._on_socratic_session_complete,
+            is_standalone=False
+        )
+
+        btn_back_to_3 = ft.OutlinedButton(
+            "Quay lại Trạm 3 (Xem Bản đồ Khái niệm)",
+            icon=ft.Icons.ARROW_BACK_ROUNDED,
+            on_click=lambda _: self.navigate_to_step_3(self.state.confirmed_problem)
+        )
+
+        step_4_container = ft.Column(
+            [
+                ft.Row([btn_back_to_3], alignment=ft.MainAxisAlignment.START),
+                chat_view.build()
+            ],
+            spacing=8,
+            expand=True
+        )
+
+        self.content_area.content = step_4_container
+        self.page.update()
+
+    def _on_socratic_session_complete(self, summary_data: dict):
+        """Xử lý khi học sinh hoàn thành toàn bộ chu trình Socratic."""
+        print(f"[Hoàn thành toàn bộ phiên] Lượt: {summary_data.get('turn_count')} - Pha: {summary_data.get('next_phase')}")
 
     def build(self) -> ft.Control:
         """Trả về toàn bộ khung ứng dụng hoàn chỉnh."""

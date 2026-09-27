@@ -29,11 +29,13 @@ class OcrConfirmationView:
         self,
         page: ft.Page,
         image_path: Optional[str] = None,
-        on_confirm: Optional[Callable[[ConfirmedProblem], None]] = None
+        on_confirm: Optional[Callable[[ConfirmedProblem], None]] = None,
+        is_standalone: bool = False
     ):
         self.page = page
         self.current_image_path = image_path or SAMPLE_PATHS.get("co_hoc", "")
         self.on_confirm = on_confirm
+        self.is_standalone = is_standalone
         self.current_ocr_result: Optional[OcrResult] = None
         self.confirmed_problem: Optional[ConfirmedProblem] = None
 
@@ -45,19 +47,45 @@ class OcrConfirmationView:
             self.load_image_and_run_ocr(self.current_image_path)
 
     def _build_controls(self):
-        # 1. Header & Tiến trình (Stepper)
-        self.header_title = ft.Text(
-            "Socrates Nhí 💡",
-            size=28,
-            weight=ft.FontWeight.BOLD,
-            color=ft.Colors.INDIGO_700
-        )
-        self.header_sub = ft.Text(
-            "Bước 2: Trích xuất OCR & Xác nhận nội dung công thức KHTN",
-            size=14,
-            color=ft.Colors.GREY_700
+        # 1. Header độc lập (Chỉ hiển thị khi chạy riêng lẻ Chức năng 2)
+        self.standalone_header = ft.Container(
+            content=ft.Column([
+                ft.Row([
+                    ft.Icon(ft.Icons.LIGHTBULB_ROUNDED, color=ft.Colors.AMBER_600, size=28),
+                    ft.Text("Socrates Nhí 💡", size=24, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900),
+                ]),
+                ft.Text("Chức năng 2: Trích xuất OCR & Xác nhận nội dung công thức KHTN (FR-02)", size=13, color=ft.Colors.GREY_700),
+                ft.Container(height=5)
+            ]),
+            visible=self.is_standalone
         )
 
+        # 2. Thẻ chỉ dẫn nhiệm vụ Trạm 2 (Mission Briefing Card)
+        self.mission_card = ft.Container(
+            content=ft.Row([
+                ft.CircleAvatar(
+                    content=ft.Icon(ft.Icons.DOCUMENT_SCANNER_ROUNDED, color=ft.Colors.INDIGO_700, size=22),
+                    bgcolor=ft.Colors.INDIGO_50,
+                    radius=20
+                ),
+                ft.Column([
+                    ft.Text("Trạm 2: Trích xuất OCR & Đối chiếu Công thức KHTN", weight=ft.FontWeight.BOLD, size=15, color=ft.Colors.INDIGO_900),
+                    ft.Text(
+                        "Em hãy đối chiếu nội dung máy đọc với ảnh đề bài gốc. "
+                        "Em có thể chỉnh sửa trực tiếp và bấm các ký hiệu nhanh (H₂O, CO₂, km/h, v²) để hoàn thiện nhé!",
+                        size=12,
+                        color=ft.Colors.GREY_700
+                    )
+                ], spacing=2, expand=True)
+            ], vertical_alignment=ft.CrossAxisAlignment.CENTER),
+            bgcolor=ft.Colors.WHITE,
+            padding=14,
+            border_radius=12,
+            border=ft.Border.all(1, ft.Colors.INDIGO_100),
+            shadow=ft.BoxShadow(blur_radius=10, color=ft.Colors.with_opacity(0.04, ft.Colors.BLACK), offset=ft.Offset(0, 2))
+        )
+
+        # 3. Stepper nội bộ (Chỉ hiện khi standalone)
         self.stepper_banner = ft.Container(
             content=ft.Row(
                 [
@@ -82,7 +110,8 @@ class OcrConfirmationView:
             bgcolor=ft.Colors.INDIGO_50,
             padding=10,
             border_radius=8,
-            border=ft.Border.all(1, ft.Colors.INDIGO_100)
+            border=ft.Border.all(1, ft.Colors.INDIGO_100),
+            visible=self.is_standalone
         )
 
         # 2. Bộ chọn ảnh mẫu kiểm thử nhanh (Dropdown test)
@@ -438,18 +467,25 @@ class OcrConfirmationView:
 
     def build(self) -> ft.Control:
         """Trả về toàn bộ giao diện của Chức năng 2."""
+        comparison_row = ft.Row(
+            [
+                ft.Container(self.left_card, expand=5),
+                ft.Container(self.right_card, expand=6)
+            ],
+            spacing=12,
+            vertical_alignment=ft.CrossAxisAlignment.START
+        )
+
         return ft.Container(
             content=ft.Column(
                 [
-                    self.header_title,
-                    self.header_sub,
+                    self.standalone_header,
+                    self.mission_card,
                     self.stepper_banner,
-                    ft.Container(height=5),
+                    ft.Container(height=4),
                     self.sample_selector,
-                    ft.Container(height=5),
-                    # Bố cục 2 khối đối chiếu
-                    self.left_card,
-                    self.right_card,
+                    ft.Container(height=4),
+                    comparison_row,
                     self.alert_box,
                     self.success_box,
                     ft.Container(height=10),
@@ -458,9 +494,9 @@ class OcrConfirmationView:
                         alignment=ft.MainAxisAlignment.CENTER
                     )
                 ],
-                spacing=12,
+                spacing=10,
                 scroll=ft.ScrollMode.AUTO
             ),
-            padding=25,
+            padding=ft.Padding(20, 10, 20, 20),
             expand=True
         )
