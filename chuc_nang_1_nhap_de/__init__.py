@@ -24,6 +24,7 @@ from .validator import (
     ALLOWED_EXTENSIONS
 )
 from .sample_bank import get_all_samples, get_sample_by_id, get_samples_by_strand
+from .voice_service import process_voice_input, normalize_spoken_khtn, get_demo_voice_presets
 from .ui_component import ProblemInputView
 
 __all__ = [
@@ -33,6 +34,9 @@ __all__ = [
     "process_image_input",
     "process_text_input",
     "process_sample_input",
+    "process_voice_input",
+    "normalize_spoken_khtn",
+    "get_demo_voice_presets",
     "validate_file_size",
     "validate_file_format",
     "check_pii_and_safety",
@@ -42,4 +46,5 @@ __all__ = [
     "get_sample_by_id",
     "get_samples_by_strand"
 ]
+
 

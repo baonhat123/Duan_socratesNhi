@@ -12,7 +12,7 @@ Socrates Nhí được xây dựng trên nguyên tắc sư phạm cốt lõi: **
 ## 📂 Kiến Trúc Dự Án (8 Module Độc Lập & App Tích Hợp)
 
 1. **[Chức năng 1: Nhập đề bài (FR-01)](file:///c:/Users/hienp/Desktop/Socrates/chuc_nang_1_nhap_de/)**
-   - 3 Chế độ tiếp nhận: Gõ văn bản trực tiếp, Tải ảnh bài tập (JPG/PNG $\le$ 5MB), Chọn đề mẫu KHTN 7 (đủ 12 bài chuẩn SGK chia đều 3 mạch kiến thức).
+   - 4 Chế độ tiếp nhận: Gõ văn bản trực tiếp, Tải ảnh bài tập (JPG/PNG $\le$ 5MB), Chọn đề mẫu KHTN 7 (đủ 12 bài chuẩn SGK chia đều 3 mạch kiến thức), Đọc đề qua Giọng nói (Speech-to-Text với bộ chuẩn hóa phát âm thuật ngữ KHTN tiếng Việt sang ký hiệu SGK quốc tế).
    - Runner độc lập: `python chuc_nang_1_nhap_de/run_chuc_nang_1.py`
 
 2. **[Chức năng 2: Trích xuất & Soát công thức OCR (FR-02)](file:///c:/Users/hienp/Desktop/Socrates/chuc_nang_2_ocr_xac_nhan/)**
@@ -54,9 +54,16 @@ Socrates Nhí được xây dựng trên nguyên tắc sư phạm cốt lõi: **
    - Tích hợp 3 bảng điều khiển chuyên sâu cho Giám khảo: `Khiên An Toàn 3 Tầng 🛡️`, `⚡ Demo Offline (12 Bài) 📚`, và `Đánh Giá Sư Phạm 📊`.
    - Khởi chạy chính thức: `python main.py`
 
-10. **Tài liệu & Hồ sơ Dự thi Bảng A chuẩn hóa:**
+10. **Tài liệu & Hồ sơ Dự thi Bảng A chính thức:**
+    - [HO_SO_DU_THI_BANG_A.md](file:///c:/Users/hienp/Desktop/Socrates/tailieu/HO_SO_DU_THI_BANG_A.md): Bản thuyết minh hoàn chỉnh 8 mục theo chuẩn Bảng A Hội thi Sáng tạo trẻ Quốc gia 2026.
+    - [BO_CAU_HOI_PHAN_BIEN_VA_KE_HOACH_6_GIO.md](file:///c:/Users/hienp/Desktop/Socrates/tailieu/BO_CAU_HOI_PHAN_BIEN_VA_KE_HOACH_6_GIO.md): Bộ 12 câu hỏi phản biện của Ban Giám khảo, Kế hoạch tác chiến Vòng Khu vực 6 giờ và Checklist đi thi.
+    - [PHIEU_DONG_THUAN_THU_NGHIEM.md](file:///c:/Users/hienp/Desktop/Socrates/tailieu/PHIEU_DONG_THUAN_THU_NGHIEM.md): Mẫu phiếu đồng thuận thử nghiệm có kiểm soát cho Phụ huynh và Giáo viên (Mục 17.3).
     - [PROMPT_LOG.md](file:///c:/Users/hienp/Desktop/Socrates/PROMPT_LOG.md): Nhật ký lệnh AI versioned (v0.1 ➜ v0.2 ➜ v1.0), báo cáo kiểm thử 40 test jailbreak, bảng 5 chỉ số đo lường thực nghiệm.
     - [.env.example](file:///c:/Users/hienp/Desktop/Socrates/.env.example): Tệp mẫu cấu hình OpenAI-compatible API an toàn phục vụ nộp hồ sơ.
+
+11. **Công cụ Đóng gói Windows Desktop (.exe):**
+    - Chạy tệp đóng gói tự động: `build_windows.bat` hoặc lệnh `python build_desktop.py`.
+    - Tạo tệp `dist/Socrates_Nhi/Socrates_Nhi.exe` độc lập để Giám khảo chấm thi mà không cần cài đặt Python.
 
 ---
 
@@ -67,8 +74,13 @@ Socrates Nhí được xây dựng trên nguyên tắc sư phạm cốt lõi: **
 python main.py
 ```
 
-### 2. Chạy Toàn Bộ Bộ Test Suite (72/72 Tests Passed 100%)
+### 2. Chạy Toàn Bộ Bộ Test Suite (77/77 Tests Passed 100%)
 ```bash
 python -m unittest discover -s . -p "test_*.py"
+```
+
+### 3. Đóng gói Ứng dụng Desktop (.exe)
+```bash
+build_windows.bat
 ```
 

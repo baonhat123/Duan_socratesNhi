@@ -23,6 +23,12 @@ from .validator import (
     MAX_FILE_SIZE_BYTES
 )
 from .sample_bank import get_all_samples, get_sample_by_id, get_samples_by_strand
+from .voice_service import (
+    process_voice_input,
+    normalize_spoken_khtn,
+    get_demo_voice_presets
+)
+
 
 
 
@@ -128,7 +134,21 @@ class ProblemInputView:
             expand=True
         )
 
-        self.mode_row = ft.Row([self.btn_mode_text, self.btn_mode_image, self.btn_mode_sample], spacing=10)
+        self.btn_mode_voice = ft.Container(
+            content=ft.Row([
+                ft.Icon(ft.Icons.MIC_OUTLINED, size=20, color=ft.Colors.GREY_700),
+                ft.Text("4. Giọng nói 🎙️", weight=ft.FontWeight.W_500, size=13, color=ft.Colors.GREY_800)
+            ], alignment=ft.MainAxisAlignment.CENTER),
+            bgcolor=ft.Colors.WHITE,
+            padding=ft.Padding(12, 10, 12, 10),
+            border_radius=10,
+            border=ft.Border.all(1, ft.Colors.GREY_300),
+            on_click=lambda _: self._switch_mode("voice"),
+            expand=True
+        )
+
+        self.mode_row = ft.Row([self.btn_mode_text, self.btn_mode_image, self.btn_mode_sample, self.btn_mode_voice], spacing=10)
+
 
         # 4. KHU VỰC 1: Tự gõ đề bài
         self.txt_content = ft.TextField(
@@ -216,9 +236,72 @@ class ProblemInputView:
             visible=False
         )
 
+        # 6B. KHU VỰC 4: Đọc đề bài bằng giọng nói (Voice-to-Text)
+        self.is_voice_recording = False
+        self.txt_voice_transcript = ft.TextField(
+            hint_text="Lời nói của em sẽ xuất hiện ở đây... Em có thể đọc trực tiếp đề bài hoặc thử nhanh với câu nói mẫu bên dưới.",
+            multiline=True,
+            min_lines=4,
+            max_lines=7,
+            bgcolor=ft.Colors.WHITE,
+            border_radius=12,
+            content_padding=15
+        )
+        self.voice_status_text = ft.Text("Nhấn vào Micro để bắt đầu nói đề bài KHTN của em nhé!", size=12, color=ft.Colors.GREY_700)
+        self.voice_mic_btn = ft.Container(
+            content=ft.Row([
+                ft.Icon(ft.Icons.MIC_ROUNDED, color=ft.Colors.WHITE, size=24),
+                ft.Text("Bắt đầu nói 🎙️", weight=ft.FontWeight.BOLD, size=14, color=ft.Colors.WHITE)
+            ], alignment=ft.MainAxisAlignment.CENTER),
+            bgcolor=ft.Colors.RED_600,
+            padding=ft.Padding(18, 12, 18, 12),
+            border_radius=25,
+            shadow=ft.BoxShadow(blur_radius=10, color=ft.Colors.with_opacity(0.3, ft.Colors.RED_600), offset=ft.Offset(0, 3)),
+            on_click=self._toggle_voice_recording
+        )
+
+        preset_chips = []
+        for p in get_demo_voice_presets():
+            chip = ft.Container(
+                content=ft.Row([
+                    ft.Icon(ft.Icons.RECORD_VOICE_OVER_ROUNDED, size=14, color=ft.Colors.INDIGO_700),
+                    ft.Text(p["title"], size=11, weight=ft.FontWeight.W_500, color=ft.Colors.INDIGO_900)
+                ], spacing=4),
+                bgcolor=ft.Colors.INDIGO_50,
+                border=ft.Border.all(1, ft.Colors.INDIGO_200),
+                padding=ft.Padding(8, 4, 8, 4),
+                border_radius=12,
+                tooltip="Bấm để phát âm câu mẫu thử nghiệm",
+                on_click=lambda _, text=p["raw_speech"]: self._apply_voice_preset(text)
+            )
+            preset_chips.append(chip)
+
+        self.voice_container = ft.Container(
+            content=ft.Column([
+                ft.Container(
+                    content=ft.Column([
+                        ft.Row([self.voice_mic_btn], alignment=ft.MainAxisAlignment.CENTER),
+                        ft.Container(height=4),
+                        ft.Row([self.voice_status_text], alignment=ft.MainAxisAlignment.CENTER),
+                    ], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+                    bgcolor=ft.Colors.RED_50,
+                    padding=16,
+                    border_radius=14,
+                    border=ft.Border.all(1, ft.Colors.RED_200)
+                ),
+                ft.Text("Văn bản nhận diện từ giọng nói (tự động chuẩn hóa công thức KHTN):", size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_800),
+                self.txt_voice_transcript,
+                ft.Column([
+                    ft.Text("Hoặc thử nhanh với các câu phát âm KHTN mẫu:", size=11, color=ft.Colors.GREY_600),
+                    ft.Row(preset_chips, spacing=6, wrap=True)
+                ], spacing=4)
+            ], spacing=8),
+            visible=False
+        )
 
         # 7. Banner bảo vệ quyền riêng tư PII (Thiết kế nhẹ nhàng)
         self.privacy_card = ft.Container(
+
             content=ft.Row([
                 ft.Icon(ft.Icons.SECURITY_ROUNDED, color=ft.Colors.BLUE_700, size=18),
                 ft.Text(
@@ -261,14 +344,15 @@ class ProblemInputView:
         )
 
     def _switch_mode(self, mode: str):
-        """Chuyển đổi giao diện giữa 3 tab nhập liệu."""
+        """Chuyển đổi giao diện giữa 4 tab nhập liệu (Chữ / Ảnh / Mẫu / Giọng nói)."""
         self.active_mode = mode
 
         # Cập nhật style nút chọn
         tabs = [
             ("text", self.btn_mode_text),
             ("image", self.btn_mode_image),
-            ("sample", self.btn_mode_sample)
+            ("sample", self.btn_mode_sample),
+            ("voice", self.btn_mode_voice)
         ]
         for m, btn in tabs:
             if m == mode:
@@ -293,10 +377,14 @@ class ProblemInputView:
         elif mode == "sample":
             self.btn_confirm.text = "Khám phá bài học này cùng Gia sư 🚀"
             self.btn_confirm.icon = ft.Icons.AUTO_AWESOME_ROUNDED
+        elif mode == "voice":
+            self.btn_confirm.text = "Gửi đề bài qua giọng nói 🎙️"
+            self.btn_confirm.icon = ft.Icons.RECORD_VOICE_OVER_ROUNDED
 
         self.text_container.visible = (mode == "text")
         self.image_container.visible = (mode == "image")
         self.sample_container.visible = (mode == "sample")
+        self.voice_container.visible = (mode == "voice")
         self.alert_box.visible = False
         self.page.update()
 
@@ -422,6 +510,36 @@ class ProblemInputView:
         """Bí danh tương thích ngược."""
         self._customize_sample(sample_id)
 
+    def _toggle_voice_recording(self, e):
+        """Bật/tắt trạng thái thu âm giọng nói và chuẩn hóa thuật ngữ KHTN."""
+        self.is_voice_recording = not self.is_voice_recording
+        if self.is_voice_recording:
+            self.voice_mic_btn.bgcolor = ft.Colors.RED_800
+            self.voice_mic_btn.content.controls[1].value = "Đang lắng nghe... (Bấm để dừng ⏹️)"
+            self.voice_status_text.value = "🎙️ Đang ghi nhận giọng nói của em... Em có thể đọc to rõ đề bài KHTN nhé!"
+            self.voice_status_text.color = ft.Colors.RED_700
+        else:
+            self.voice_mic_btn.bgcolor = ft.Colors.RED_600
+            self.voice_mic_btn.content.controls[1].value = "Bắt đầu nói 🎙️"
+            if self.txt_voice_transcript.value:
+                norm = normalize_spoken_khtn(self.txt_voice_transcript.value)
+                self.txt_voice_transcript.value = norm
+                self.voice_status_text.value = "✅ Đã nhận diện và chuẩn hóa thuật ngữ KHTN từ giọng nói!"
+                self.voice_status_text.color = ft.Colors.GREEN_700
+            else:
+                self.voice_status_text.value = "Đã dừng. Em có thể đọc lại hoặc bấm chọn câu nói mẫu bên dưới."
+                self.voice_status_text.color = ft.Colors.GREY_700
+        self.page.update()
+
+    def _apply_voice_preset(self, text: str):
+        """Áp dụng câu nói mẫu phát âm tiếng Việt và tự động chuẩn hóa KHTN."""
+        normalized = normalize_spoken_khtn(text)
+        self.txt_voice_transcript.value = normalized
+        self.voice_status_text.value = "✅ Đã chọn và chuẩn hóa thuật ngữ KHTN thành công!"
+        self.voice_status_text.color = ft.Colors.GREEN_700
+        self.alert_box.visible = False
+        self.page.update()
+
     def _on_text_change(self, e):
         count = len(self.txt_content.value or "")
         self.char_count_text.value = f"{count} ký tự"
@@ -481,6 +599,12 @@ class ProblemInputView:
             else:
                 self._show_alert("Em hãy bấm chọn một bài tập mẫu ở trên để tiếp tục nhé!")
                 return
+        elif self.active_mode == "voice":
+            speech_text = (self.txt_voice_transcript.value or "").strip()
+            if not speech_text:
+                self._show_alert("Em chưa đọc hoặc nhập lời nói! Hãy bấm Micro hoặc thử nhanh câu nói mẫu nhé.")
+                return
+            final_input = process_voice_input(speech_text)
 
         if not final_input or final_input.validation_error:
             self._show_alert(final_input.validation_error if final_input else "Dữ liệu chưa hợp lệ!")
@@ -503,6 +627,7 @@ class ProblemInputView:
                 self.text_container,
                 self.image_container,
                 self.sample_container,
+                self.voice_container,
                 ft.Container(height=4),
                 self.privacy_card,
                 self.alert_box,

@@ -16,6 +16,8 @@ class InputType(str, Enum):
     TEXT = "text"          # Học sinh tự gõ đề bài
     IMAGE = "image"        # Học sinh tải ảnh bài tập (JPG/PNG <= 5MB)
     SAMPLE = "sample"      # Học sinh chọn từ ngân hàng đề mẫu KHTN 7
+    VOICE = "voice"        # Học sinh đọc đề bài bằng giọng nói (Voice-to-Text)
+
 
 
 @dataclass

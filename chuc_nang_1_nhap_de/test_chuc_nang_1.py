@@ -164,6 +164,57 @@ class TestChucNang1(unittest.TestCase):
         self.assertEqual(alias_result.sample_id, "VL01")
 
 
+    # --- 6. KIỂM THỬ ĐẦU VÀO GIỌNG NÓI & CHUẨN HÓA KHTN ---
+    def test_voice_normalization_physics_units(self):
+        """Kiểm tra chuẩn hóa thuật ngữ & đơn vị đo Vật lý từ giọng nói."""
+        from chuc_nang_1_nhap_de.voice_service import normalize_spoken_khtn
+        spoken = "Một người đi xe đạp với vận tốc 15 ki lô mét trên giờ trong thời gian 30 phút."
+        normalized = normalize_spoken_khtn(spoken)
+        self.assertIn("km/h", normalized)
+        self.assertNotIn("ki lô mét trên giờ", normalized)
+
+    def test_voice_normalization_chemistry_bio(self):
+        """Kiểm tra chuẩn hóa công thức hóa học và thuật ngữ sinh học từ giọng nói."""
+        from chuc_nang_1_nhap_de.voice_service import normalize_spoken_khtn
+        spoken = "Hòa tan can xi các bo nát vào axit clohydric thu được khí các bon níc và nước."
+        normalized = normalize_spoken_khtn(spoken)
+        self.assertIn("CaCO3", normalized)
+        self.assertIn("HCl", normalized)
+        self.assertIn("CO2", normalized)
+
+    def test_process_voice_input_valid(self):
+        """Kiểm tra xử lý đầu vào giọng nói hợp lệ."""
+        from chuc_nang_1_nhap_de.voice_service import process_voice_input
+        raw = "Một vật chuyển động đều với tốc độ 5 mét trên giây đi được quãng đường 100 mét."
+        result = process_voice_input(raw)
+        self.assertEqual(result.input_type, InputType.VOICE)
+        self.assertTrue(result.is_valid)
+        self.assertFalse(result.is_confirmed, "Chưa xác nhận thì is_confirmed = False")
+        self.assertIn("5 m/s", result.text_content)
+        self.assertIn("100 m", result.text_content)
+
+    def test_process_voice_input_empty_and_short(self):
+        """Kiểm tra từ chối giọng nói rỗng hoặc quá ngắn."""
+        from chuc_nang_1_nhap_de.voice_service import process_voice_input
+        res_empty = process_voice_input("   ")
+        self.assertFalse(res_empty.is_valid)
+        self.assertIn("Chưa ghi nhận được", res_empty.validation_error)
+
+        res_short = process_voice_input("alo")
+        self.assertFalse(res_short.is_valid)
+        self.assertIn("quá ngắn", res_short.validation_error)
+
+    def test_voice_presets_available(self):
+        """Kiểm tra danh sách mẫu phát âm thử nghiệm chuẩn 3 phân môn."""
+        from chuc_nang_1_nhap_de.voice_service import get_demo_voice_presets
+        presets = get_demo_voice_presets()
+        self.assertGreaterEqual(len(presets), 3)
+        strands = [p["strand"] for p in presets]
+        self.assertIn("Vật lý", strands)
+        self.assertIn("Hóa học", strands)
+        self.assertIn("Sinh học", strands)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 
