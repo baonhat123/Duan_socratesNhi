@@ -1,0 +1,77 @@
+Paragraphs count: 40
+Tables count: 2
+
+=== PARAGRAPHS ===
+P0 [style=Normal]: MẪU HỒ SƠ DỰ ÁN DỰ THI BẢNG A
+P1 [style=Normal]: Cuộc thi Sáng tạo trẻ Quốc gia trong lĩnh vực Trí tuệ nhân tạo năm 2026
+P2 [style=Normal]: -----------------------------------------
+P3 [style=Normal]: 
+P4 [style=Normal]: 
+P5 [style=Normal]: 
+P6 [style=Normal]: 
+P7 [style=Normal]: NỘI DUNG HỒ SƠ DỰ ÁN
+P8 [style=Normal]: 1. Vấn đề cần giải quyết
+P9 [style=Normal]: Nội dung trình bày: Nêu ngắn gọn vấn đề trong học tập, nhà trường, gia đình hoặc cộng đồng mà sản phẩm hướng tới giải quyết; lý do lựa chọn vấn đề.
+P10 [style=Normal]: ................................................................................................................................................. .................................................................................................................................................
+P11 [style=Normal]: 2. Đối tượng sử dụng	
+P12 [style=Normal]: Nội dung trình bày: Nêu nhóm người sử dụng hoặc thụ hưởng sản phẩm; nhu cầu chính của nhóm đối tượng này.
+P13 [style=Normal]: .................................................................................................................................................
+P14 [style=Normal]: .................................................................................................................................................
+P15 [style=Normal]: 3. Dữ liệu, câu lệnh, công cụ trí tuệ nhân tạo đã sử dụng
+P16 [style=Normal]: Nội dung trình bày: Liệt kê dữ liệu/câu lệnh/công cụ AI đã sử dụng; nêu vai trò của từng công cụ, dữ liệu trong quá trình xây dựng sản phẩm.
+P17 [style=Normal]: .................................................................................................................................................
+P18 [style=Normal]: .................................................................................................................................................
+P19 [style=Normal]: 4. Sơ đồ mô tả dữ liệu đầu vào, quá trình xử lý bằng AI và kết quả đầu ra
+P20 [style=Normal]: Nội dung trình bày: Trình bày theo dạng sơ đồ hoặc mô tả ngắn: Dữ liệu đầu vào → AI xử lý → Kết quả đầu ra.
+P21 [style=Normal]: .................................................................................................................................................
+P22 [style=Normal]: .................................................................................................................................................
+P23 [style=Normal]: 5. Hình ảnh quá trình thử nghiệm
+P24 [style=Normal]: Nội dung trình bày: Chèn hình ảnh quá trình thử nghiệm, kèm chú thích ngắn cho từng hình ảnh.
+P25 [style=Normal]: .................................................................................................................................................
+P26 [style=Normal]: .................................................................................................................................................
+P27 [style=Normal]: 6. Kết quả trình diễn sản phẩm
+P28 [style=Normal]: Nội dung trình bày: Mô tả các chức năng chính, cách sản phẩm vận hành và kết quả đạt được khi trình diễn.
+P29 [style=Normal]: .................................................................................................................................................
+P30 [style=Normal]: .................................................................................................................................................
+P31 [style=Normal]: 7. Hạn chế và hướng cải tiến
+P32 [style=Normal]: Nội dung trình bày: Nêu những điểm còn hạn chế của sản phẩm và hướng điều chỉnh, hoàn thiện trong thời gian tới.
+P33 [style=Normal]: .................................................................................................................................................
+P34 [style=Normal]: 8. Lịch sử câu lệnh và hình ảnh minh chứng quá trình phát triển sản phẩm
+P35 [style=Normal]: Nội dung trình bày: Đường liên kết đến thư mục Google Drive chứa Lịch sử câu lệnh và hình ảnh minh chứng (Bắt buộc mở quyền truy cập trước khi nộp).
+P36 [style=Normal]: .................................................................................................................................................
+P37 [style=Normal]: .................................................................................................................................................
+P38 [style=Normal]: 
+P39 [style=Normal]: 
+
+=== TABLE 0 (rows=28, cols=4) ===
+R0: ['Số lượng thí sinh trong đội thi', '1 người', '2 người', '3 người']
+R1: ['Thí sinh thứ nhất (đội trưởng)', 'Thí sinh thứ nhất (đội trưởng)', 'Thí sinh thứ nhất (đội trưởng)', 'Thí sinh thứ nhất (đội trưởng)']
+R2: ['Họ và tên:', 'Phan Ngọc Bảo Nhật', 'Phan Ngọc Bảo Nhật', 'Phan Ngọc Bảo Nhật']
+R3: ['Ngày/tháng/năm sinh:', '17/04/2014', '17/04/2014', '17/04/2014']
+R4: ['Lớp, trường:', 'Lớp 7/8 Trường THCS Nguyễn Bỉnh Khiêm', 'Lớp 7/8 Trường THCS Nguyễn Bỉnh Khiêm', 'Lớp 7/8 Trường THCS Nguyễn Bỉnh Khiêm']
+R5: ['Xã/phường/đặc khu, tỉnh/thành phố:', 'Phường Hòa Khánh Thành Phố Đà Nẵng', 'Phường Hòa Khánh Thành Phố Đà Nẵng', 'Phường Hòa Khánh Thành Phố Đà Nẵng']
+R6: ['Điện thoại:', '0938102461', '0938102461', '0938102461']
+R7: ['Email:', 'nhatnam.infotech@gmail.com', 'nhatnam.infotech@gmail.com', 'nhatnam.infotech@gmail.com']
+R8: ['Thí sinh thứ hai', 'Thí sinh thứ hai', 'Thí sinh thứ hai', 'Thí sinh thứ hai']
+R9: ['Họ và tên:', '', '', '']
+R10: ['Ngày/tháng/năm sinh:', '', '', '']
+R11: ['Lớp, trường:', '', '', '']
+R12: ['Xã/phường/đặc khu, tỉnh/thành phố:', '', '', '']
+R13: ['Điện thoại:', '', '', '']
+R14: ['Email:', '', '', '']
+R15: ['Thí sinh thứ ba', 'Thí sinh thứ ba', 'Thí sinh thứ ba', 'Thí sinh thứ ba']
+R16: ['Họ và tên:', '', '', '']
+R17: ['Ngày/tháng/năm sinh:', '', '', '']
+R18: ['Lớp, trường:', '', '', '']
+R19: ['Xã/phường/đặc khu, tỉnh/thành phố:', '', '', '']
+R20: ['Điện thoại:', '', '', '']
+R21: ['Email:', '', '', '']
+R22: ['Giáo viên hoặc chuyên gia hướng dẫn', 'Giáo viên hoặc chuyên gia hướng dẫn', 'Giáo viên hoặc chuyên gia hướng dẫn', 'Giáo viên hoặc chuyên gia hướng dẫn']
+R23: ['Họ và tên:', 'Phan Ngọc Hiển', 'Phan Ngọc Hiển', 'Phan Ngọc Hiển']
+R24: ['Đơn vị công tác:', '', '', '']
+R25: ['Chức vụ:', '', '', '']
+R26: ['Điện thoại:', '', '', '']
+R27: ['Email:', '', '', '']
+
+=== TABLE 1 (rows=1, cols=2) ===
+R0: ['Xác nhận của giáo viên/người hướng dẫn (nếu có)', '………, ngày …… tháng …… năm 2026 Đại diện đội thi (Ký, ghi rõ họ tên)']

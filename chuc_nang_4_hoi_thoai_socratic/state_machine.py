@@ -18,12 +18,15 @@ from .socratic_model import SocraticPhase, StudentState
 class SocraticStateMachine:
     """
     Bộ máy chuyển đổi trạng thái sư phạm cho phiên tự học KHTN.
+    Hỗ trợ chế độ hội thoại không giới hạn số lượt (unlimited turns),
+    kiên trì gợi mở đến khi học sinh thực sự hiểu bài và tự đúc kết được quy tắc.
     """
-    def __init__(self, max_turns: int = 7):
+    def __init__(self, max_turns: int = 7, unlimited_turns: bool = True):
         self.current_phase: SocraticPhase = SocraticPhase.CLARIFY
         self.turn_count: int = 1
         self.consecutive_unknown_count: int = 0
         self.max_turns: int = max_turns
+        self.unlimited_turns: bool = unlimited_turns
         self.is_session_closed: bool = False
 
     def reset(self):
@@ -46,21 +49,21 @@ class SocraticStateMachine:
         else:
             self.consecutive_unknown_count = 0
 
-        # 2. Kiểm tra ngưỡng tối đa 7 lượt (Mục 5.3)
-        if self.turn_count >= self.max_turns:
-            self.current_phase = SocraticPhase.GENERALIZE
-            self.is_session_closed = True
-            strategy = "Đạt ngưỡng 7 lượt hội thoại: Chuyển thẳng sang pha generalize để học sinh tự tóm tắt bài học."
-            return start_phase, SocraticPhase.GENERALIZE, strategy
+        # 2. Xử lý giới hạn lượt (CHỈ KHI chế độ giới hạn được bật tường minh: unlimited_turns=False)
+        if not self.unlimited_turns:
+            if self.turn_count >= self.max_turns:
+                self.current_phase = SocraticPhase.GENERALIZE
+                self.is_session_closed = True
+                strategy = f"Đạt ngưỡng {self.max_turns} lượt hội thoại: Chuyển thẳng sang pha generalize để học sinh tự tóm tắt bài học."
+                return start_phase, SocraticPhase.GENERALIZE, strategy
 
-        # 3. Kiểm tra kẹt ở Pha 3 sau 5 lượt (Mục 5.3)
-        if self.turn_count >= 5 and self.current_phase in [SocraticPhase.CLARIFY, SocraticPhase.RECALL, SocraticPhase.REASON]:
-            self.current_phase = SocraticPhase.GENERALIZE
-            self.is_session_closed = True
-            strategy = "Sau 5 lượt chưa vượt qua lập luận: Khép sớm bằng tự tóm tắt, tuyệt đối không phát đáp án."
-            return start_phase, SocraticPhase.GENERALIZE, strategy
+            if self.turn_count >= 5 and self.current_phase in [SocraticPhase.CLARIFY, SocraticPhase.RECALL, SocraticPhase.REASON]:
+                self.current_phase = SocraticPhase.GENERALIZE
+                self.is_session_closed = True
+                strategy = "Sau 5 lượt chưa vượt qua lập luận: Khép sớm bằng tự tóm tắt, tuyệt đối không phát đáp án."
+                return start_phase, SocraticPhase.GENERALIZE, strategy
 
-        # 4. Xử lý quá 2 lần 'unknown' liên tiếp: từ lần 3 hạ độ khó và reset bộ đếm
+        # 3. Xử lý quá 2 lần 'unknown' liên tiếp: từ lần 3 hạ độ khó và reset bộ đếm
         if self.consecutive_unknown_count >= 3:
             self.consecutive_unknown_count = 0
             lowered_phase = self._step_back_phase(self.current_phase)
@@ -68,12 +71,16 @@ class SocraticStateMachine:
             strategy = "Unknown liên tiếp lần 3: Hạ độ khó (lùi 1 pha hoặc tách câu hỏi nhỏ) và đặt lại bộ đếm."
             return start_phase, lowered_phase, strategy
 
-        # 5. Tra cứu MA TRẬN CHUYỂN PHA (Mục 5.2)
+        # 4. Tra cứu MA TRẬN CHUYỂN PHA (Mục 5.2)
         next_phase, strategy = self._lookup_matrix(self.current_phase, student_state)
         self.current_phase = next_phase
 
-        if next_phase == SocraticPhase.GENERALIZE and student_state == StudentState.CORRECT:
+        # 5. Xác định đóng phiên (CHỈ KHI học sinh đang ở Pha 5 và trả lời đạt/chính xác)
+        # Nếu chuyển từ CHECK sang GENERALIZE thì CHƯA ĐÓNG phiên vì mới bắt đầu câu hỏi của Pha 5!
+        if start_phase == SocraticPhase.GENERALIZE and student_state == StudentState.CORRECT:
             self.is_session_closed = True
+        else:
+            self.is_session_closed = False
 
         return start_phase, next_phase, strategy
 
@@ -132,9 +139,20 @@ class SocraticStateMachine:
             else:
                 return SocraticPhase.CHECK, "Xin đáp án -> Giữ nguyên check: từ chối nhẹ + hỏi cách tự kiểm tra."
 
-        # PHA 5: GENERALIZE (Khái quát)
+        # PHA 5: GENERALIZE (Khái quát & Tổng kết)
+        elif phase == SocraticPhase.GENERALIZE:
+            if state == StudentState.CORRECT:
+                return SocraticPhase.GENERALIZE, "Học sinh đúc kết chính xác -> Khép phiên thành công, ghi nhận tóm tắt."
+            elif state == StudentState.PARTIAL:
+                return SocraticPhase.GENERALIZE, "Đúc kết còn thiếu ý -> Giữ generalize: gợi ý thêm 1 ý còn sót để hoàn thiện."
+            elif state == StudentState.UNKNOWN:
+                return SocraticPhase.GENERALIZE, "Chưa biết tóm tắt -> Giữ generalize: hướng dẫn cách đúc kết ngắn gọn."
+            elif state == StudentState.MISCONCEPTION:
+                return SocraticPhase.GENERALIZE, "Đúc kết nhầm lẫn -> Giữ generalize: chỉ ra điểm mâu thuẫn để học sinh điều chỉnh."
+            else:
+                return SocraticPhase.GENERALIZE, "Giữ generalize: nhắc nhở tập trung vào bài học cốt lõi."
         else:
-            return SocraticPhase.GENERALIZE, "Khép phiên: ghi nhận tóm tắt của học sinh, hiện sơ đồ tư duy hoàn chỉnh."
+            return SocraticPhase.GENERALIZE, "Giữ generalize: tiếp tục đồng hành cùng học sinh."
 
     def _step_back_phase(self, phase: SocraticPhase) -> SocraticPhase:
         """Lùi 1 pha khi học sinh gặp khó khăn liên tiếp."""

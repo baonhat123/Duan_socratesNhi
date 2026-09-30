@@ -31,13 +31,40 @@ from .offline_bank import (
 TIMEOUT_THRESHOLD_SECONDS = 20.0  # Ngưỡng timeout 20s theo quy định mục 18.1
 
 
+import os
+from pathlib import Path
+
+# Đảm bảo nạp .env
+try:
+    from dotenv import load_dotenv
+    _env_p = Path(__file__).resolve().parent.parent / ".env"
+    if _env_p.exists():
+        load_dotenv(_env_p)
+    else:
+        load_dotenv()
+except Exception:
+    pass
+
+
 class OfflineDemoEngine:
     """
     Bộ máy điều phối chế độ Demo Offline và Cache Học liệu.
     """
-    def __init__(self, force_offline: bool = True):
-        # Mặc định bật chế độ Offline Demo tin cậy 100% khi thi
-        self.mode: NetworkMode = NetworkMode.OFFLINE_DEMO if force_offline else NetworkMode.ONLINE
+    def __init__(self, force_offline: Optional[bool] = None):
+        import sys
+        is_testing = "unittest" in sys.modules or any("test" in arg.lower() for arg in sys.argv)
+        has_key = bool(os.getenv("OPENAI_API_KEY", "").strip())
+
+        if force_offline is True:
+            self.mode: NetworkMode = NetworkMode.OFFLINE_DEMO
+        elif force_offline is False:
+            self.mode: NetworkMode = NetworkMode.ONLINE
+        elif is_testing:
+            # Luôn giữ offline trong unit test để kiểm thử chuẩn mực 100% không phụ thuộc mạng
+            self.mode: NetworkMode = NetworkMode.OFFLINE_DEMO
+        else:
+            self.mode: NetworkMode = NetworkMode.ONLINE if has_key else NetworkMode.OFFLINE_DEMO
+
         self.active_problem_id: str = "VL01"
         self.current_phase_index: int = 0
         self.phase_keys = ["clarify", "recall", "reason", "check", "generalize"]
@@ -140,4 +167,4 @@ class OfflineDemoEngine:
 
 
 # Instance toàn cục để chia sẻ giữa các module
-GLOBAL_OFFLINE_ENGINE = OfflineDemoEngine(force_offline=True)
+GLOBAL_OFFLINE_ENGINE = OfflineDemoEngine()

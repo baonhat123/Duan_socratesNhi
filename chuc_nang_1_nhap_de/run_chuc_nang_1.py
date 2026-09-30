@@ -50,10 +50,6 @@ def main(page: ft.Page):
 
 
 if __name__ == "__main__":
-    # Flet 1.0+ sử dụng ft.run(main), các bản cũ dùng ft.app(target=main)
-    if hasattr(ft, "run"):
-        ft.run(main)
-    elif hasattr(ft, "app"):
-        ft.app(target=main)
-    else:
-        raise RuntimeError("Không tìm thấy hàm khởi chạy ứng dụng Flet (ft.run hoặc ft.app)!")
+    from app_tich_hop_socrates.app_launcher import safe_run_app
+    safe_run_app(main)
+

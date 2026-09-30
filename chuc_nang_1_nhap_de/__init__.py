@@ -21,7 +21,8 @@ from .validator import (
     validate_file_format,
     check_pii_and_safety,
     MAX_FILE_SIZE_BYTES,
-    ALLOWED_EXTENSIONS
+    ALLOWED_EXTENSIONS,
+    SOCRATES_TEMP_DIR
 )
 from .sample_bank import get_all_samples, get_sample_by_id, get_samples_by_strand
 from .voice_service import process_voice_input, normalize_spoken_khtn, get_demo_voice_presets
@@ -42,6 +43,7 @@ __all__ = [
     "check_pii_and_safety",
     "MAX_FILE_SIZE_BYTES",
     "ALLOWED_EXTENSIONS",
+    "SOCRATES_TEMP_DIR",
     "get_all_samples",
     "get_sample_by_id",
     "get_samples_by_strand"

@@ -30,13 +30,9 @@ class KnowledgeClassifier:
     def classify_problem(self, problem_text: str) -> ClassificationResult:
         """
         Phân loại toàn diện đề bài đã xác nhận.
+        Sử dụng thuật toán đối chiếu bản đồ khái niệm nội bộ để phản hồi tức thì (<1ms),
+        tránh hoàn toàn hiện tượng nghẽn mạng gây đơ giật giao diện khi chuyển trạm.
         """
-        # Thử gọi qua OpenAI-compatible API nếu cấu hình .env
-        ai_res = self._classify_via_openai(problem_text)
-        if ai_res:
-            return ai_res
-
-        # Mặc định / Offline: Phân loại theo thuật toán đối chiếu bản đồ khái niệm nội bộ
         return self._classify_via_concept_bank(problem_text)
 
     def _classify_via_concept_bank(self, text: str) -> ClassificationResult:
@@ -219,15 +215,13 @@ class KnowledgeClassifier:
         """Gọi OpenAI-compatible API với JSON response format nếu có cấu hình."""
         base_url = os.getenv("OPENAI_BASE_URL")
         api_key = os.getenv("OPENAI_API_KEY")
-        model = os.getenv("SOCRATES_MODEL", "gpt-4o-mini")
+        model = os.getenv("SOCRATES_MODEL", "gpt-5-mini-2025-08-07")
 
         if not api_key:
             return None
 
         try:
-            from openai import OpenAI
-            client = OpenAI(base_url=base_url if base_url else None, api_key=api_key)
-
+            from app_tich_hop_socrates.ai_service import call_ai_chat_completion
             system_prompt = (
                 "Bạn là bộ phân loại kiến thức KHTN THCS theo chuẩn đặc tả Socrates Nhí v3.0. "
                 f"Chỉ được CHỌN tối đa 3 khái niệm cốt lõi từ danh sách sau: {json.dumps(self.curated_concept_names, ensure_ascii=False)}. "
@@ -237,16 +231,14 @@ class KnowledgeClassifier:
                 '"core_concepts": [string], "common_mistakes": [string]}'
             )
 
-            response = client.chat.completions.create(
-                model=model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": f"Đề bài KHTN: {text}"}
-                ],
-                response_format={"type": "json_object"},
-                temperature=0.0
-            )
-            data = json.loads(response.choices[0].message.content)
+            messages = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"Đề bài KHTN: {text}"}
+            ]
+
+            ok, _, data, err = call_ai_chat_completion(messages, json_mode=True, timeout=18.0)
+            if not ok or not data:
+                return None
 
             # Ràng buộc tối đa 3 khái niệm
             concepts = [c for c in data.get("core_concepts", []) if c in self.curated_concept_names][:3]

@@ -11,23 +11,35 @@ Nâng cấp giao diện:
 - Đã khắc phục triệt để lỗi Service FilePicker trong Flet 1.0.
 """
 
+import os
+import threading
+import time
 from pathlib import Path
 from typing import Callable, Optional
 import flet as ft
+from PIL import ImageGrab, Image
 
 from .input_model import ProblemInput, InputType
 from .validator import (
     process_image_input,
     process_text_input,
     process_sample_input,
-    MAX_FILE_SIZE_BYTES
+    MAX_FILE_SIZE_BYTES,
+    SOCRATES_TEMP_DIR,
+    resolve_image_asset_src,
+    ASSETS_UPLOADS_DIR,
+    ASSETS_SAMPLE_DIR
 )
+
 from .sample_bank import get_all_samples, get_sample_by_id, get_samples_by_strand
 from .voice_service import (
     process_voice_input,
     normalize_spoken_khtn,
-    get_demo_voice_presets
+    get_demo_voice_presets,
+    transcribe_audio_file,
+    GLOBAL_AUDIO_RECORDER
 )
+
 
 
 
@@ -49,12 +61,39 @@ class ProblemInputView:
         self.active_mode = "text"  # "text", "image", "sample"
         self.selected_sample_id: Optional[str] = "VL01"
         self.sample_filter_strand: str = "Tất cả"
+        self.is_voice_recording = False
+        self.recorder = GLOBAL_AUDIO_RECORDER
+        self._recording_timer_thread = None
+        self._stop_timer_flag = False
 
-        # Thiết lập FilePicker đúng chuẩn Service trong Flet 1.0 (Tuyệt đối không đưa vào overlay)
-        self.file_picker = ft.FilePicker(on_result=self._on_file_selected)
-        if hasattr(self.page, "services") and self.page.services is not None:
-            if self.file_picker not in self.page.services:
-                self.page.services.append(self.file_picker)
+
+        # Tuyệt đối KHÔNG đưa FilePicker vào page.overlay (trong Flet 1.0 sẽ làm Flutter báo lỗi đỏ "Unknown control: FilePicker")
+        if hasattr(self.page, "overlay") and self.page.overlay is not None:
+            self.page.overlay[:] = [c for c in self.page.overlay if not isinstance(c, ft.FilePicker)]
+
+        self.file_picker = None
+        try:
+            self.file_picker = ft.FilePicker(on_result=self._on_file_selected)
+            if hasattr(self.page, "services") and self.page.services is not None:
+                if self.file_picker not in self.page.services:
+                    self.page.services.append(self.file_picker)
+        except Exception:
+            pass
+
+        # Lắng nghe phím tắt Ctrl + V trên toàn trang (khi ở tab ảnh thì tự động dán ảnh)
+        if hasattr(self.page, "on_keyboard_event"):
+            old_handler = self.page.on_keyboard_event
+            def _key_handler(e: ft.KeyboardEvent):
+                is_ctrl = getattr(e, "ctrl", False)
+                key_name = str(getattr(e, "key", "")).lower()
+                if is_ctrl and key_name == "v" and self.active_mode == "image":
+                    self._paste_image_from_clipboard(None)
+                elif old_handler:
+                    try:
+                        old_handler(e)
+                    except Exception:
+                        pass
+            self.page.on_keyboard_event = _key_handler
 
         # Xây dựng giao diện
         self._build_controls()
@@ -74,35 +113,39 @@ class ProblemInputView:
             visible=self.is_standalone
         )
 
-        # 2. Hướng dẫn thân thiện cho học sinh
+        # 2. Hướng dẫn thân thiện cho học sinh (Card Hero chào đón)
         self.welcome_banner = ft.Container(
             content=ft.Row([
-                ft.CircleAvatar(
-                    content=ft.Icon(ft.Icons.AUTO_AWESOME_ROUNDED, color=ft.Colors.AMBER_900, size=18),
-                    bgcolor=ft.Colors.AMBER_100,
-                    radius=16
+                ft.Container(
+                    content=ft.Icon(ft.Icons.LIGHTBULB_ROUNDED, color=ft.Colors.WHITE, size=24),
+                    bgcolor=ft.Colors.AMBER_500,
+                    border_radius=22,
+                    width=44,
+                    height=44,
+                    alignment=ft.Alignment.CENTER,
+                    shadow=ft.BoxShadow(blur_radius=8, color=ft.Colors.with_opacity(0.3, ft.Colors.AMBER_500), offset=ft.Offset(0, 2))
                 ),
                 ft.Column([
-                    ft.Text("Chào em! Em muốn nhập bài tập KHTN theo cách nào?", weight=ft.FontWeight.BOLD, size=14, color=ft.Colors.INDIGO_900),
-                    ft.Text("Em có thể tự gõ nội dung, tải ảnh chụp từ sách/vở, hoặc thử ngay với bài tập mẫu có sẵn.", size=12, color=ft.Colors.GREY_700)
+                    ft.Text("Chào em! Hôm nay em muốn khám phá bài tập KHTN nào cùng thầy Socrates?", weight=ft.FontWeight.BOLD, size=15, color=ft.Colors.INDIGO_900),
+                    ft.Text("Em có thể tự gõ câu hỏi vào ô bên dưới, chọn từ các bài tập mẫu, chụp ảnh đề bài hoặc đọc bằng giọng nói nhé!", size=12, color=ft.Colors.GREY_700)
                 ], spacing=2, expand=True)
-            ], vertical_alignment=ft.CrossAxisAlignment.CENTER),
+            ], vertical_alignment=ft.CrossAxisAlignment.CENTER, spacing=14),
             bgcolor=ft.Colors.WHITE,
-            padding=14,
-            border_radius=12,
+            padding=ft.Padding(16, 14, 16, 14),
+            border_radius=14,
             border=ft.Border.all(1, ft.Colors.INDIGO_100),
-            shadow=ft.BoxShadow(blur_radius=10, color=ft.Colors.with_opacity(0.04, ft.Colors.BLACK), offset=ft.Offset(0, 2))
+            shadow=ft.BoxShadow(blur_radius=12, color=ft.Colors.with_opacity(0.04, ft.Colors.BLACK), offset=ft.Offset(0, 2))
         )
 
         # 3. Ba thẻ lựa chọn phương thức nhập (Interactive Mode Cards)
         self.btn_mode_text = ft.Container(
             content=ft.Row([
                 ft.Icon(ft.Icons.EDIT_NOTE_ROUNDED, size=20, color=ft.Colors.INDIGO_700),
-                ft.Text("1. Tự gõ đề bài", weight=ft.FontWeight.BOLD, size=13, color=ft.Colors.INDIGO_900)
-            ], alignment=ft.MainAxisAlignment.CENTER),
+                ft.Text("1. Tự gõ đề bài ✍️", weight=ft.FontWeight.BOLD, size=13, color=ft.Colors.INDIGO_900)
+            ], alignment=ft.MainAxisAlignment.CENTER, spacing=6),
             bgcolor=ft.Colors.INDIGO_50,
-            padding=ft.Padding(12, 10, 12, 10),
-            border_radius=10,
+            padding=ft.Padding(14, 11, 14, 11),
+            border_radius=12,
             border=ft.Border.all(2, ft.Colors.INDIGO_600),
             on_click=lambda _: self._switch_mode("text"),
             expand=True
@@ -110,12 +153,12 @@ class ProblemInputView:
 
         self.btn_mode_image = ft.Container(
             content=ft.Row([
-                ft.Icon(ft.Icons.CAMERA_ALT_OUTLINED, size=20, color=ft.Colors.GREY_700),
-                ft.Text("2. Tải ảnh đề (≤ 5MB)", weight=ft.FontWeight.W_500, size=13, color=ft.Colors.GREY_800)
-            ], alignment=ft.MainAxisAlignment.CENTER),
+                ft.Icon(ft.Icons.CAMERA_ALT_ROUNDED, size=19, color=ft.Colors.GREY_700),
+                ft.Text("2. Tải ảnh đề (≤ 5MB) 📷", weight=ft.FontWeight.W_500, size=13, color=ft.Colors.GREY_800)
+            ], alignment=ft.MainAxisAlignment.CENTER, spacing=6),
             bgcolor=ft.Colors.WHITE,
-            padding=ft.Padding(12, 10, 12, 10),
-            border_radius=10,
+            padding=ft.Padding(14, 11, 14, 11),
+            border_radius=12,
             border=ft.Border.all(1, ft.Colors.GREY_300),
             on_click=lambda _: self._switch_mode("image"),
             expand=True
@@ -123,12 +166,12 @@ class ProblemInputView:
 
         self.btn_mode_sample = ft.Container(
             content=ft.Row([
-                ft.Icon(ft.Icons.AUTO_STORIES_OUTLINED, size=20, color=ft.Colors.GREY_700),
-                ft.Text("3. Bài mẫu KHTN 7", weight=ft.FontWeight.W_500, size=13, color=ft.Colors.GREY_800)
-            ], alignment=ft.MainAxisAlignment.CENTER),
+                ft.Icon(ft.Icons.AUTO_STORIES_ROUNDED, size=19, color=ft.Colors.GREY_700),
+                ft.Text("3. Bài mẫu KHTN 7 📚", weight=ft.FontWeight.W_500, size=13, color=ft.Colors.GREY_800)
+            ], alignment=ft.MainAxisAlignment.CENTER, spacing=6),
             bgcolor=ft.Colors.WHITE,
-            padding=ft.Padding(12, 10, 12, 10),
-            border_radius=10,
+            padding=ft.Padding(14, 11, 14, 11),
+            border_radius=12,
             border=ft.Border.all(1, ft.Colors.GREY_300),
             on_click=lambda _: self._switch_mode("sample"),
             expand=True
@@ -136,12 +179,12 @@ class ProblemInputView:
 
         self.btn_mode_voice = ft.Container(
             content=ft.Row([
-                ft.Icon(ft.Icons.MIC_OUTLINED, size=20, color=ft.Colors.GREY_700),
+                ft.Icon(ft.Icons.MIC_ROUNDED, size=19, color=ft.Colors.GREY_700),
                 ft.Text("4. Giọng nói 🎙️", weight=ft.FontWeight.W_500, size=13, color=ft.Colors.GREY_800)
-            ], alignment=ft.MainAxisAlignment.CENTER),
+            ], alignment=ft.MainAxisAlignment.CENTER, spacing=6),
             bgcolor=ft.Colors.WHITE,
-            padding=ft.Padding(12, 10, 12, 10),
-            border_radius=10,
+            padding=ft.Padding(14, 11, 14, 11),
+            border_radius=12,
             border=ft.Border.all(1, ft.Colors.GREY_300),
             on_click=lambda _: self._switch_mode("voice"),
             expand=True
@@ -149,44 +192,144 @@ class ProblemInputView:
 
         self.mode_row = ft.Row([self.btn_mode_text, self.btn_mode_image, self.btn_mode_sample, self.btn_mode_voice], spacing=10)
 
-
-        # 4. KHU VỰC 1: Tự gõ đề bài
+        # 4. KHU VỰC 1: Tự gõ đề bài (Thiết kế cao cấp, dễ bấm, tự động focus)
         self.txt_content = ft.TextField(
-            hint_text="Nhập đề bài của em vào đây (Ví dụ: Một người đi xe đạp với tốc độ 12 km/h trong thời gian 30 phút...)",
+            hint_text="Nhập đề bài hoặc câu hỏi KHTN của em vào đây...\n(Ví dụ: Một người đi xe đạp với tốc độ 12 km/h trong thời gian 30 phút...)",
+            hint_style=ft.TextStyle(color=ft.Colors.GREY_400, size=13),
             multiline=True,
-            min_lines=6,
-            max_lines=10,
+            min_lines=5,
+            max_lines=9,
+            text_size=14,
+            color=ft.Colors.GREY_900,
+            cursor_color=ft.Colors.INDIGO_700,
             bgcolor=ft.Colors.WHITE,
+            border_color=ft.Colors.INDIGO_300,
+            focused_border_color=ft.Colors.INDIGO_600,
+            focused_border_width=2,
             border_radius=12,
-            content_padding=15,
+            content_padding=ft.Padding(16, 14, 16, 14),
+            autofocus=True,
             on_change=self._on_text_change
         )
-        self.char_count_text = ft.Text("0 ký tự", size=11, color=ft.Colors.GREY_500)
+        self.char_count_text = ft.Text("0 ký tự", size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_700)
+
+        # Gợi ý câu hỏi KHTN 7 nhanh 1-chạm
+        quick_prompts = [
+            ("🚴 Chuyển động xe đạp (v = s/t)", "Một người đi xe đạp chuyển động đều trên quãng đường thẳng s = 12 km trong thời gian t = 30 phút. Hãy xác định tốc độ v của người đó theo đơn vị km/h và m/s."),
+            ("🪞 Phản xạ ánh sáng gương phẳng", "Chiếu một tia sáng tới hợp với mặt gương phẳng một góc 30 độ. Hãy xác định góc tới và góc phản xạ của tia sáng đó."),
+            ("🌿 Quá trình quang hợp ở thực vật", "Nêu các nguyên liệu chính và sản phẩm được tạo ra trong quá trình quang hợp ở thực vật. Quá trình này có ý nghĩa gì đối với sự sống trên Trái Đất?"),
+            ("🧪 Phản ứng tạo gỉ sắt", "Hiện tượng gỉ sắt xảy ra khi sắt tiếp xúc với những chất nào trong không khí? Hãy viết phương trình chữ của phản ứng hóa học này.")
+        ]
+
+        quick_prompt_chips = [
+            ft.Container(
+                content=ft.Row([
+                    ft.Icon(ft.Icons.AUTO_AWESOME_ROUNDED, size=13, color=ft.Colors.INDIGO_600),
+                    ft.Text(label, size=11, weight=ft.FontWeight.W_500, color=ft.Colors.INDIGO_900)
+                ], spacing=4),
+                bgcolor=ft.Colors.INDIGO_50,
+                border=ft.Border.all(1, ft.Colors.INDIGO_200),
+                padding=ft.Padding(10, 5, 10, 5),
+                border_radius=16,
+                tooltip="Bấm để đưa câu hỏi này vào ô nhập liệu",
+                on_click=lambda _, t=text: self._apply_quick_prompt(t)
+            )
+            for label, text in quick_prompts
+        ]
 
         self.text_container = ft.Container(
             content=ft.Column([
-                self.txt_content,
                 ft.Row([
-                    ft.Text("💡 Mẹo: Em có thể gõ công thức như v = s/t hoặc đơn vị km/h, m/s bình thường.", size=11, color=ft.Colors.GREY_600, italic=True),
+                    ft.Row([
+                        ft.Icon(ft.Icons.EDIT_ROUNDED, size=16, color=ft.Colors.INDIGO_700),
+                        ft.Text("Nội dung câu hỏi / Bài tập KHTN của em:", size=13, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900),
+                    ], spacing=6),
                     self.char_count_text
-                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
+                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+                ft.Container(
+                    content=self.txt_content,
+                    on_click=lambda _: self.txt_content.focus()
+                ),
+                ft.Row([
+                    ft.Row([
+                        ft.Icon(ft.Icons.LIGHTBULB_OUTLINE_ROUNDED, size=14, color=ft.Colors.AMBER_800),
+                        ft.Text("Mẹo: Em có thể gõ công thức v = s/t, CO₂, O₂, m/s bình thường nhé.", size=11, color=ft.Colors.GREY_700, italic=True)
+                    ], spacing=4),
+                    ft.TextButton(
+                        "Xóa nội dung 🗑️",
+                        style=ft.ButtonStyle(color=ft.Colors.GREY_600, padding=4),
+                        on_click=lambda _: self._clear_text_content()
+                    )
+                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+                ft.Container(height=2),
+                ft.Column([
+                    ft.Row([
+                        ft.Icon(ft.Icons.FLASH_ON_ROUNDED, size=14, color=ft.Colors.AMBER_700),
+                        ft.Text("Thử nhanh với câu hỏi KHTN 7 mẫu (Bấm để điền ngay vào ô):", size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_700)
+                    ], spacing=4),
+                    ft.Row(quick_prompt_chips, spacing=6, wrap=True)
+                ], spacing=4)
             ], spacing=6),
+            bgcolor=ft.Colors.WHITE,
+            padding=16,
+            border_radius=14,
+            border=ft.Border.all(1, ft.Colors.INDIGO_100),
+            shadow=ft.BoxShadow(blur_radius=10, color=ft.Colors.with_opacity(0.03, ft.Colors.BLACK), offset=ft.Offset(0, 2)),
             visible=True
         )
 
-        # 5. KHU VỰC 2: Tải ảnh bài tập (Dropzone thẩm mỹ)
+        # 5. KHU VỰC 2: Tải ảnh bài tập (Có 2 loại: Tải từ tệp ảnh & Dán ảnh từ Clipboard)
         self.btn_select_file = ft.FilledButton(
-            "Chọn tệp ảnh từ máy tính",
-            icon=ft.Icons.FILE_UPLOAD_ROUNDED,
-            style=ft.ButtonStyle(bgcolor=ft.Colors.INDIGO_600, color=ft.Colors.WHITE, padding=16),
-            on_click=lambda _: self.file_picker.pick_files(
-                dialog_title="Chọn ảnh bài tập KHTN (JPG/PNG, tối đa 5MB)",
-                allowed_extensions=["jpg", "jpeg", "png"]
-            )
+            "1. Chọn tệp ảnh từ máy tính (File) 📁",
+            icon=ft.Icons.FOLDER_OPEN_ROUNDED,
+            style=ft.ButtonStyle(
+                bgcolor=ft.Colors.INDIGO_600,
+                color=ft.Colors.WHITE,
+                padding=ft.Padding(18, 14, 18, 14),
+                shape=ft.RoundedRectangleBorder(radius=10)
+            ),
+            tooltip="Mở hộp thoại máy tính để chọn ảnh JPG, PNG, WebP có sẵn",
+            on_click=self._pick_image_from_file
         )
+
+        self.btn_paste_clipboard = ft.FilledButton(
+            "2. Dán ảnh vừa copy (Clipboard / Ctrl+V) 📋",
+            icon=ft.Icons.CONTENT_PASTE_ROUNDED,
+            style=ft.ButtonStyle(
+                bgcolor=ft.Colors.TEAL_600,
+                color=ft.Colors.WHITE,
+                padding=ft.Padding(18, 14, 18, 14),
+                shape=ft.RoundedRectangleBorder(radius=10)
+            ),
+            tooltip="Dán ảnh vừa chụp (Win + Shift + S) hoặc vừa sao chép từ mạng/tài liệu",
+            on_click=self._paste_image_from_clipboard
+        )
+
         self.img_preview = ft.Image(src="", visible=False, fit=ft.BoxFit.CONTAIN, border_radius=8)
-        self.img_info_text = ft.Text("Chưa chọn tệp ảnh nào (Chấp nhận JPG, PNG • Tối đa 5 MB)", size=12, color=ft.Colors.GREY_600)
-        self.btn_clear_image = ft.TextButton("Bỏ chọn ảnh", icon=ft.Icons.DELETE_OUTLINE, visible=False, on_click=self._on_clear_image)
+        self.img_info_text = ft.Text("Chưa chọn tệp ảnh nào (Chấp nhận JPG, PNG, WebP • Tối đa 5 MB)", size=12, color=ft.Colors.GREY_600)
+        self.btn_clear_image = ft.TextButton("Bỏ chọn ảnh 🗑️", icon=ft.Icons.DELETE_OUTLINE, visible=False, on_click=self._on_clear_image)
+
+        quick_sample_images = [
+            ("⚡ Đề Cơ học Tốc độ (SGK)", "ocr_co_hoc_toc_do.png"),
+            ("⚡ Đề Hóa Quang hợp (SGK)", "ocr_hoa_hoc_quang_hop.png"),
+            ("⚡ Đề Vật lý Khối lượng (SGK)", "ocr_vat_ly_khoi_luong.png"),
+        ]
+
+        quick_image_chips = [
+            ft.Container(
+                content=ft.Row([
+                    ft.Icon(ft.Icons.IMAGE_ROUNDED, size=13, color=ft.Colors.TEAL_700),
+                    ft.Text(label, size=11, weight=ft.FontWeight.W_500, color=ft.Colors.TEAL_900)
+                ], spacing=4),
+                bgcolor=ft.Colors.TEAL_50,
+                border=ft.Border.all(1, ft.Colors.TEAL_200),
+                padding=ft.Padding(10, 5, 10, 5),
+                border_radius=16,
+                tooltip=f"Bấm để tải nhanh ảnh mẫu '{fname}' kiểm thử OCR",
+                on_click=lambda _, f=fname: self._load_sample_image(f)
+            )
+            for label, fname in quick_sample_images
+        ]
 
         self.image_container = ft.Container(
             content=ft.Column([
@@ -195,21 +338,57 @@ class ProblemInputView:
                         ft.CircleAvatar(
                             content=ft.Icon(ft.Icons.CLOUD_UPLOAD_ROUNDED, size=32, color=ft.Colors.INDIGO_600),
                             bgcolor=ft.Colors.INDIGO_50,
-                            radius=30
+                            radius=28
                         ),
-                        ft.Text("Tải ảnh chụp đề bài từ sách hoặc vở bài tập", weight=ft.FontWeight.BOLD, size=14, color=ft.Colors.INDIGO_900),
-                        ft.Text("Yêu cầu: Ảnh chụp rõ nét, đủ ánh sáng, không bị nhòe chữ • Dung lượng ≤ 5 MB", size=12, color=ft.Colors.GREY_600),
+                        ft.Text("Tải ảnh đề bài KHTN (Hỗ trợ 2 phương thức tải)", weight=ft.FontWeight.BOLD, size=15, color=ft.Colors.INDIGO_900),
+                        ft.Text(
+                            "Em có thể chọn tệp ảnh có sẵn trong máy tính, hoặc chụp ảnh màn hình rồi dán trực tiếp:",
+                            size=12,
+                            color=ft.Colors.GREY_700,
+                            text_align=ft.TextAlign.CENTER
+                        ),
                         ft.Container(height=6),
-                        self.btn_select_file
-                    ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=6),
+                        ft.Row([
+                            self.btn_select_file,
+                            self.btn_paste_clipboard
+                        ], alignment=ft.MainAxisAlignment.CENTER, spacing=12, wrap=True),
+                        ft.Container(height=6),
+                        ft.Container(
+                            content=ft.Row([
+                                ft.Icon(ft.Icons.LIGHTBULB_ROUNDED, color=ft.Colors.AMBER_800, size=18),
+                                ft.Column([
+                                    ft.Text("Hướng dẫn 2 loại tải ảnh:", weight=ft.FontWeight.BOLD, size=12, color=ft.Colors.INDIGO_900),
+                                    ft.Text("• Loại 1 (Tải từ file): Bấm 'Chọn tệp ảnh từ máy tính' để chọn ảnh JPG, PNG chụp từ sách vở.", size=11, color=ft.Colors.GREY_700),
+                                    ft.Text("• Loại 2 (Copy ảnh): Nhấn phím Windows + Shift + S chụp đề bài, rồi bấm 'Dán ảnh' (hoặc nhấn Ctrl + V).", size=11, color=ft.Colors.GREY_700),
+                                ], spacing=2, expand=True)
+                            ], spacing=8, vertical_alignment=ft.CrossAxisAlignment.START),
+                            bgcolor=ft.Colors.AMBER_50,
+                            padding=10,
+                            border_radius=10,
+                            border=ft.Border.all(1, ft.Colors.AMBER_200)
+                        ),
+                        ft.Container(height=4),
+                        ft.Column([
+                            ft.Row([
+                                ft.Icon(ft.Icons.AUTO_AWESOME_ROUNDED, size=13, color=ft.Colors.TEAL_800),
+                                ft.Text("Thử nghiệm nhanh với ảnh chụp đề bài mẫu có sẵn:", size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_700)
+                            ], spacing=4),
+                            ft.Row(quick_image_chips, spacing=6, wrap=True)
+                        ], spacing=4)
+                    ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=8),
                     alignment=ft.Alignment.CENTER,
-                    padding=25,
+                    padding=20,
                     border=ft.Border.all(1.5, ft.Colors.INDIGO_200),
                     border_radius=16,
                     bgcolor=ft.Colors.WHITE
                 ),
                 ft.Row([self.img_info_text, self.btn_clear_image], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-                ft.Container(content=self.img_preview, alignment=ft.Alignment.CENTER)
+                ft.Container(
+                    content=self.img_preview,
+                    alignment=ft.Alignment.CENTER,
+                    padding=6,
+                    border_radius=10
+                )
             ], spacing=8),
             visible=False
         )
@@ -338,7 +517,10 @@ class ProblemInputView:
             style=ft.ButtonStyle(
                 bgcolor=ft.Colors.INDIGO_700,
                 color=ft.Colors.WHITE,
-                padding=20
+                padding=ft.Padding(26, 16, 26, 16),
+                shape=ft.RoundedRectangleBorder(radius=25),
+                shadow_color=ft.Colors.with_opacity(0.3, ft.Colors.INDIGO_700),
+                elevation=3
             ),
             on_click=self._on_confirm_click
         )
@@ -371,6 +553,10 @@ class ProblemInputView:
         if mode == "text":
             self.btn_confirm.text = "Hỏi Gia sư Socrates Nhí ngay 💬"
             self.btn_confirm.icon = ft.Icons.CHAT_BUBBLE_ROUNDED
+            try:
+                self.txt_content.focus()
+            except Exception:
+                pass
         elif mode == "image":
             self.btn_confirm.text = "Tiếp tục nhận diện chữ từ ảnh 📷"
             self.btn_confirm.icon = ft.Icons.ARROW_FORWARD_ROUNDED
@@ -482,11 +668,16 @@ class ProblemInputView:
         self.page.update()
 
     def _on_sample_card_click(self, sample_id: str):
-        """Chọn bài mẫu và xem trước nội dung."""
+        """Chọn bài mẫu và chuyển sang xem/sửa ngay trong ô hỏi."""
         self.selected_sample_id = sample_id
         sample = get_sample_by_id(sample_id)
         self.txt_content.value = sample["content"]
-        self._build_sample_section()
+        self._on_text_change(None)
+        self._switch_mode("text")
+        try:
+            self.txt_content.focus()
+        except Exception:
+            pass
         self.page.update()
 
     def _customize_sample(self, sample_id: str):
@@ -511,25 +702,100 @@ class ProblemInputView:
         self._customize_sample(sample_id)
 
     def _toggle_voice_recording(self, e):
-        """Bật/tắt trạng thái thu âm giọng nói và chuẩn hóa thuật ngữ KHTN."""
-        self.is_voice_recording = not self.is_voice_recording
-        if self.is_voice_recording:
+        """Bật/tắt trạng thái thu âm giọng nói thực tế và chuyển đổi sang văn bản KHTN."""
+        import threading
+        import time
+
+        if not self.is_voice_recording:
+            # 1. BẮT ĐẦU THU ÂM
+            success, msg = self.recorder.start_recording()
+            if not success:
+                self._show_alert(f"⚠️ {msg}\nEm hãy đảm bảo microphone trên máy tính đang hoạt động hoặc thử chọn các câu nói mẫu bên dưới nhé.")
+                return
+
+            self.is_voice_recording = True
+            self._stop_timer_flag = False
+            self.alert_box.visible = False
+
+            # Cập nhật giao diện nút thu âm đang lắng nghe
             self.voice_mic_btn.bgcolor = ft.Colors.RED_800
-            self.voice_mic_btn.content.controls[1].value = "Đang lắng nghe... (Bấm để dừng ⏹️)"
-            self.voice_status_text.value = "🎙️ Đang ghi nhận giọng nói của em... Em có thể đọc to rõ đề bài KHTN nhé!"
+            self.voice_mic_btn.content.controls[0].name = ft.Icons.STOP_CIRCLE_ROUNDED
+            self.voice_mic_btn.content.controls[1].value = "Đang thu âm... Bấm để dừng ⏹️"
+            self.voice_status_text.value = "🎙️ Đang thu âm từ Microphone... Em hãy đọc to, rõ ràng đề bài nhé! (0s)"
             self.voice_status_text.color = ft.Colors.RED_700
+            self.page.update()
+
+            # Luồng cập nhật số giây ghi âm trực tiếp
+            def timer_worker():
+                while not self._stop_timer_flag and self.is_voice_recording:
+                    time.sleep(0.8)
+                    if self._stop_timer_flag or not self.is_voice_recording:
+                        break
+                    sec = self.recorder.get_elapsed_seconds()
+                    if self.is_voice_recording:
+                        self.voice_status_text.value = f"🎙️ Đang thu âm từ Microphone... ({sec}s) - Bấm nút đỏ khi em nói xong nhé!"
+                        try:
+                            self.page.update()
+                        except Exception:
+                            pass
+
+            self._recording_timer_thread = threading.Thread(target=timer_worker, daemon=True)
+            self._recording_timer_thread.start()
+
         else:
-            self.voice_mic_btn.bgcolor = ft.Colors.RED_600
-            self.voice_mic_btn.content.controls[1].value = "Bắt đầu nói 🎙️"
-            if self.txt_voice_transcript.value:
-                norm = normalize_spoken_khtn(self.txt_voice_transcript.value)
-                self.txt_voice_transcript.value = norm
-                self.voice_status_text.value = "✅ Đã nhận diện và chuẩn hóa thuật ngữ KHTN từ giọng nói!"
-                self.voice_status_text.color = ft.Colors.GREEN_700
-            else:
-                self.voice_status_text.value = "Đã dừng. Em có thể đọc lại hoặc bấm chọn câu nói mẫu bên dưới."
-                self.voice_status_text.color = ft.Colors.GREY_700
-        self.page.update()
+            # 2. DỪNG THU ÂM VÀ CHUYỂN ĐỔI SANG VĂN BẢN (STT)
+            self.is_voice_recording = False
+            self._stop_timer_flag = True
+
+            # Cập nhật giao diện sang trạng thái đang phân tích
+            self.voice_mic_btn.disabled = True
+            self.voice_mic_btn.opacity = 0.7
+            self.voice_mic_btn.bgcolor = ft.Colors.AMBER_800
+            self.voice_mic_btn.content.controls[0].name = ft.Icons.HOURGLASS_TOP_ROUNDED
+            self.voice_mic_btn.content.controls[1].value = "Đang nhận diện giọng nói AI... ⏳"
+            self.voice_status_text.value = "⏳ Đang chuyển đổi âm thanh sang văn bản và chuẩn hóa ký hiệu KHTN..."
+            self.voice_status_text.color = ft.Colors.AMBER_900
+            self.page.update()
+
+            # Dừng ghi âm lấy file WAV
+            wav_path = self.recorder.stop_recording()
+
+            # Xử lý STT trong luồng nền để không làm đơ giao diện Flet
+            def transcribe_worker():
+                transcript = None
+                if wav_path:
+                    try:
+                        transcript = transcribe_audio_file(wav_path)
+                    finally:
+                        try:
+                            if os.path.exists(wav_path):
+                                os.remove(wav_path)
+                        except Exception:
+                            pass
+
+                # Khôi phục trạng thái nút bấm và áp dụng kết quả
+                self.voice_mic_btn.disabled = False
+                self.voice_mic_btn.opacity = 1.0
+                self.voice_mic_btn.bgcolor = ft.Colors.RED_600
+                self.voice_mic_btn.content.controls[0].name = ft.Icons.MIC_ROUNDED
+                self.voice_mic_btn.content.controls[1].value = "Bắt đầu nói 🎙️"
+
+                if transcript and transcript.strip():
+                    self.txt_voice_transcript.value = transcript
+                    self.txt_content.value = transcript
+                    self.voice_status_text.value = f"✅ Nhận diện thành công ({len(transcript)} ký tự)! Đã chuẩn hóa thuật ngữ KHTN."
+                    self.voice_status_text.color = ft.Colors.GREEN_700
+                else:
+                    self.voice_status_text.value = "⚠️ Chưa nhận diện được âm thanh rõ ràng (có thể do nói quá nhanh hoặc im lặng). Em đọc lại hoặc chọn câu mẫu bên dưới nhé!"
+                    self.voice_status_text.color = ft.Colors.ORANGE_800
+
+                try:
+                    self.page.update()
+                except Exception:
+                    pass
+
+            threading.Thread(target=transcribe_worker, daemon=True).start()
+
 
     def _apply_voice_preset(self, text: str):
         """Áp dụng câu nói mẫu phát âm tiếng Việt và tự động chuẩn hóa KHTN."""
@@ -540,41 +806,186 @@ class ProblemInputView:
         self.alert_box.visible = False
         self.page.update()
 
+    def _apply_quick_prompt(self, text: str):
+        """Áp dụng câu hỏi gợi ý nhanh và tự động focus vào ô hỏi."""
+        self.txt_content.value = text
+        self._on_text_change(None)
+        self._switch_mode("text")
+        try:
+            self.txt_content.focus()
+        except Exception:
+            pass
+        self.page.update()
+
+    def _clear_text_content(self):
+        """Xóa trắng nội dung ô hỏi để học sinh gõ lại từ đầu."""
+        self.txt_content.value = ""
+        self._on_text_change(None)
+        try:
+            self.txt_content.focus()
+        except Exception:
+            pass
+        self.page.update()
+
     def _on_text_change(self, e):
         count = len(self.txt_content.value or "")
         self.char_count_text.value = f"{count} ký tự"
         self.page.update()
 
-    def _on_file_selected(self, e: ft.FilePickerResultEvent):
-        if not e.files or len(e.files) == 0:
+    def _pick_image_from_file(self, e=None):
+        """Loại 1: Mở hộp thoại chọn tệp ảnh chuẩn trên máy tính (Native Windows Dialog)."""
+        def _open_file_dialog():
+            selected_path = None
+            try:
+                import tkinter as tk
+                from tkinter import filedialog
+                root = tk.Tk()
+                root.withdraw()
+                root.attributes('-topmost', True)
+                selected_path = filedialog.askopenfilename(
+                    title="Chọn ảnh bài tập KHTN (JPG/PNG/WebP)",
+                    filetypes=[
+                        ("Tệp hình ảnh (*.jpg, *.png, *.jpeg, *.webp)", "*.jpg;*.jpeg;*.png;*.webp;*.bmp"),
+                        ("Tất cả các tệp (*.*)", "*.*")
+                    ]
+                )
+                root.destroy()
+            except Exception as ex:
+                # Dự phòng bằng Flet FilePicker nếu Tkinter không gọi được
+                if self.file_picker and hasattr(self.file_picker, "pick_files"):
+                    try:
+                        self.file_picker.pick_files(
+                            dialog_title="Chọn ảnh bài tập KHTN (JPG/PNG, tối đa 5MB)",
+                            allowed_extensions=["jpg", "jpeg", "png", "webp"]
+                        )
+                        return
+                    except Exception:
+                        pass
+
+            if selected_path:
+                self._process_selected_file_path(selected_path)
+
+        threading.Thread(target=_open_file_dialog, daemon=True).start()
+
+    def _paste_image_from_clipboard(self, e=None):
+        """
+        Loại 2: Dán ảnh trực tiếp từ bộ nhớ tạm (Clipboard / Ctrl+V):
+        - Hỗ trợ ảnh chụp màn hình bằng Windows + Shift + S.
+        - Hỗ trợ 'Sao chép hình ảnh' từ trình duyệt/Word/PDF.
+        - Hỗ trợ copy tệp ảnh từ Windows Explorer.
+        """
+        try:
+            clip_data = ImageGrab.grabclipboard()
+            if clip_data is None:
+                self._show_alert(
+                    "Bộ nhớ tạm (Clipboard) chưa có ảnh nào!\n"
+                    "👉 Em hãy nhấn tổ hợp phím Windows + Shift + S để chụp ảnh đề bài, hoặc chuột phải vào ảnh chọn 'Sao chép hình ảnh' rồi bấm lại nút này nhé!"
+                )
+                return
+
+            # Trường hợp 1: Đối tượng hình ảnh (Image)
+            if isinstance(clip_data, Image.Image):
+                ASSETS_UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+                timestamp = int(time.time() * 1000)
+                temp_filename = f"clip_{timestamp}.png"
+                temp_file_path = str(ASSETS_UPLOADS_DIR / temp_filename)
+
+                # Lưu ảnh dưới định dạng PNG vào thư mục assets/uploads
+                clip_data.save(temp_file_path, "PNG")
+                try:
+                    clip_data.save(str(SOCRATES_TEMP_DIR / temp_filename), "PNG")
+                except Exception:
+                    pass
+
+                self._process_selected_file_path(temp_file_path, display_name="Ảnh chụp màn hình (Clipboard)")
+                return
+
+            # Trường hợp 2: Danh sách đường dẫn tệp (khi học sinh copy file trong Windows Explorer)
+            if isinstance(clip_data, list):
+                valid_images = [
+                    p for p in clip_data
+                    if isinstance(p, str) and os.path.splitext(p)[1].lower() in [".jpg", ".jpeg", ".png", ".webp", ".bmp"]
+                ]
+                if valid_images:
+                    self._process_selected_file_path(valid_images[0], display_name=os.path.basename(valid_images[0]))
+                    return
+                else:
+                    self._show_alert("Các tệp vừa sao chép không phải là định dạng hình ảnh hợp lệ (chỉ nhận JPG, PNG, WebP).")
+                    return
+
+            self._show_alert(
+                "Trong bộ nhớ tạm không có hình ảnh!\n"
+                "Em hãy chụp màn hình bằng Win + Shift + S hoặc sao chép ảnh trước khi bấm Dán nhé."
+            )
+        except Exception as ex:
+            self._show_alert(f"Lỗi khi đọc ảnh từ bộ nhớ tạm: {str(ex)}")
+
+    def _load_sample_image(self, asset_filename: str):
+        """Tải nhanh ảnh mẫu KHTN 7 có sẵn trong dự án để kiểm thử OCR."""
+        possible_paths = [
+            ASSETS_SAMPLE_DIR / asset_filename,
+            Path(__file__).resolve().parent.parent / "chuc_nang_2_ocr_xac_nhan" / "sample_assets" / asset_filename,
+            Path("assets") / "sample_assets" / asset_filename,
+            Path("chuc_nang_2_ocr_xac_nhan") / "sample_assets" / asset_filename,
+        ]
+        found_path = None
+        for p in possible_paths:
+            if p.exists():
+                found_path = str(p.resolve())
+                break
+
+        if found_path:
+            self._process_selected_file_path(found_path, display_name=f"Ảnh mẫu ({asset_filename})")
+        else:
+            self._show_alert(f"Không tìm thấy ảnh mẫu: {asset_filename}")
+
+    def _process_selected_file_path(self, file_path: str, display_name: Optional[str] = None):
+        """Xử lý tệp ảnh được chọn (từ File, Clipboard, hoặc Ảnh mẫu)."""
+        if not file_path or not os.path.exists(file_path):
+            self._show_alert(f"Không tìm thấy tệp ảnh: {file_path}")
             return
-        selected_file = e.files[0]
-        problem_input = process_image_input(selected_file.path)
+
+        name = display_name or os.path.basename(file_path)
+        problem_input = process_image_input(file_path)
         self.current_input = problem_input
 
         if problem_input.validation_error:
             self._show_alert(problem_input.validation_error)
             self.img_preview.visible = False
+            self.img_preview.src = ""
             self.btn_clear_image.visible = False
-            self.img_info_text.value = f"❌ Tệp không hợp lệ: {selected_file.name}"
+            self.img_info_text.value = f"❌ Tệp không hợp lệ: {name}"
             self.img_info_text.color = ft.Colors.RED_700
         else:
             self.alert_box.visible = False
-            self.img_preview.src = problem_input.file_path
+            # Chuyển đổi sang Web Asset URL tương thích Flet Web (Edge / Chrome)
+            web_src = resolve_image_asset_src(problem_input.file_path)
+            self.img_preview.src = web_src
             self.img_preview.visible = True
-            self.img_preview.height = 180
+            self.img_preview.height = 240
             self.btn_clear_image.visible = True
-            self.img_info_text.value = f"✅ Đã tải: {selected_file.name} ({problem_input.file_size_mb:.2f} MB - Rõ nét)"
+            self.img_info_text.value = f"✅ Đã tải: {name} ({problem_input.file_size_mb:.2f} MB - Rõ nét)"
             self.img_info_text.color = ft.Colors.GREEN_700
 
-        self.page.update()
+        try:
+            self.page.update()
+        except Exception:
+            pass
+
+
+    def _on_file_selected(self, e: ft.FilePickerResultEvent):
+        """Nhận kết quả từ Flet FilePicker (nếu dùng)."""
+        if not e.files or len(e.files) == 0:
+            return
+        selected_file = e.files[0]
+        self._process_selected_file_path(selected_file.path, display_name=selected_file.name)
 
     def _on_clear_image(self, e):
         self.current_input = None
         self.img_preview.visible = False
         self.img_preview.src = ""
         self.btn_clear_image.visible = False
-        self.img_info_text.value = "Chưa chọn tệp ảnh nào (Chấp nhận JPG, PNG • Tối đa 5 MB)"
+        self.img_info_text.value = "Chưa chọn tệp ảnh nào (Chấp nhận JPG, PNG, WebP • Tối đa 5 MB)"
         self.img_info_text.color = ft.Colors.GREY_600
         self.alert_box.visible = False
         self.page.update()
@@ -621,18 +1032,20 @@ class ProblemInputView:
             content=ft.Column([
                 self.standalone_header,
                 self.welcome_banner,
-                ft.Container(height=4),
+                ft.Container(height=2),
                 self.mode_row,
-                ft.Container(height=6),
+                ft.Container(height=4),
                 self.text_container,
                 self.image_container,
                 self.sample_container,
                 self.voice_container,
-                ft.Container(height=4),
+                ft.Container(height=2),
                 self.privacy_card,
                 self.alert_box,
-                ft.Container(height=8),
-                ft.Row([self.btn_confirm], alignment=ft.MainAxisAlignment.CENTER)
-            ], spacing=10),
-            padding=ft.Padding(20, 10, 20, 20)
+                ft.Container(height=6),
+                ft.Row([self.btn_confirm], alignment=ft.MainAxisAlignment.CENTER),
+                ft.Container(height=10)
+            ], spacing=10, scroll=ft.ScrollMode.AUTO),
+            padding=ft.Padding(20, 10, 20, 20),
+            expand=True
         )

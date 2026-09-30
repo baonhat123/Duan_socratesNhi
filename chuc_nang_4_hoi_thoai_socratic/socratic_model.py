@@ -59,6 +59,8 @@ class ChatMessage:
     micro_hint: Optional[str] = None # Gợi ý vi mô (nếu có)
     feedback: Optional[str] = None   # Nhận xét tích cực cho câu trả lời trước
     student_state: Optional[StudentState] = None
+    source: str = "ai"             # "ai" hoặc "offline"
+    model_used: Optional[str] = None # Tên mô hình AI nếu sinh từ AI
     created_at: datetime = field(default_factory=datetime.now)
 
 
@@ -82,6 +84,8 @@ class TurnResponse:
     consecutive_unknown_count: int = 0
     is_session_closed: bool = False
     safety_flags: List[str] = field(default_factory=list)
+    source: str = "ai"             # "ai" hoặc "offline"
+    model_used: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -94,5 +98,7 @@ class TurnResponse:
             "turn_count": self.turn_count,
             "consecutive_unknown_count": self.consecutive_unknown_count,
             "is_session_closed": self.is_session_closed,
-            "safety_flags": self.safety_flags
+            "safety_flags": self.safety_flags,
+            "source": self.source,
+            "model_used": self.model_used
         }

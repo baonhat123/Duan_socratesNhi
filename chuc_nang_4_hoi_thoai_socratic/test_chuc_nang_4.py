@@ -45,10 +45,16 @@ class TestChucNang4(unittest.TestCase):
         self.assertEqual(next_phase, SocraticPhase.CHECK)
 
     def test_progression_check_to_generalize(self):
-        """Học sinh kiểm tra đúng ở check -> chuyển sang generalize (khép phiên)."""
+        """Học sinh kiểm tra đúng ở check -> chuyển sang generalize; phiên chỉ khép khi trả lời đạt ở generalize."""
         self.sm.current_phase = SocraticPhase.CHECK
         start_phase, next_phase, _ = self.sm.transition(StudentState.CORRECT)
         self.assertEqual(next_phase, SocraticPhase.GENERALIZE)
+        # Khi mới chuyển sang generalize, chưa khép phiên vì mới đặt câu hỏi tổng kết
+        self.assertFalse(self.sm.is_session_closed)
+
+        # Học sinh trả lời đúng câu hỏi tổng kết của Pha 5 -> khép phiên thành công!
+        _, final_phase, _ = self.sm.transition(StudentState.CORRECT)
+        self.assertEqual(final_phase, SocraticPhase.GENERALIZE)
         self.assertTrue(self.sm.is_session_closed)
 
     # --- 2. KIỂM THỬ TỪ CHỐI XIN ĐÁP ÁN (ANSWER PLEA) ---
@@ -88,24 +94,24 @@ class TestChucNang4(unittest.TestCase):
         self.assertEqual(self.sm.consecutive_unknown_count, 0)
         self.assertIn("Hạ độ khó", strategy)
 
-    # --- 4. KIỂM THỬ NGƯỠNG TỐI ĐA 7 LƯỢT (MỤC 5.3) ---
-    def test_max_7_turns_closure(self):
-        """Đến lượt thứ 7, hệ thống chuyển thẳng sang pha generalize bất kể đang ở pha nào."""
-        self.sm.turn_count = 7
-        self.sm.current_phase = SocraticPhase.CLARIFY
-        _, next_phase, _ = self.sm.transition(StudentState.PARTIAL)
-        self.assertEqual(next_phase, SocraticPhase.GENERALIZE)
-        self.assertTrue(self.sm.is_session_closed)
-
-    # --- 5. KIỂM THỬ KẸT Ở PHA 3 SAU 5 LƯỢT (MỤC 5.3) ---
-    def test_stuck_at_phase_3_after_5_turns(self):
-        """Sau 5 lượt chưa qua pha 3 -> Khép sớm bằng tự tóm tắt, không hé đáp án."""
-        self.sm.turn_count = 5
+    # --- 4. KIỂM THỬ CHẾ ĐỘ KHÔNG GIỚI HẠN LƯỢT (UNLIMITED TURNS) ---
+    def test_unlimited_turns_does_not_force_closure(self):
+        """Chế độ mặc định unlimited_turns: vượt quá 5 hay 7 lượt vẫn tiếp tục hỏi nếu chưa hoàn thành."""
+        self.sm.turn_count = 8
         self.sm.current_phase = SocraticPhase.REASON
-        _, next_phase, strategy = self.sm.transition(StudentState.PARTIAL)
+        _, next_phase, _ = self.sm.transition(StudentState.PARTIAL)
+        # Vẫn ở REASON để hướng dẫn tiếp, không bị cưỡng bức đóng phiên
+        self.assertEqual(next_phase, SocraticPhase.REASON)
+        self.assertFalse(self.sm.is_session_closed)
+
+    def test_limited_turns_when_explicitly_configured(self):
+        """Khi bật tường minh unlimited_turns=False: đạt 7 lượt mới chuyển sang generalize khép phiên."""
+        sm_limited = SocraticStateMachine(max_turns=7, unlimited_turns=False)
+        sm_limited.turn_count = 7
+        sm_limited.current_phase = SocraticPhase.CLARIFY
+        _, next_phase, _ = sm_limited.transition(StudentState.PARTIAL)
         self.assertEqual(next_phase, SocraticPhase.GENERALIZE)
-        self.assertTrue(self.sm.is_session_closed)
-        self.assertIn("chưa vượt qua lập luận", strategy)
+        self.assertTrue(sm_limited.is_session_closed)
 
     # --- 6. KIỂM THỬ CẤU TRÚC PHẢN HỒI SƯ PHẠM (FR-04) ---
     def test_single_main_question_and_micro_hint_limit(self):

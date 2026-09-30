@@ -17,6 +17,7 @@ from chuc_nang_1_nhap_de.input_model import ProblemInput
 from chuc_nang_2_ocr_xac_nhan.ocr_model import OcrResult, ConfirmedProblem
 from chuc_nang_3_phan_loai_kien_thuc.classifier_model import ClassificationResult
 from chuc_nang_5_so_do_tong_ket.mindmap_model import SessionSummary
+from app_tich_hop_socrates.auth_service import UserAccount
 
 
 class AppStep:
@@ -39,6 +40,8 @@ class SessionState:
     classification_result: Optional[ClassificationResult] = None
     session_summary: Optional[SessionSummary] = None
     is_offline_demo: bool = False
+    is_socratic_completed: bool = False  # Đã hoàn thành tự đúc kết kiến thức cốt lõi chưa
+    current_user: Optional[UserAccount] = None  # Tài khoản học sinh đang đăng nhập
 
     def reset(self):
         """Khôi phục trạng thái ban đầu."""
@@ -48,3 +51,4 @@ class SessionState:
         self.confirmed_problem = None
         self.classification_result = None
         self.session_summary = None
+        self.is_socratic_completed = False

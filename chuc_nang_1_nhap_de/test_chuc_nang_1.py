@@ -99,6 +99,29 @@ class TestChucNang1(unittest.TestCase):
         self.assertIsNone(result.validation_error)
         self.assertTrue(result.is_valid)
 
+    def test_image_input_valid_webp(self):
+        """Kiểm tra tải ảnh WebP hợp lệ <= 5MB."""
+        img_path = self.temp_path / "de_bai.webp"
+        img = Image.new("RGB", (200, 200), color="green")
+        img.save(img_path, format="WEBP")
+
+        result = process_image_input(str(img_path))
+        self.assertEqual(result.input_type, InputType.IMAGE)
+        self.assertIsNone(result.validation_error)
+        self.assertTrue(result.is_valid)
+
+    def test_clipboard_image_flow(self):
+        """Kiểm thử luồng dán ảnh chụp màn hình từ bộ nhớ tạm (Clipboard / Win+Shift+S)."""
+        clip_path = self.temp_path / "clip_screenshot.png"
+        img = Image.new("RGBA", (400, 300), color=(255, 255, 255, 255))
+        img.save(clip_path, format="PNG")
+
+        result = process_image_input(str(clip_path))
+        self.assertEqual(result.input_type, InputType.IMAGE)
+        self.assertIsNone(result.validation_error)
+        self.assertTrue(result.is_valid)
+        self.assertTrue(os.path.exists(result.file_path))
+
     # --- 3. KIỂM THỬ GIỚI HẠN DUNG LƯỢNG TỆP (> 5MB) ---
     def test_image_size_exceeded(self):
         """Tiêu chí chấp nhận FR-01: Báo lỗi rõ khi tệp quá lớn (> 5 MB)."""

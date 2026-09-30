@@ -1,0 +1,54 @@
+[
+  {
+    "id": "nb_demo_01",
+    "created_at": "30/09/2026 15:30",
+    "topic": "Vật lý – Quang học (Gương phẳng)",
+    "strand": "Vật lý THCS",
+    "problem_text": "Chiếu một tia sáng tới mặt một gương phẳng với góc tới bằng 30°. Hỏi góc phản xạ bằng bao nhiêu độ và tính góc hợp bởi tia tới và tia phản xạ?",
+    "concept_name": "Định luật phản xạ ánh sáng trên gương phẳng",
+    "full_concept": "Định luật phản xạ ánh sáng:\n1. Tia sáng phản xạ nằm trong mặt phẳng tới.\n2. Góc phản xạ luôn bằng góc tới (i' = i).\nKhi chùm sáng gặp mặt gương phẳng nhẵn bóng, ánh sáng không đi xuyên qua mà bị hắt ngược trở lại môi trường cũ.",
+    "key_takeaways": [
+      "Tia sáng chiếu tới mặt gương gọi là tia tới; tia bị hắt ngược lại gọi là tia phản xạ.",
+      "Đường pháp tuyến (vuông góc với mặt gương tại điểm tới) là đường chuẩn để đo góc tới (i) và góc phản xạ (i').",
+      "Nếu chiếu tia sáng vuông góc với mặt gương (i = 0°), tia phản xạ sẽ bật thẳng ngược trở lại theo phương cũ (i' = 0°)."
+    ],
+    "formula": "i' = i = 30°; Góc giữa 2 tia = 60°",
+    "pitfall": "Nhầm góc tới là góc hợp với mặt gương thay vì góc với đường pháp tuyến vuông góc.",
+    "rule_learned": "Góc phản xạ luôn bằng góc tới (i' = i).",
+    "pitfall_avoided": "Không nhầm góc hợp với mặt gương là góc tới.",
+    "next_step": "Dựng đường pháp tuyến vuông góc trước khi đo góc.",
+    "rating_stars": 5,
+    "feedback_comment": "Em đã hiểu rất rõ bản chất định luật phản xạ!",
+    "total_turns": 4,
+    "author_username": "minhtriet",
+    "author_name": "Minh Triết",
+    "author_avatar": "💡",
+    "author_class": "Lớp 7A • Say mê Vật lý 💡"
+  },
+  {
+    "id": "nb_demo_02",
+    "created_at": "30/09/2026 16:45",
+    "topic": "Sinh học – Trao đổi chất & Chuyển hóa năng lượng",
+    "strand": "Sinh học THCS",
+    "problem_text": "Tại sao vào những ngày nắng gắt, một số loài cây lại có hiện tượng héo rũ tạm thời vào buổi trưa?",
+    "concept_name": "Hiện tượng thoát hơi nước qua khí khổng ở lá",
+    "full_concept": "Quá trình thoát hơi nước diễn ra chủ yếu qua khí khổng ở lớp biểu bì lá cây. Khi nắng gắt, tốc độ thoát hơi nước vượt quá tốc độ hút nước của rễ, các tế bào mất sức trương nước làm lá bị héo rũ tạm thời.",
+    "key_takeaways": [
+      "Khí khổng chủ động đóng bớt lại vào ban trưa để hạn chế mất nước.",
+      "Hiện tượng héo rũ tạm thời giúp bảo vệ cây không bị khô kiệt tế bào.",
+      "Khi trời dịu mát, rễ tiếp tục hút nước bù đắp và cây sẽ tươi trở lại."
+    ],
+    "formula": "Tốc độ thoát nước > Tốc độ hút nước của rễ",
+    "pitfall": "Nghĩ rằng cây bị chết hẳn thay vì là cơ chế tự vệ sinh lý tạm thời.",
+    "rule_learned": "Cây héo do mất cân bằng nước tạm thời khi trời nắng to.",
+    "pitfall_avoided": "Không vội tưới nước lạnh đẫm lá khi trời đang nắng gắt.",
+    "next_step": "Tìm hiểu thêm cấu tạo tế bào đóng mở khí khổng.",
+    "rating_stars": 5,
+    "feedback_comment": "Socrates gợi ý rất hay về thí nghiệm thoát hơi nước!",
+    "total_turns": 5,
+    "author_username": "baoan",
+    "author_name": "Bảo An",
+    "author_avatar": "🌿",
+    "author_class": "Lớp 7B • Yêu Sinh học 🌿"
+  }
+]

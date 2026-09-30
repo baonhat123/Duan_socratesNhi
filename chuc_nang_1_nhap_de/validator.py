@@ -22,11 +22,56 @@ from .input_model import ProblemInput, InputType
 
 # Giới hạn kích thước tệp theo FR-01: 5 MB
 MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024  # 5,242,880 bytes
-ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png"}
+ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".bmp"}
 
 # Thư mục tạm dành cho phiên làm việc Socrates Nhí
 SOCRATES_TEMP_DIR = Path(tempfile.gettempdir()) / "socrates_nhi_uploads"
 SOCRATES_TEMP_DIR.mkdir(parents=True, exist_ok=True)
+
+# Thư mục tài nguyên dùng chung phục vụ Flet Web Asset Server
+WORKSPACE_ROOT = Path(__file__).resolve().parent.parent
+ASSETS_DIR = WORKSPACE_ROOT / "assets"
+ASSETS_UPLOADS_DIR = ASSETS_DIR / "uploads"
+ASSETS_SAMPLE_DIR = ASSETS_DIR / "sample_assets"
+ASSETS_UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+ASSETS_SAMPLE_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def resolve_image_asset_src(image_path: str) -> str:
+    """
+    Chuyển đổi đường dẫn ảnh cục bộ sang URL Web Asset tương thích 100% với Flet Web & Desktop.
+    - Đảm bảo file được đồng bộ vào thư mục assets/ của dự án để FastAPI phục vụ tĩnh.
+    - Trả về đường dẫn Web Asset (ví dụ: '/uploads/abc.png' hoặc '/sample_assets/xyz.png').
+    """
+    if not image_path:
+        return ""
+    p = Path(image_path)
+
+    # 1. Kiểm tra nếu file trùng tên trong assets/sample_assets/
+    sample_check = ASSETS_SAMPLE_DIR / p.name
+    if sample_check.exists():
+        return f"/sample_assets/{p.name}"
+
+    if not p.exists():
+        return image_path
+
+    # 2. Nếu file đã nằm trong ASSETS_DIR
+    try:
+        rel = p.resolve().relative_to(ASSETS_DIR.resolve())
+        return f"/{rel.as_posix()}"
+    except ValueError:
+        pass
+
+    # 3. Nếu nằm ngoài ASSETS_DIR: sao chép ngay vào assets/uploads/
+    ASSETS_UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+    dest = ASSETS_UPLOADS_DIR / f"img_{os.urandom(4).hex()}_{p.name}"
+    try:
+        shutil.copy2(p, dest)
+        return f"/uploads/{dest.name}"
+    except Exception as e:
+        print(f"[Asset Sync Error] {e}")
+        return image_path
+
 
 
 def validate_file_size(file_size_bytes: int) -> Tuple[bool, Optional[str]]:
@@ -47,7 +92,7 @@ def validate_file_format(file_path: str) -> Tuple[bool, Optional[str]]:
     
     ext = path.suffix.lower()
     if ext not in ALLOWED_EXTENSIONS:
-        return False, f"Định dạng tệp '{ext}' không được hỗ trợ. Chỉ chấp nhận ảnh định dạng JPG, JPEG hoặc PNG."
+        return False, f"Định dạng tệp '{ext}' không được hỗ trợ. Chỉ chấp nhận ảnh định dạng JPG, JPEG, PNG, WebP hoặc BMP."
     
     # Kiểm tra tệp ảnh thực tế bằng Pillow
     try:
@@ -80,14 +125,23 @@ def check_pii_and_safety(text: str) -> List[str]:
 
 def stage_uploaded_file(source_path: str) -> str:
     """
-    Sao chép tệp ảnh đã chọn vào thư mục tạm an toàn của ứng dụng
-    để quản lý vòng đời và tự động xóa sau khi phiên kết thúc.
+    Sao chép tệp ảnh đã chọn vào thư mục assets/uploads của ứng dụng
+    để vừa phục vụ OCR nội bộ, vừa phục vụ hiển thị trên Flet Web.
     """
     src = Path(source_path)
     dest_filename = f"upload_{os.urandom(4).hex()}_{src.name}"
-    dest_path = SOCRATES_TEMP_DIR / dest_filename
+
+    ASSETS_UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+    dest_path = ASSETS_UPLOADS_DIR / dest_filename
     shutil.copy2(src, dest_path)
+
+    try:
+        shutil.copy2(src, SOCRATES_TEMP_DIR / dest_filename)
+    except Exception:
+        pass
+
     return str(dest_path)
+
 
 
 def process_image_input(file_path: str) -> ProblemInput:

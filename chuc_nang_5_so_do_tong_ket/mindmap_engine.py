@@ -36,18 +36,28 @@ class MindmapBuilder:
         strand_name: str = "Vật lý THCS",
         given_facts: Optional[List[str]] = None,
         core_concepts: Optional[List[str]] = None,
-        target_variable: str = ""
+        target_variable: str = "",
+        problem_text: str = ""
     ) -> MindmapGraph:
         """
         Tạo sơ đồ tư duy gồm từ 3 đến 6 nút, không tiết lộ đáp số.
+        Chuẩn hóa theo phân môn KHTN 7 thực tế (Quang học, Cơ học, Hóa học, Sinh học).
         """
+        from .notebook_manager import get_curated_concept_details
+
+        curated = get_curated_concept_details(
+            problem_text=problem_text,
+            topic=topic,
+            core_concepts=core_concepts
+        )
+
         nodes: List[MindmapNode] = []
         connections = []
 
         # 1. Nút 1: Chủ đề bài toán (Topic Node)
         node_topic = MindmapNode(
             id="node_topic",
-            title=topic or "Khoa học Tự nhiên 7",
+            title=topic or curated.get("concept_name", "Khoa học Tự nhiên 7"),
             node_type=MindmapNodeType.TOPIC,
             subtitle=strand_name or "Mạch kiến thức KHTN",
             icon_name="category"
@@ -55,7 +65,7 @@ class MindmapBuilder:
         nodes.append(node_topic)
 
         # 2. Nút 2: Dữ kiện đã cho (Given Facts Node)
-        facts = given_facts or ["s = 12 km", "t = 30 phút"]
+        facts = given_facts or ["Quan sát thực tế đề bài cho"]
         facts_summary = " • ".join(facts[:3])
         node_facts = MindmapNode(
             id="node_facts",
@@ -68,10 +78,10 @@ class MindmapBuilder:
         connections.append(("node_topic", "node_facts"))
 
         # 3. Nút 3: Mục tiêu cần tìm (Target Node)
-        target_label = target_variable or "Tốc độ v"
+        target_label = target_variable or "Vấn đề cần giải quyết"
         node_target = MindmapNode(
             id="node_target",
-            title="Mục tiêu cần tính",
+            title="Mục tiêu cần tìm",
             node_type=MindmapNodeType.FACT,
             subtitle=target_label,
             icon_name="flag"
@@ -79,29 +89,22 @@ class MindmapBuilder:
         nodes.append(node_target)
         connections.append(("node_facts", "node_target"))
 
-        # 4. Nút 4: Khái niệm & Công thức cốt lõi (Concept Node)
-        concept_names = core_concepts or ["Tốc độ chuyển động"]
-        first_concept = concept_names[0] if concept_names else "Tốc độ chuyển động"
-        matched_c = next((c for c in CONCEPT_MAP.values() if c.name == first_concept), None)
-        formula = matched_c.formula if matched_c and matched_c.formula else "v = s / t"
-        concept_desc = matched_c.description if matched_c else "Công thức tính tốc độ chuyển động."
-
+        # 4. Nút 4: Khái niệm & Quy tắc cốt lõi (Concept Node)
+        formula = curated.get("formula", "")
+        concept_desc = curated.get("full_concept", "Quy luật cốt lõi của bài học")
         node_concept = MindmapNode(
             id="node_concept",
-            title=first_concept,
+            title=curated.get("concept_name", "Quy luật cốt lõi"),
             node_type=MindmapNodeType.CONCEPT,
             subtitle=concept_desc[:70] + "..." if len(concept_desc) > 70 else concept_desc,
-            formula=formula,
+            formula=formula if formula else None,
             icon_name="functions"
         )
         nodes.append(node_concept)
         connections.append(("node_target", "node_concept"))
 
-        # 5. Nút 5: Phương pháp tự kiểm tra & Tránh bẫy (Check Node)
-        check_desc = "Đổi đơn vị đo lường tương thích trước khi tính toán (ví dụ: phút sang giờ)."
-        if matched_c and matched_c.common_pitfalls:
-            check_desc = matched_c.common_pitfalls[0]
-
+        # 5. Nút 5: Phương pháp tự kiểm tra & Bẫy sai lầm (Check Node)
+        check_desc = curated.get("pitfall", "Kiểm tra kỹ điều kiện và tính hợp lý của kết quả.")
         node_check = MindmapNode(
             id="node_check",
             title="Tự kiểm tra kết quả",

@@ -13,10 +13,12 @@ if str(WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(WORKSPACE_ROOT))
 
 import flet as ft
+from app_tich_hop_socrates.ai_service import load_project_env
+load_project_env()
+
 from app_tich_hop_socrates.main_app import main
+from app_tich_hop_socrates.app_launcher import safe_run_app
 
 if __name__ == "__main__":
-    if hasattr(ft, "run"):
-        ft.run(main)
-    elif hasattr(ft, "app"):
-        ft.app(target=main)
+    safe_run_app(main)
+

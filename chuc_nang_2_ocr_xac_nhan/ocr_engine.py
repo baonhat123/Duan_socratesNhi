@@ -62,9 +62,16 @@ def _extract_via_openai_vision(image_path: str) -> Optional[str]:
     """
     Trích xuất văn bản từ ảnh bằng OpenAI-compatible Vision API (nếu cấu hình trong .env).
     """
+    # Đảm bảo nạp .env
+    try:
+        from dotenv import load_dotenv
+        load_dotenv()
+    except Exception:
+        pass
+
     base_url = os.getenv("OPENAI_BASE_URL")
     api_key = os.getenv("OPENAI_API_KEY")
-    model_name = os.getenv("SOCRATES_MODEL", "gpt-4o-mini")
+    model_name = os.getenv("SOCRATES_MODEL", "gpt-5-mini-2025-08-07")
 
     if not api_key:
         return None
@@ -87,26 +94,47 @@ def _extract_via_openai_vision(image_path: str) -> Optional[str]:
             "- Chỉ trả ra nội dung đề bài được trích xuất, tuyệt đối không giải, không thêm lời chào, không đưa ra đáp số."
         )
 
-        response = client.chat.completions.create(
-            model=model_name,
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": prompt},
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}
-                        }
-                    ]
-                }
-            ],
-            max_tokens=600,
-            temperature=0.0
-        )
-        return response.choices[0].message.content.strip()
-    except Exception as e:
-        print(f"[OCR Warning] Không thể gọi OpenAI Vision API ({e}). Đang chuyển sang bộ nhận dạng nội bộ.")
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": prompt},
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}
+                    }
+                ]
+            }
+        ]
+
+        # Thử gọi lượt 1 với tham số tương thích đa dạng mô hình
+        try:
+            is_reasoning = any(prefix in model_name.lower() for prefix in ["gpt-5", "o1", "o3", "o4"])
+            kwargs = {
+                "model": model_name,
+                "messages": messages,
+                "timeout": 20.0
+            }
+            if is_reasoning:
+                kwargs["max_completion_tokens"] = 800
+            else:
+                kwargs["temperature"] = 0.0
+                kwargs["max_tokens"] = 600
+
+            response = client.chat.completions.create(**kwargs)
+            return response.choices[0].message.content.strip()
+        except Exception as retry_err:
+            # Retry an toàn nếu lỗi temperature hoặc max_tokens
+            response = client.chat.completions.create(
+                model=model_name,
+                messages=messages,
+                max_completion_tokens=800,
+                timeout=20.0
+            )
+            return response.choices[0].message.content.strip()
+
+    except Exception:
+        # Chuyển sang bộ nhận dạng nội bộ an toàn
         return None
 
 

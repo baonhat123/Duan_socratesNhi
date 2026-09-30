@@ -60,8 +60,8 @@ class RubricDashboardView:
         self.standalone_header = ft.Container(
             content=ft.Row([
                 ft.CircleAvatar(
-                    content=ft.Icon(ft.Icons.ASSESSMENT_ROUNDED, color=ft.Colors.EMERALD_700, size=24),
-                    bgcolor=ft.Colors.EMERALD_100,
+                    content=ft.Icon(ft.Icons.ASSESSMENT_ROUNDED, color=ft.Colors.TEAL_700, size=24),
+                    bgcolor=ft.Colors.TEAL_100,
                     radius=20
                 ),
                 ft.Column([
@@ -159,7 +159,7 @@ class RubricDashboardView:
                         border_radius=12,
                         width=85,
                         height=85,
-                        alignment=ft.alignment.center
+                        alignment=ft.Alignment.CENTER
                     ),
                     ft.Column([
                         ft.Row([
@@ -253,7 +253,7 @@ class RubricDashboardView:
                             border=ft.Border.all(1, border_c)
                         ),
                         ft.Column([
-                            ft.Text(crit.title, size=14, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_950),
+                            ft.Text(crit.title, size=14, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900),
                             ft.Text(f"Quy chuẩn Mục 16.3: {crit.rubric_rule}", size=11, color=ft.Colors.GREY_600)
                         ], spacing=1)
                     ], spacing=10),
@@ -317,7 +317,7 @@ class RubricDashboardView:
             content=ft.Row([
                 ft.Icon(ft.Icons.MILITARY_TECH_ROUNDED, color=ft.Colors.AMBER_800, size=28),
                 ft.Column([
-                    ft.Text("BẢNG 5 CHỈ SỐ ĐO LƯỜNG THÀNH CÔNG MVP (MỤC 3 - SPEC v3.0)", size=15, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_950),
+                    ft.Text("BẢNG 5 CHỈ SỐ ĐO LƯỜNG THÀNH CÔNG MVP (MỤC 3 - SPEC v3.0)", size=15, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900),
                     ft.Text("Toàn bộ 5 chỉ số cốt lõi đều đạt và vượt mục tiêu đặt ra cho Hội thi Sáng tạo trẻ Quốc gia AI 2026 Bảng A.", size=12, color=ft.Colors.GREY_700)
                 ], spacing=2, expand=True)
             ], spacing=12),
@@ -357,7 +357,7 @@ class RubricDashboardView:
                 ft.Row([
                     ft.Row([
                         ft.Icon(icon, color=ft.Colors.INDIGO_700, size=20),
-                        ft.Text(item.name, size=13, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_950)
+                        ft.Text(item.name, size=13, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900)
                     ], spacing=8),
                     badge
                 ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
@@ -410,7 +410,7 @@ class RubricDashboardView:
         return ft.Column([
             ft.Row([
                 ft.Column([
-                    ft.Text("Văn Bản Minh Chứng Hồ Sơ Bảng A (Mục 19)", size=14, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_950),
+                    ft.Text("Văn Bản Minh Chứng Hồ Sơ Bảng A (Mục 19)", size=14, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900),
                     ft.Text("Báo cáo số liệu thực nghiệm chuẩn Markdown, sẵn sàng nộp Ban Giám Khảo.", size=11, color=ft.Colors.GREY_600)
                 ], spacing=1),
                 btn_copy

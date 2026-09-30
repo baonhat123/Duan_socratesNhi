@@ -19,6 +19,8 @@ from .ocr_model import OcrResult, ConfirmedProblem
 from .ocr_engine import process_image_ocr
 from .formula_normalizer import normalize_khtn_text, extract_formulas_and_units
 from .sample_images import SAMPLE_PATHS
+from chuc_nang_1_nhap_de.validator import resolve_image_asset_src
+
 
 
 class OcrConfirmationView:
@@ -130,11 +132,12 @@ class OcrConfirmationView:
 
         # 3. CỘT TRÁI: Ảnh đề bài gốc & Đánh giá độ nét
         self.img_display = ft.Image(
-            src=self.current_image_path,
+            src=resolve_image_asset_src(self.current_image_path),
             fit=ft.BoxFit.CONTAIN,
             border_radius=8,
             height=240
         )
+
         self.sharpness_badge = ft.Container(
             content=ft.Row([
                 ft.Icon(ft.Icons.LENS, color=ft.Colors.GREEN_600, size=12),
@@ -224,6 +227,10 @@ class OcrConfirmationView:
             multiline=True,
             min_lines=6,
             max_lines=10,
+            border_radius=10,
+            border_color=ft.Colors.INDIGO_200,
+            focused_border_color=ft.Colors.INDIGO_600,
+            cursor_color=ft.Colors.INDIGO_700,
             on_change=self._on_text_edited
         )
 
@@ -311,41 +318,82 @@ class OcrConfirmationView:
         )
 
     def load_image_and_run_ocr(self, image_path: str):
-        """Tiến hành kiểm tra độ nét và trích xuất OCR từ tệp ảnh."""
+        """Tiến hành kiểm tra độ nét và trích xuất OCR từ tệp ảnh (Bất đồng bộ mượt mà)."""
         self.current_image_path = image_path
-        self.img_display.src = image_path
+        self.img_display.src = resolve_image_asset_src(image_path)
 
-        # Thực thi OCR engine
-        ocr_res = process_image_ocr(image_path)
-        self.current_ocr_result = ocr_res
 
-        # Cập nhật huy hiệu độ nét
-        sharpness = ocr_res.sharpness_score
-        if ocr_res.is_blurry:
-            self.sharpness_badge.content.controls[0].color = ft.Colors.RED_600
-            self.sharpness_badge.content.controls[1].value = f"Độ nét: {sharpness}% (Quá mờ)"
-            self.sharpness_badge.bgcolor = ft.Colors.RED_50
-            self.sharpness_badge.border = ft.Border.all(1, ft.Colors.RED_200)
+        # 1. Cập nhật giao diện ngay lập tức ở trạng thái đang nhận dạng
+        self.sharpness_badge.content.controls[0].color = ft.Colors.AMBER_600
+        self.sharpness_badge.content.controls[1].value = "Đang nhận diện chữ & công thức..."
+        self.sharpness_badge.bgcolor = ft.Colors.AMBER_50
+        self.sharpness_badge.border = ft.Border.all(1, ft.Colors.AMBER_200)
 
-            # Hiển thị thông báo từ chối ảnh mờ
-            self._show_alert(ocr_res.error_message or "Ảnh quá mờ, không thể đọc chính xác!")
-            self.txt_editor.value = ""
-            self.live_preview_text.value = "(Không có nội dung do ảnh quá mờ)"
-            self.btn_confirm.disabled = True
-            self.detected_tags_box.visible = False
-        else:
-            self.sharpness_badge.content.controls[0].color = ft.Colors.GREEN_600
-            self.sharpness_badge.content.controls[1].value = f"Độ nét: {sharpness}% (Rõ nét)"
-            self.sharpness_badge.bgcolor = ft.Colors.GREEN_50
-            self.sharpness_badge.border = ft.Border.all(1, ft.Colors.GREEN_200)
-
-            self.alert_box.visible = False
-            self.btn_confirm.disabled = False
-            self.txt_editor.value = ocr_res.formatted_text
-            self._update_live_preview(ocr_res.formatted_text)
-
+        self.txt_editor.value = "AI đang trích xuất văn bản và công thức KHTN từ ảnh... (Em đợi xíu nhé 🔍)"
+        self.btn_confirm.disabled = True
+        self.alert_box.visible = False
         self.success_box.visible = False
-        self.page.update()
+        try:
+            self.page.update()
+        except Exception:
+            pass
+
+        # 2. Chạy OCR ngầm trong background thread
+        import threading
+        def _ocr_worker():
+            try:
+                ocr_res = process_image_ocr(image_path)
+            except Exception as ex:
+                from .ocr_model import OcrResult
+                ocr_res = OcrResult(
+                    raw_text="",
+                    formatted_text="",
+                    sharpness_score=50,
+                    is_blurry=False,
+                    detected_formulas=[],
+                    detected_units=[],
+                    error_message=f"Lỗi khi đọc ảnh: {str(ex)}"
+                )
+
+            def _apply_result():
+                self.current_ocr_result = ocr_res
+                sharpness = ocr_res.sharpness_score
+                if ocr_res.is_blurry:
+                    self.sharpness_badge.content.controls[0].color = ft.Colors.RED_600
+                    self.sharpness_badge.content.controls[1].value = f"Độ nét: {sharpness}% (Quá mờ)"
+                    self.sharpness_badge.bgcolor = ft.Colors.RED_50
+                    self.sharpness_badge.border = ft.Border.all(1, ft.Colors.RED_200)
+
+                    # Hiển thị thông báo từ chối ảnh mờ
+                    self._show_alert(ocr_res.error_message or "Ảnh quá mờ, không thể đọc chính xác!")
+                    self.txt_editor.value = ""
+                    self.live_preview_text.value = "(Không có nội dung do ảnh quá mờ)"
+                    self.btn_confirm.disabled = True
+                    self.detected_tags_box.visible = False
+                else:
+                    self.sharpness_badge.content.controls[0].color = ft.Colors.GREEN_600
+                    self.sharpness_badge.content.controls[1].value = f"Độ nét: {sharpness}% (Rõ nét)"
+                    self.sharpness_badge.bgcolor = ft.Colors.GREEN_50
+                    self.sharpness_badge.border = ft.Border.all(1, ft.Colors.GREEN_200)
+
+                    self.alert_box.visible = False
+                    self.btn_confirm.disabled = False
+                    self.txt_editor.value = ocr_res.formatted_text
+                    self._update_live_preview(ocr_res.formatted_text)
+
+                self.success_box.visible = False
+                try:
+                    self.page.update()
+                except Exception:
+                    pass
+
+            loop = getattr(self.page, "loop", None)
+            if loop and loop.is_running():
+                loop.call_soon_threadsafe(_apply_result)
+            else:
+                _apply_result()
+
+        threading.Thread(target=_ocr_worker, daemon=True).start()
 
     def _on_sample_changed(self, e):
         """Xử lý khi học sinh chọn ảnh mẫu khác."""
