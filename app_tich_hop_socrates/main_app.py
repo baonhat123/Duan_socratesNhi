@@ -51,12 +51,21 @@ from chuc_nang_7_demo_offline_cache.offline_engine import GLOBAL_OFFLINE_ENGINE
 from app_tich_hop_socrates.app_state import SessionState, AppStep
 from app_tich_hop_socrates.auth_service import AuthService, UserAccount
 from app_tich_hop_socrates.auth_view import LoginScreenView, AuthModalDialog, AuthDialogView
+from app_tich_hop_socrates.dashboard_view import StudentDashboardModal, safe_open_dialog, safe_close_dialog
 
 
 class SocratesIntegratedApp:
     """
     Ứng dụng tích hợp điều phối toàn bộ hành trình tương tác của học sinh.
     """
+    def _safe_open_dialog(self, dialog: ft.AlertDialog):
+        """Mở hộp thoại tương thích 100% với Flet 1.0.1 và các bản Flet khác."""
+        safe_open_dialog(self.page, dialog)
+
+    def _safe_close_dialog(self, dialog: ft.AlertDialog):
+        """Đóng hộp thoại tương thích 100% với Flet 1.0.1."""
+        safe_close_dialog(self.page, dialog)
+
     def __init__(self, page: ft.Page):
         self.page = page
         self.state = SessionState()
@@ -214,10 +223,16 @@ class SocratesIntegratedApp:
                 self.navigate_to_step_1()
 
         def on_click_pill_3(_):
-            if not self.state.is_socratic_completed:
-                self._show_not_summarized_dialog()
-            else:
+            is_unlocked = self.state.is_socratic_completed
+            if not is_unlocked and self.socratic_view and hasattr(self.socratic_view, "is_mindmap_unlocked"):
+                if self.socratic_view.is_mindmap_unlocked():
+                    is_unlocked = True
+                    self.state.is_socratic_completed = True
+
+            if is_unlocked:
                 self.navigate_to_step_5()
+            else:
+                self._show_not_summarized_dialog()
 
         self.pill_step_1 = self._create_station_pill(1, "Bước 1: Đặt câu hỏi", "Gõ câu hỏi / Mẫu / Chụp ảnh", on_click=on_click_pill_1)
         self.pill_step_2 = self._create_station_pill(2, "Bước 2: Gia sư Socratic", "Gợi mở & Trao đổi trực tiếp 💬", on_click=on_click_pill_2)
@@ -263,6 +278,27 @@ class SocratesIntegratedApp:
             shadow=ft.BoxShadow(blur_radius=10, color=ft.Colors.with_opacity(0.03, ft.Colors.BLACK), offset=ft.Offset(0, 2))
         )
 
+        cur_user = self.state.current_user or AuthService.get_current_user()
+        streak_data = AuthService.get_user_streak(cur_user.username)
+        s_count = streak_data.get("streak_count", 5)
+
+        self.streak_text = ft.Text(f"{s_count} Ngày", size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.AMBER_900)
+        self.streak_dashboard_btn = ft.Container(
+            content=ft.Row([
+                ft.Text("🔥", size=14),
+                self.streak_text,
+                ft.Container(width=1, height=12, bgcolor=ft.Colors.AMBER_300),
+                ft.Text("Tiến Độ 📊", size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900)
+            ], spacing=4),
+            bgcolor=ft.Colors.AMBER_50,
+            padding=ft.Padding(10, 6, 12, 6),
+            border_radius=12,
+            border=ft.Border.all(1.5, ft.Colors.AMBER_400),
+            tooltip="Bấm để mở Bảng Theo Dõi Học Tập: Streak chuỗi ngày, tiến độ 3 mạch KHTN 7 và quản lý tài khoản",
+            on_click=lambda _: self._open_dashboard(),
+            ink=True
+        )
+
         self.user_chip = self._create_user_profile_chip()
 
         self.header_panel = ft.Container(
@@ -271,6 +307,7 @@ class SocratesIntegratedApp:
                 ft.Row([
                     self.pedagogy_badge,
                     self.ai_status_btn,
+                    self.streak_dashboard_btn,
                     self.notebook_btn,
                     self.offline_btn,
                     self.guardrail_btn,
@@ -498,13 +535,6 @@ class SocratesIntegratedApp:
                 save_status_text.color = ft.Colors.RED_700
             self.page.update()
 
-        def close_dialog(_):
-            if hasattr(self.page, "close"):
-                self.page.close(dialog)
-            else:
-                dialog.open = False
-                self.page.update()
-
         content_box = ft.Container(
             content=ft.Column([
                 ft.Container(
@@ -549,6 +579,9 @@ class SocratesIntegratedApp:
             padding=10
         )
 
+        def close_dialog(_):
+            self._safe_close_dialog(dialog)
+
         dialog = ft.AlertDialog(
             title=ft.Row([
                 ft.Icon(ft.Icons.SMART_TOY_ROUNDED, color=ft.Colors.INDIGO_700, size=24),
@@ -565,23 +598,14 @@ class SocratesIntegratedApp:
             actions_alignment=ft.MainAxisAlignment.END,
         )
 
-        if hasattr(self.page, "open"):
-            self.page.open(dialog)
-        else:
-            self.page.dialog = dialog
-            dialog.open = True
-            self.page.update()
+        self._safe_open_dialog(dialog)
 
     def _open_guardrail_dashboard(self):
         """Mở Bảng Điều Khiển An Toàn & Thử Nghiệm Bẻ Khóa AI (FR-07)."""
         playground = GuardrailPlaygroundView(page=self.page, is_standalone=False)
 
         def close_dialog(_):
-            if hasattr(self.page, "close"):
-                self.page.close(dialog)
-            else:
-                dialog.open = False
-                self.page.update()
+            self._safe_close_dialog(dialog)
 
         dialog = ft.AlertDialog(
             title=ft.Row([
@@ -602,21 +626,12 @@ class SocratesIntegratedApp:
             ],
             actions_alignment=ft.MainAxisAlignment.END,
         )
-        if hasattr(self.page, "open"):
-            self.page.open(dialog)
-        else:
-            self.page.dialog = dialog
-            dialog.open = True
-            self.page.update()
+        self._safe_open_dialog(dialog)
 
     def _open_offline_dashboard(self):
         """Mở Bảng Điều Khiển Demo Offline & Ngân hàng 12 Bài Mẫu KHTN 7 (FR-10)."""
         def on_study_prob(prob):
-            if hasattr(self.page, "close"):
-                self.page.close(dialog)
-            else:
-                dialog.open = False
-                self.page.update()
+            self._safe_close_dialog(dialog)
 
             # Nạp bài toán vào ứng dụng và vào thẳng trao đổi với Gia sư Socratic
             normalized_text = normalize_khtn_text(prob.problem_text)
@@ -641,11 +656,7 @@ class SocratesIntegratedApp:
         )
 
         def close_dialog(_):
-            if hasattr(self.page, "close"):
-                self.page.close(dialog)
-            else:
-                dialog.open = False
-                self.page.update()
+            self._safe_close_dialog(dialog)
 
         dialog = ft.AlertDialog(
             title=ft.Row([
@@ -666,12 +677,19 @@ class SocratesIntegratedApp:
             ],
             actions_alignment=ft.MainAxisAlignment.END,
         )
-        if hasattr(self.page, "open"):
-            self.page.open(dialog)
-        else:
-            self.page.dialog = dialog
-            dialog.open = True
-            self.page.update()
+        self._safe_open_dialog(dialog)
+
+    def _open_dashboard(self):
+        """Mở Bảng Theo Dõi Học Tập, Streak & Tiến Độ THCS."""
+        cur_user = self.state.current_user or AuthService.get_current_user()
+        dashboard = StudentDashboardModal(
+            self.page,
+            current_user=cur_user,
+            on_open_notebook=self._open_notebook_viewer,
+            on_switch_account=self._open_auth_dialog,
+            on_logout=self._on_logout
+        )
+        dashboard.show()
 
     def _create_user_profile_chip(self) -> ft.Container:
         """Tạo thẻ hiển thị thông tin tài khoản học sinh ở góc phải trên cùng."""
@@ -696,14 +714,14 @@ class SocratesIntegratedApp:
                     self.user_name_text,
                     self.user_class_text
                 ], spacing=0),
-                ft.Icon(ft.Icons.ARROW_DROP_DOWN_ROUNDED, color=ft.Colors.PURPLE_800, size=18)
+                ft.Icon(ft.Icons.ANALYTICS_ROUNDED, color=ft.Colors.PURPLE_800, size=16)
             ], spacing=6, vertical_alignment=ft.CrossAxisAlignment.CENTER),
             bgcolor=ft.Colors.PURPLE_50,
             padding=ft.Padding(8, 4, 10, 4),
             border_radius=12,
             border=ft.Border.all(1, ft.Colors.PURPLE_300),
-            tooltip="Tài khoản học sinh • Bấm để xem thông tin, đổi tài khoản hoặc đăng nhập",
-            on_click=lambda _: self._open_auth_dialog(),
+            tooltip="Hồ sơ học sinh • Bấm để mở Dashboard tiến độ, streak và quản lý tài khoản",
+            on_click=lambda _: self._open_dashboard(),
             ink=True
         )
         return chip
@@ -756,6 +774,9 @@ class SocratesIntegratedApp:
     def _on_logout(self):
         """Xử lý khi học sinh bấm Đăng xuất."""
         AuthService.logout()
+        guest = AuthService.logout_to_guest()
+        self.state.current_user = guest
+        self._update_user_chip_display(guest)
         self._show_login_screen()
 
     def _update_user_chip_display(self, user: UserAccount):
@@ -765,6 +786,10 @@ class SocratesIntegratedApp:
             self.user_name_text.value = user.display_name
             class_short = user.grade_class.split("•")[0].strip() if user.grade_class else "Học sinh"
             self.user_class_text.value = class_short
+        if hasattr(self, "streak_text") and self.streak_text:
+            s_data = AuthService.get_user_streak(user.username)
+            self.streak_text.value = f"{s_data['streak_count']} Ngày"
+        self.page.update()
 
     def _open_auth_dialog(self):
         """Mở cửa sổ Đăng nhập / Tài khoản học sinh."""
@@ -796,17 +821,16 @@ class SocratesIntegratedApp:
         self.page.update()
 
     def _open_notebook_viewer(self):
-        """Mở Sổ tay Tự học từ thanh điều hướng trên cùng kèm thông tin tài khoản học sinh."""
+        """Mở Sổ tay Tự học của duy nhất học sinh hiện hành."""
         from chuc_nang_5_so_do_tong_ket.notebook_manager import load_notebook_entries
         entries = load_notebook_entries()
 
         cur_user = self.state.current_user or AuthService.get_current_user()
-        active_filter = ["all"]  # "all" hoặc "mine"
 
         detail_container = ft.Container(expand=True)
         list_container = ft.Column(spacing=6, scroll=ft.ScrollMode.AUTO)
 
-        def display_entry_detail(item: dict):
+        def display_entry_detail(item: dict, update_page: bool = True):
             takeaways_list = []
             for t in item.get("key_takeaways", []):
                 takeaways_list.append(
@@ -816,18 +840,11 @@ class SocratesIntegratedApp:
                     ], spacing=4)
                 )
 
-            author_row = ft.Row([
-                ft.Text(item.get("author_avatar", "💡"), size=14),
-                ft.Text(f"Học sinh: {item.get('author_name', 'Học sinh')} • {item.get('author_class', '')}", size=11, color=ft.Colors.PURPLE_900, weight=ft.FontWeight.W_500)
-            ], spacing=4) if item.get("author_name") else ft.Container()
-
             detail_container.content = ft.Column([
                 ft.Row([
                     ft.Text(item.get("topic", "Khoa học Tự nhiên 7"), size=15, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900),
                     ft.Text(item.get("created_at", ""), size=11, color=ft.Colors.GREY_600)
                 ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-
-                author_row,
 
                 # Đề bài
                 ft.Container(
@@ -878,106 +895,106 @@ class SocratesIntegratedApp:
                 ], spacing=10)
             ], spacing=10, scroll=ft.ScrollMode.AUTO)
 
-            self.page.update()
+            if update_page:
+                try:
+                    self.page.update()
+                except Exception:
+                    pass
 
-        def render_list():
-            list_container.controls.clear()
-            filtered_entries = entries
-            if active_filter[0] == "mine":
-                filtered_entries = [
-                    e for e in entries
-                    if e.get("author_username") == cur_user.username or (cur_user.username == "minhtriet" and not e.get("author_username"))
-                ]
+        cards = []
+        selected_idx = [0]
 
-            if filtered_entries:
-                for entry in filtered_entries:
-                    def make_click_handler(item_ref=entry):
-                        return lambda _: display_entry_detail(item_ref)
+        def select_card(idx: int):
+            selected_idx[0] = idx
+            for i, c in enumerate(cards):
+                is_sel = (i == idx)
+                c.bgcolor = ft.Colors.INDIGO_50 if is_sel else ft.Colors.WHITE
+                c.border = ft.Border.all(1.5, ft.Colors.INDIGO_600) if is_sel else ft.Border.all(1, ft.Colors.INDIGO_100)
+            display_entry_detail(entries[idx], update_page=True)
 
-                    author_label = f"{entry.get('author_avatar', '💡')} {entry.get('author_name', 'Minh Triết')}"
+        if entries:
+            for idx, entry in enumerate(entries):
+                def make_click_handler(i=idx):
+                    return lambda _: select_card(i)
 
-                    card = ft.Container(
-                        content=ft.Column([
-                            ft.Row([
-                                ft.Text(entry.get("concept_name", entry.get("topic", "Bài học")), size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900, expand=True),
-                                ft.Text(f"{'⭐' * entry.get('rating_stars', 5)}", size=9, color=ft.Colors.AMBER_600)
-                            ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-                            ft.Row([
-                                ft.Text(author_label, size=10, color=ft.Colors.PURPLE_800, weight=ft.FontWeight.W_500),
-                                ft.Text(entry.get("created_at", ""), size=9, color=ft.Colors.GREY_500)
-                            ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
-                        ], spacing=2),
-                        bgcolor=ft.Colors.WHITE,
-                        padding=8,
-                        border_radius=8,
-                        border=ft.Border.all(1, ft.Colors.INDIGO_100),
-                        on_click=make_click_handler(),
-                        ink=True
-                    )
-                    list_container.controls.append(card)
+                strand_name = entry.get("strand", "")
+                topic_str = entry.get("topic", "")
+                if any(k in strand_name or k in topic_str for k in ["Vật", "Tốc độ", "Âm", "Ánh sáng", "VL"]):
+                    badge_icon = "⚡"
+                    badge_label = "Vật lý"
+                    badge_bg = ft.Colors.BLUE_50
+                    badge_fg = ft.Colors.BLUE_900
+                elif any(k in strand_name or k in topic_str for k in ["Hóa", "Nguyên tử", "Phân tử", "Hóa trị", "HH"]):
+                    badge_icon = "🔬"
+                    badge_label = "Hóa học"
+                    badge_bg = ft.Colors.PURPLE_50
+                    badge_fg = ft.Colors.PURPLE_900
+                else:
+                    badge_icon = "🌿"
+                    badge_label = "Sinh học"
+                    badge_bg = ft.Colors.GREEN_50
+                    badge_fg = ft.Colors.GREEN_900
 
-                display_entry_detail(filtered_entries[0])
-            else:
-                list_container.controls.append(
-                    ft.Container(
-                        content=ft.Column([
-                            ft.Icon(ft.Icons.MENU_BOOK_ROUNDED, color=ft.Colors.GREY_400, size=28),
-                            ft.Text("Chưa có bài nào!", size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_600),
-                            ft.Text("Hãy học và đúc kết để bài học xuất hiện ở đây nhé!", size=9, color=ft.Colors.GREY_500, text_align=ft.TextAlign.CENTER)
-                        ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=3),
-                        padding=12
-                    )
+                is_first = (idx == 0)
+                card = ft.Container(
+                    content=ft.Column([
+                        ft.Row([
+                            ft.Container(
+                                content=ft.Row([
+                                    ft.Text(badge_icon, size=10),
+                                    ft.Text(badge_label, size=9, weight=ft.FontWeight.BOLD, color=badge_fg)
+                                ], spacing=3),
+                                bgcolor=badge_bg,
+                                padding=ft.Padding(5, 1, 6, 1),
+                                border_radius=6
+                            ),
+                            ft.Text(f"{'⭐' * entry.get('rating_stars', 5)}", size=9, color=ft.Colors.AMBER_600)
+                        ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+                        ft.Text(entry.get("concept_name", entry.get("topic", "Bài học")), size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900),
+                        ft.Text(entry.get("created_at", ""), size=9, color=ft.Colors.GREY_500)
+                    ], spacing=3),
+                    bgcolor=ft.Colors.INDIGO_50 if is_first else ft.Colors.WHITE,
+                    padding=8,
+                    border_radius=8,
+                    border=ft.Border.all(1.5 if is_first else 1, ft.Colors.INDIGO_600 if is_first else ft.Colors.INDIGO_100),
+                    on_click=make_click_handler(idx),
+                    ink=True
                 )
-                detail_container.content = ft.Container(
-                    content=ft.Text("Chưa có bài học nào theo bộ lọc này.", color=ft.Colors.GREY_500),
-                    alignment=ft.Alignment.CENTER
+                cards.append(card)
+                list_container.controls.append(card)
+
+            display_entry_detail(entries[0], update_page=False)
+        else:
+            list_container.controls.append(
+                ft.Container(
+                    content=ft.Column([
+                        ft.Icon(ft.Icons.MENU_BOOK_ROUNDED, color=ft.Colors.GREY_400, size=28),
+                        ft.Text("Sổ tay đang trống!", size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_600),
+                        ft.Text("Hãy học và đúc kết để bài học xuất hiện ở đây nhé!", size=9, color=ft.Colors.GREY_500, text_align=ft.TextAlign.CENTER)
+                    ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=3),
+                    padding=12
                 )
-            self.page.update()
-
-        # Nút chuyển bộ lọc
-        btn_filter_all = ft.Container(
-            content=ft.Text("Tất cả", size=10, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900),
-            bgcolor=ft.Colors.INDIGO_100,
-            padding=ft.Padding(8, 4, 8, 4),
-            border_radius=6,
-            ink=True
-        )
-        btn_filter_mine = ft.Container(
-            content=ft.Text(f"Của em ({cur_user.display_name})", size=10, color=ft.Colors.GREY_700),
-            bgcolor=ft.Colors.GREY_100,
-            padding=ft.Padding(8, 4, 8, 4),
-            border_radius=6,
-            ink=True
-        )
-
-        def set_filter_all(_):
-            active_filter[0] = "all"
-            btn_filter_all.bgcolor = ft.Colors.INDIGO_100
-            btn_filter_all.content.color = ft.Colors.INDIGO_900
-            btn_filter_all.content.weight = ft.FontWeight.BOLD
-            btn_filter_mine.bgcolor = ft.Colors.GREY_100
-            btn_filter_mine.content.color = ft.Colors.GREY_700
-            btn_filter_mine.content.weight = ft.FontWeight.NORMAL
-            render_list()
-
-        def set_filter_mine(_):
-            active_filter[0] = "mine"
-            btn_filter_mine.bgcolor = ft.Colors.PURPLE_100
-            btn_filter_mine.content.color = ft.Colors.PURPLE_900
-            btn_filter_mine.content.weight = ft.FontWeight.BOLD
-            btn_filter_all.bgcolor = ft.Colors.GREY_100
-            btn_filter_all.content.color = ft.Colors.GREY_700
-            btn_filter_all.content.weight = ft.FontWeight.NORMAL
-            render_list()
-
-        btn_filter_all.on_click = set_filter_all
-        btn_filter_mine.on_click = set_filter_mine
-
-        filter_row = ft.Row([btn_filter_all, btn_filter_mine], spacing=4)
+            )
+            detail_container.content = ft.Container(
+                content=ft.Text("Chưa có bài học nào được lưu.", color=ft.Colors.GREY_500),
+                alignment=ft.Alignment.CENTER
+            )
 
         left_column = ft.Container(
             content=ft.Column([
-                filter_row,
+                ft.Row([
+                    ft.Row([
+                        ft.Icon(ft.Icons.AUTO_STORIES_ROUNDED, color=ft.Colors.INDIGO_700, size=15),
+                        ft.Text(f"Bài Đã Đúc Kết ({len(entries)})", size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900),
+                    ], spacing=5),
+                    ft.Container(
+                        content=ft.Text("KHTN 7", size=9, weight=ft.FontWeight.BOLD, color=ft.Colors.GREEN_800),
+                        bgcolor=ft.Colors.GREEN_50,
+                        padding=ft.Padding(5, 1, 5, 1),
+                        border_radius=6,
+                        border=ft.Border.all(1, ft.Colors.GREEN_200)
+                    )
+                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
                 ft.Divider(height=1, color=ft.Colors.GREY_200),
                 list_container
             ], spacing=6, expand=True),
@@ -994,20 +1011,16 @@ class SocratesIntegratedApp:
         )
 
         def close_dialog(_):
-            if hasattr(self.page, "close"):
-                self.page.close(dialog)
-            else:
-                dialog.open = False
-                self.page.update()
+            self._safe_close_dialog(dialog)
 
         dialog = ft.AlertDialog(
             title=ft.Row([
                 ft.Icon(ft.Icons.MENU_BOOK_ROUNDED, color=ft.Colors.INDIGO_700, size=24),
-                ft.Text("Sổ Tay Tự Học Của Em 📓", size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900),
+                ft.Text(f"Sổ Tay Tự Học - {cur_user.display_name} 📓", size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900),
                 ft.Container(
                     content=ft.Row([
                         ft.Text(cur_user.avatar, size=13),
-                        ft.Text(cur_user.display_name, size=10, weight=ft.FontWeight.BOLD, color=ft.Colors.PURPLE_900)
+                        ft.Text(cur_user.grade_class or "Học sinh THCS", size=10, weight=ft.FontWeight.BOLD, color=ft.Colors.PURPLE_900)
                     ], spacing=3),
                     bgcolor=ft.Colors.PURPLE_50,
                     padding=ft.Padding(6, 2, 8, 2),
@@ -1027,14 +1040,7 @@ class SocratesIntegratedApp:
             actions_alignment=ft.MainAxisAlignment.END
         )
 
-        render_list()
-
-        if hasattr(self.page, "open"):
-            self.page.open(dialog)
-        else:
-            self.page.dialog = dialog
-            dialog.open = True
-            self.page.update()
+        self._safe_open_dialog(dialog)
 
     def _open_rubric_dashboard(self):
         """Mở Bảng Điều Khiển Đánh Giá Sư Phạm & 5 Chỉ Số Khoa Học (Mục 16.3 & Mục 3)."""
@@ -1072,11 +1078,7 @@ class SocratesIntegratedApp:
         dashboard = RubricDashboardView(page=self.page, assessment=assessment, is_standalone=False)
 
         def close_dialog(_):
-            if hasattr(self.page, "close"):
-                self.page.close(dialog)
-            else:
-                dialog.open = False
-                self.page.update()
+            self._safe_close_dialog(dialog)
 
         dialog = ft.AlertDialog(
             title=ft.Row([
@@ -1097,12 +1099,7 @@ class SocratesIntegratedApp:
             ],
             actions_alignment=ft.MainAxisAlignment.END,
         )
-        if hasattr(self.page, "open"):
-            self.page.open(dialog)
-        else:
-            self.page.dialog = dialog
-            dialog.open = True
-            self.page.update()
+        self._safe_open_dialog(dialog)
 
     def navigate_to_step_1(self):
         """Hiển thị Bước 1: Tiếp nhận đề bài."""
@@ -1185,11 +1182,7 @@ class SocratesIntegratedApp:
         problem_text = self.state.confirmed_problem.confirmed_text if self.state.confirmed_problem else ""
 
         def close_dialog(_=None):
-            if hasattr(self.page, "close"):
-                self.page.close(dialog)
-            else:
-                dialog.open = False
-                self.page.update()
+            self._safe_close_dialog(dialog)
 
         view_3 = KnowledgeClassifierView(
             page=self.page,
@@ -1218,12 +1211,7 @@ class SocratesIntegratedApp:
             ],
             actions_alignment=ft.MainAxisAlignment.END,
         )
-        if hasattr(self.page, "open"):
-            self.page.open(dialog)
-        else:
-            self.page.dialog = dialog
-            dialog.open = True
-            self.page.update()
+        self._safe_open_dialog(dialog)
 
     def navigate_to_step_3(self, confirmed_problem: ConfirmedProblem):
         """Dự phòng xem Bản đồ Khái niệm toàn trang nếu cần."""
@@ -1235,12 +1223,14 @@ class SocratesIntegratedApp:
 
     def _show_not_summarized_dialog(self):
         """Hộp thoại thông báo khi học sinh bấm vào Sơ đồ tư duy dạng nhánh mà chưa đúc kết xong."""
+        # Kiểm tra phòng vệ nếu phiên hội thoại thực tế đã mở khóa thành công
+        if self.socratic_view and hasattr(self.socratic_view, "is_mindmap_unlocked") and self.socratic_view.is_mindmap_unlocked():
+            self.state.is_socratic_completed = True
+            self.navigate_to_step_5()
+            return
+
         def close_dialog(_=None):
-            if hasattr(self.page, "close"):
-                self.page.close(dialog)
-            else:
-                dialog.open = False
-                self.page.update()
+            self._safe_close_dialog(dialog)
 
         def open_notebook_and_close(_=None):
             close_dialog()
@@ -1299,21 +1289,12 @@ class SocratesIntegratedApp:
             actions_alignment=ft.MainAxisAlignment.END
         )
 
-        if hasattr(self.page, "open"):
-            self.page.open(dialog)
-        else:
-            self.page.dialog = dialog
-            dialog.open = True
-            self.page.update()
+        self._safe_open_dialog(dialog)
 
     def _show_congrats_unlock_dialog(self, turn_count: int = 4):
         """Hộp thoại thông báo chúc mừng đúc kết thành công và mở khóa Sơ đồ tư duy dạng nhánh."""
         def close_dialog(_=None):
-            if hasattr(self.page, "close"):
-                self.page.close(dialog)
-            else:
-                dialog.open = False
-                self.page.update()
+            self._safe_close_dialog(dialog)
 
         def go_to_mindmap(_=None):
             close_dialog()
@@ -1356,12 +1337,7 @@ class SocratesIntegratedApp:
             actions_alignment=ft.MainAxisAlignment.END
         )
 
-        if hasattr(self.page, "open"):
-            self.page.open(dialog)
-        else:
-            self.page.dialog = dialog
-            dialog.open = True
-            self.page.update()
+        self._safe_open_dialog(dialog)
 
     def navigate_to_step_4(self):
         """Hiển thị Bước 2: Chu trình đối thoại cùng Gia sư Socrates Nhí."""
@@ -1392,10 +1368,24 @@ class SocratesIntegratedApp:
         )
 
         def on_click_summary(_):
-            if not self.state.is_socratic_completed:
-                self._show_not_summarized_dialog()
-            else:
+            is_unlocked = self.state.is_socratic_completed
+            if not is_unlocked and self.socratic_view and hasattr(self.socratic_view, "is_mindmap_unlocked"):
+                if self.socratic_view.is_mindmap_unlocked():
+                    is_unlocked = True
+                    self.state.is_socratic_completed = True
+                    if hasattr(self, "btn_to_summary") and self.btn_to_summary:
+                        self.btn_to_summary.text = "Xem Sơ đồ Tư duy Dạng Nhánh 🌿 (Đã mở khóa)"
+                        self.btn_to_summary.icon = ft.Icons.WORKSPACE_PREMIUM_ROUNDED
+                        self.btn_to_summary.style = ft.ButtonStyle(bgcolor=ft.Colors.GREEN_700, color=ft.Colors.WHITE)
+                        try:
+                            self.btn_to_summary.update()
+                        except Exception:
+                            pass
+
+            if is_unlocked:
                 self.navigate_to_step_5()
+            else:
+                self._show_not_summarized_dialog()
 
         if self.state.is_socratic_completed:
             self.btn_to_summary = ft.FilledButton(
@@ -1467,6 +1457,17 @@ class SocratesIntegratedApp:
                 self.btn_to_summary.update()
             except Exception:
                 pass
+
+        if hasattr(self, "pill_step_3") and self.pill_step_3:
+            try:
+                self.pill_step_3.update()
+            except Exception:
+                pass
+
+        try:
+            self.page.update()
+        except Exception:
+            pass
 
         # Hiển thị thông báo chúc mừng & mở khóa
         turn_count = summary_data.get("turn_count", 4)

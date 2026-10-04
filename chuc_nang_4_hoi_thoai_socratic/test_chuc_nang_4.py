@@ -22,8 +22,15 @@ from chuc_nang_4_hoi_thoai_socratic.socratic_engine import SocraticEngine
 class TestChucNang4(unittest.TestCase):
 
     def setUp(self):
+        from chuc_nang_7_demo_offline_cache.offline_engine import GLOBAL_OFFLINE_ENGINE
+        self._orig_offline = GLOBAL_OFFLINE_ENGINE.is_offline()
+        GLOBAL_OFFLINE_ENGINE.set_force_offline(True)
         self.sm = SocraticStateMachine(max_turns=7)
         self.engine = SocraticEngine(max_turns=7)
+
+    def tearDown(self):
+        from chuc_nang_7_demo_offline_cache.offline_engine import GLOBAL_OFFLINE_ENGINE
+        GLOBAL_OFFLINE_ENGINE.set_force_offline(self._orig_offline)
 
     # --- 1. KIỂM THỬ MA TRẬN CHUYỂN PHA (MỤC 5.2) ---
     def test_progression_clarify_to_recall(self):
@@ -149,6 +156,18 @@ class TestChucNang4(unittest.TestCase):
         self.assertEqual(res1.next_phase, SocraticPhase.RECALL)
         self.assertIn("phản xạ", res1.feedback.lower())
         self.assertIn("góc phản xạ", res1.next_question.lower())
+
+    # --- 9. KIỂM THỬ ĐỒNG BỘ MỞ KHÓA SƠ ĐỒ TƯ DUY DẠNG NHÁNH ---
+    def test_mindmap_unlock_synchronization(self):
+        """Khi có thông báo mở khóa sơ đồ tư duy, hệ thống tự động đồng bộ đóng phiên và chuyển sang Pha 5."""
+        self.engine.state_machine.current_phase = SocraticPhase.CHECK
+        # Giả lập phản hồi có thông báo mở khóa sơ đồ
+        prob = "xe đạp 12 km trong 30 phút"
+        self.engine.state_machine.current_phase = SocraticPhase.GENERALIZE
+        res = self.engine.generate_turn_response(prob, "tóm lại quy tắc là v = s/t quãng đường chia thời gian")
+        self.assertTrue(res.is_session_closed)
+        self.assertTrue(self.engine.state_machine.is_session_closed)
+        self.assertEqual(res.next_phase, SocraticPhase.GENERALIZE)
 
 
 if __name__ == "__main__":

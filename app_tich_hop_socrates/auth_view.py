@@ -588,20 +588,15 @@ class AuthModalDialog:
             actions_alignment=ft.MainAxisAlignment.SPACE_BETWEEN
         )
 
-        if hasattr(self.page, "open"):
-            self.page.open(self.dialog)
-        else:
-            self.page.dialog = self.dialog
-            self.dialog.open = True
-            self.page.update()
+        if self.dialog not in self.page.overlay:
+            self.page.overlay.append(self.dialog)
+        self.dialog.open = True
+        self.page.update()
 
     def _do_switch(self, username: str):
         """Xử lý đổi tài khoản trong hộp thoại."""
-        if hasattr(self.page, "close"):
-            self.page.close(self.dialog)
-        else:
-            self.dialog.open = False
-            self.page.update()
+        self.dialog.open = False
+        self.page.update()
 
         success, user, _ = AuthService.quick_login(username)
         if success and user:

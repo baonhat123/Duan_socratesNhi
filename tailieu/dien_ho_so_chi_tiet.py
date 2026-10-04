@@ -484,20 +484,11 @@ def main():
         "Nội dung trình bày: Đường liên kết đến thư mục Google Drive chứa Lịch sử câu lệnh và hình ảnh minh chứng (Bắt buộc mở quyền truy cập trước khi nộp)."
     )
 
-    add_sub_header(dst_doc, "8.1. Đường liên kết đến thư mục Google Drive chứa minh chứng đầy đủ:")
-
-    p_link = add_p(dst_doc, align=WD_ALIGN_PARAGRAPH.CENTER, space_before=3, space_after=4)
-    r_l = p_link.add_run("🔗 https://drive.google.com/drive/folders/1socrates-nhi-ai2026-minhchung?usp=sharing\n")
-    format_run(r_l, size_pt=12.5, bold=True, color_rgb=RGBColor(13, 71, 161))
-    r_n = p_link.add_run("(Thư mục đã được mở quyền truy cập 'Người xem' công khai cho Ban Giám khảo)")
-    format_run(r_n, size_pt=10.5, italic=True, color_rgb=RGBColor(100, 100, 100))
-
-    add_sub_header(dst_doc, "8.2. Danh mục tài liệu minh chứng minh bạch được lưu trữ trong thư mục:")
-    add_bullet_p(dst_doc, "Tệp PROMPT_LOG.md: Ghi lại toàn bộ lịch sử tiến hóa của System Prompt qua các phiên bản (v0.1 ➔ v0.2 ➔ v1.0), kèm theo lý do kỹ thuật sư phạm, các lỗ hổng jailbreak đã phát hiện và phương án vá lỗi chi tiết.", bold_prefix="1. ", indent_left=0.2)
-    add_bullet_p(dst_doc, "Báo cáo Kết quả 77 bài kiểm thử tự động (Unit Tests): Mã nguồn kiểm thử bao phủ 100% các chức năng cốt lõi (FR-01 đến FR-10) với tỷ lệ vượt qua tuyệt đối (Ran 77 tests - OK).", bold_prefix="2. ", indent_left=0.2)
-    add_bullet_p(dst_doc, "Phiếu đồng thuận thử nghiệm: Bản scan các Phiếu đồng thuận có đầy đủ chữ ký xác nhận của Phụ huynh học sinh và Giáo viên hướng dẫn.", bold_prefix="3. ", indent_left=0.2)
-    add_bullet_p(dst_doc, "Video Clip Demo thực tế: Video Full HD 3 phút quay lại toàn bộ quá trình học sinh tương tác thực tế với ứng dụng và phản ứng của hệ thống khi ngắt mạng Internet.", bold_prefix="4. ", indent_left=0.2)
-    add_bullet_p(dst_doc, "Toàn bộ mã nguồn sản phẩm và file đóng gói chạy độc lập: Tệp Socrates_Nhi.exe có thể chạy trực tiếp từ USB mà không cần cài đặt môi trường.", bold_prefix="5. ", indent_left=0.2)
+    p_note = add_p(dst_doc, space_before=4, space_after=4)
+    r_n1 = p_note.add_run("Toàn bộ lịch sử câu lệnh (Prompt Log), video demo thực tế và minh chứng quá trình phát triển được lưu trữ và đính kèm đầy đủ trong gói nộp bài dự thi của nhóm tác giả.\n")
+    format_run(r_n1, size_pt=11, italic=False)
+    r_n2 = p_note.add_run("Đường liên kết (nếu nộp trực tuyến): .................................................................................................................................................")
+    format_run(r_n2, size_pt=11, italic=True, color_rgb=RGBColor(120, 120, 120))
 
     # ==========================================
     # 4. BẢNG XÁC NHẬN CỦA GIÁO VIÊN VÀ ĐẠI DIỆN ĐỘI THI (TABLE 1)

@@ -733,14 +733,19 @@ class ProblemInputView:
                         break
                     sec = self.recorder.get_elapsed_seconds()
                     if self.is_voice_recording:
-                        self.voice_status_text.value = f"🎙️ Đang thu âm từ Microphone... ({sec}s) - Bấm nút đỏ khi em nói xong nhé!"
-                        try:
-                            self.page.update()
-                        except Exception:
-                            pass
+                        def update_timer():
+                            self.voice_status_text.value = f"🎙️ Đang thu âm từ Microphone... ({sec}s) - Bấm nút đỏ khi em nói xong nhé!"
+                            try:
+                                self.page.update()
+                            except Exception:
+                                pass
+                        self._safe_ui_call(update_timer)
 
-            self._recording_timer_thread = threading.Thread(target=timer_worker, daemon=True)
-            self._recording_timer_thread.start()
+            if hasattr(self.page, "run_thread") and callable(self.page.run_thread):
+                self.page.run_thread(timer_worker)
+            else:
+                self._recording_timer_thread = threading.Thread(target=timer_worker, daemon=True)
+                self._recording_timer_thread.start()
 
         else:
             # 2. DỪNG THU ÂM VÀ CHUYỂN ĐỔI SANG VĂN BẢN (STT)
@@ -773,28 +778,66 @@ class ProblemInputView:
                         except Exception:
                             pass
 
-                # Khôi phục trạng thái nút bấm và áp dụng kết quả
-                self.voice_mic_btn.disabled = False
-                self.voice_mic_btn.opacity = 1.0
-                self.voice_mic_btn.bgcolor = ft.Colors.RED_600
-                self.voice_mic_btn.content.controls[0].name = ft.Icons.MIC_ROUNDED
-                self.voice_mic_btn.content.controls[1].value = "Bắt đầu nói 🎙️"
+                def apply_result():
+                    # Khôi phục trạng thái nút bấm và áp dụng kết quả ngay lập tức
+                    self.voice_mic_btn.disabled = False
+                    self.voice_mic_btn.opacity = 1.0
+                    self.voice_mic_btn.bgcolor = ft.Colors.RED_600
+                    self.voice_mic_btn.content.controls[0].name = ft.Icons.MIC_ROUNDED
+                    self.voice_mic_btn.content.controls[1].value = "Bắt đầu nói 🎙️"
 
-                if transcript and transcript.strip():
-                    self.txt_voice_transcript.value = transcript
-                    self.txt_content.value = transcript
-                    self.voice_status_text.value = f"✅ Nhận diện thành công ({len(transcript)} ký tự)! Đã chuẩn hóa thuật ngữ KHTN."
-                    self.voice_status_text.color = ft.Colors.GREEN_700
-                else:
-                    self.voice_status_text.value = "⚠️ Chưa nhận diện được âm thanh rõ ràng (có thể do nói quá nhanh hoặc im lặng). Em đọc lại hoặc chọn câu mẫu bên dưới nhé!"
-                    self.voice_status_text.color = ft.Colors.ORANGE_800
+                    if transcript and transcript.strip():
+                        self.txt_voice_transcript.value = transcript
+                        self.txt_content.value = transcript
+                        self.voice_status_text.value = f"✅ Nhận diện thành công ({len(transcript)} ký tự)! Đã chuẩn hóa thuật ngữ KHTN."
+                        self.voice_status_text.color = ft.Colors.GREEN_700
+                        self._on_text_change(None)
+                    else:
+                        self.voice_status_text.value = "⚠️ Chưa nhận diện được âm thanh rõ ràng (có thể do nói quá nhanh hoặc im lặng). Em đọc lại hoặc chọn câu mẫu bên dưới nhé!"
+                        self.voice_status_text.color = ft.Colors.ORANGE_800
 
-                try:
-                    self.page.update()
-                except Exception:
-                    pass
+                    try:
+                        if hasattr(self.page, "schedule_update"):
+                            self.page.schedule_update()
+                        self.page.update()
+                    except Exception:
+                        pass
 
-            threading.Thread(target=transcribe_worker, daemon=True).start()
+                self._safe_ui_call(apply_result)
+
+            if hasattr(self.page, "run_thread") and callable(self.page.run_thread):
+                self.page.run_thread(transcribe_worker)
+            else:
+                threading.Thread(target=transcribe_worker, daemon=True).start()
+
+    def _safe_ui_call(self, callback):
+        """
+        Đảm bảo thực thi callback cập nhật UI ngay trên asyncio event loop của Flet.
+        Khắc phục triệt để lỗi Flet Socket Server bị trễ/treo gói tin gửi sang client
+        khi được gọi từ background worker thread (buộc người dùng phải click thêm lần nữa mới hiện).
+        """
+        loop = None
+        try:
+            if hasattr(self.page, "loop") and self.page.loop and self.page.loop.is_running():
+                loop = self.page.loop
+            elif hasattr(self.page, "session") and hasattr(self.page.session, "connection"):
+                conn = self.page.session.connection
+                if conn and hasattr(conn, "loop") and conn.loop and conn.loop.is_running():
+                    loop = conn.loop
+        except Exception:
+            pass
+
+        if loop and loop.is_running():
+            try:
+                loop.call_soon_threadsafe(callback)
+                return
+            except Exception:
+                pass
+
+        try:
+            callback()
+        except Exception:
+            pass
 
 
     def _apply_voice_preset(self, text: str):

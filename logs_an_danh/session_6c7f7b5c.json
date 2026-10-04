@@ -1,0 +1,15 @@
+{
+  "session_id": "6c7f7b5c",
+  "topic": "Vật lý – Chuyển động và Tốc độ",
+  "strand": "Cơ học / Đại lượng vật lý",
+  "total_turns": 4,
+  "final_phase": "generalize",
+  "rating_stars": 5,
+  "student_summary": {
+    "rule_learned": "Muốn tính t=s/v",
+    "pitfall_avoided": "Quên đổi đơn vị đúng yêu cầu",
+    "next_step": "Đổi đơn vị theo đúng yêu cầu đề bài"
+  },
+  "created_at": "2026-10-01T15:25:42.931159",
+  "pii_protected": true
+}

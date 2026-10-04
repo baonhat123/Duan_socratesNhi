@@ -305,8 +305,16 @@ class SocraticChatView:
                 # 3. Hiển thị phản hồi của Socrates Nhí
                 self._add_socrates_message(response, auto_update=False)
 
-                # 4. Kiểm tra nếu phiên đã thực sự hoàn thành (CHỈ KHI học sinh đã hoàn tất Pha 5 và is_session_closed == True)
-                if response.is_session_closed:
+                # 4. Kiểm tra nếu phiên đã thực sự hoàn thành (is_session_closed hoặc AI phát thông báo mở khóa sơ đồ)
+                is_unlock_triggered = (
+                    response.is_session_closed
+                    or any(kw in ((response.next_question or "") + " " + (response.feedback or "")).lower() 
+                           for kw in ["mở khóa sơ đồ", "thầy đã mở khóa", "đã mở khóa sơ đồ", "mở khóa sơ đồ tư duy"])
+                )
+                if is_unlock_triggered:
+                    response.is_session_closed = True
+                    self.engine.state_machine.is_session_closed = True
+                    self.phase_badge_text.value = PHASE_NAMES.get(SocraticPhase.GENERALIZE, "Pha 5: Khái quát hóa & Tự đúc kết")
                     self._show_completion_banner(auto_update=False)
                     if self.on_session_complete:
                         self.on_session_complete(response.to_dict())
@@ -406,13 +414,18 @@ class SocraticChatView:
                         except Exception:
                             pass
                     try:
+                        if hasattr(self.page, "schedule_update"):
+                            self.page.schedule_update()
                         self.page.update()
                     except Exception:
                         pass
 
                 self._safe_ui_call(update_ui)
 
-            threading.Thread(target=process_chat_audio, daemon=True).start()
+            if hasattr(self.page, "run_thread") and callable(self.page.run_thread):
+                self.page.run_thread(process_chat_audio)
+            else:
+                threading.Thread(target=process_chat_audio, daemon=True).start()
 
     def _send_quick_reply(self, text: str):
         """Hỗ trợ bấm nút trả lời nhanh."""
@@ -457,15 +470,25 @@ class SocraticChatView:
         """
         Đảm bảo thực thi callback cập nhật UI ngay trên asyncio event loop của Flet.
         Khắc phục triệt để lỗi Flet Socket Server bị trễ/treo gói tin gửi sang Flutter client
-        khi được gọi từ background worker thread (buộc người dùng phải minimize/restore mới hiện).
+        khi được gọi từ background worker thread (buộc người dùng phải click thêm lần nữa mới hiện).
         """
+        loop = None
         try:
-            loop = getattr(self.page, "loop", None)
-            if loop and loop.is_running():
-                loop.call_soon_threadsafe(callback)
-                return
+            if hasattr(self.page, "loop") and self.page.loop and self.page.loop.is_running():
+                loop = self.page.loop
+            elif hasattr(self.page, "session") and hasattr(self.page.session, "connection"):
+                conn = self.page.session.connection
+                if conn and hasattr(conn, "loop") and conn.loop and conn.loop.is_running():
+                    loop = conn.loop
         except Exception:
             pass
+
+        if loop and loop.is_running():
+            try:
+                loop.call_soon_threadsafe(callback)
+                return
+            except Exception:
+                pass
 
         try:
             callback()
@@ -660,6 +683,21 @@ class SocraticChatView:
                 self.page.update()
             except Exception:
                 pass
+
+    def is_mindmap_unlocked(self) -> bool:
+        """Kiểm tra xem phiên hội thoại đã mở khóa Sơ đồ tư duy dạng nhánh hay chưa."""
+        if getattr(self.engine.state_machine, "is_session_closed", False):
+            return True
+        unlock_keywords = [
+            "mở khóa sơ đồ", "thầy đã mở khóa", "đã mở khóa sơ đồ",
+            "mở khóa sơ đồ tư duy dạng nhánh", "đã mở khóa sđtd"
+        ]
+        for msg in getattr(self.engine, "conversation_history", []):
+            if getattr(msg, "sender", "") == "socrates":
+                text = (getattr(msg, "content", "") or "") + " " + (getattr(msg, "feedback", "") or "")
+                if any(kw in text.lower() for kw in unlock_keywords):
+                    return True
+        return False
 
     def update_problem_text(self, new_text: str):
         """Cập nhật đề bài khi chuyển giao từ Bước 2."""

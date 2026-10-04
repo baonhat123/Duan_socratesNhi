@@ -228,8 +228,13 @@ class SocraticEngine:
         # Bước 1: Thử gọi AI trực tuyến để đánh giá ngữ nghĩa và tạo phản hồi sư phạm
         ai_result = self._try_ai_dialogue(problem_text, current_phase, student_message, turn_num)
         if ai_result:
-            feedback, next_question, micro_hint, source, model_used, student_state = ai_result
+            feedback, next_question, micro_hint, source, model_used, student_state, is_completed = ai_result
             start_phase, next_phase, strategy = self.state_machine.transition(student_state)
+            # Đồng bộ tức thì nếu AI xác nhận hoàn thành đúc kết hoặc phát câu thông báo mở khóa sơ đồ
+            if is_completed:
+                self.state_machine.is_session_closed = True
+                self.state_machine.current_phase = SocraticPhase.GENERALIZE
+                next_phase = SocraticPhase.GENERALIZE
         else:
             # Chế độ Offline / Fallback: phân loại theo quy tắc chuẩn
             student_state = self.classify_student_answer(student_message, current_phase, problem_text=problem_text)
@@ -248,6 +253,16 @@ class SocraticEngine:
                 feedback, next_question, micro_hint = dialogue_result
                 source = "offline"
                 model_used = None
+
+            # Kiểm tra chế độ offline nếu lời thoại thông báo mở khóa sơ đồ
+            unlock_keywords = [
+                "mở khóa sơ đồ", "thầy đã mở khóa", "đã mở khóa sơ đồ",
+                "mở khóa sơ đồ tư duy dạng nhánh", "đã mở khóa sđtd"
+            ]
+            if any(kw in ((next_question or "") + " " + (feedback or "")).lower() for kw in unlock_keywords):
+                self.state_machine.is_session_closed = True
+                self.state_machine.current_phase = SocraticPhase.GENERALIZE
+                next_phase = SocraticPhase.GENERALIZE
 
         # Lưu tin nhắn của học sinh vào lịch sử với trạng thái chính xác
         self.conversation_history.append(
@@ -334,7 +349,7 @@ class SocraticEngine:
         current_phase: SocraticPhase,
         student_message: str,
         turn_num: int
-    ) -> Optional[Tuple[str, str, Optional[str], str, str, StudentState]]:
+    ) -> Optional[Tuple[str, str, Optional[str], str, str, StudentState, bool]]:
         """
         Đánh giá ngữ nghĩa thông minh và tạo phản hồi sư phạm qua AI trực tuyến.
         Tuyệt đối không khen sai khi học sinh đoán mò / lạc đề / hiểu sai bản chất.
@@ -394,12 +409,13 @@ class SocraticEngine:
                 "   - TUYỆT ĐỐI KHÔNG kết thúc phiên hay chúc mừng hoàn thành sớm khi học sinh chưa hiểu bài hoặc câu trả lời chưa chính xác.\n"
                 "   - Khi ở Pha 5 (generalize - Khái quát hóa & Tự đúc kết kiến thức cốt lõi):\n"
                 "     + BẮT BUỘC yêu cầu học sinh TỰ ĐÚC KẾT KIẾN THỨC CỐT LÕI (quy tắc, bài học hoặc công thức quan trọng nhất) theo cách hiểu của học sinh.\n"
-                "     + Nếu học sinh trả lời chưa đúng hoặc chưa khái quát được bản chất: gán 'student_state': 'misconception' (hoặc 'partial'/'unknown'), chỉ ra điểm mâu thuẫn trong feedback và TIẾP TỤC ĐẶT CÂU HỎI gợi mở để học sinh đúc kết lại.\n"
-                "     + CHỈ KHI học sinh đã tự mình đúc kết được bài học/quy tắc cốt lõi một cách chính xác: gán 'student_state': 'correct'. Lúc này 'feedback' khen ngợi học sinh đã tự mình đúc kết kiến thức cốt lõi thành công, và 'question' thông báo: 'Thầy đã mở khóa Sơ đồ Tư duy Dạng Nhánh cho em rồi đó! Em hãy mở sơ đồ ra để xem các nhánh kiến thức và ghi nhớ bài học nhé!'. 'micro_hint' gợi ý: 'Em hãy bấm nút Xem Sơ đồ Tư duy Dạng Nhánh 🌿 để khám phá sơ đồ rẽ nhánh và lưu vào sổ tay nhé!'.\n\n"
+                "     + Nếu học sinh trả lời chưa đúng hoặc chưa khái quát được bản chất: gán 'student_state': 'misconception' (hoặc 'partial'/'unknown'), 'is_completed': false, chỉ ra điểm mâu thuẫn trong feedback và TIẾP TỤC ĐẶT CÂU HỎI gợi mở để học sinh đúc kết lại.\n"
+                "     + CHỈ KHI học sinh đã tự mình đúc kết được bài học/quy tắc cốt lõi một cách chính xác: gán 'student_state': 'correct', gán 'is_completed': true. Lúc này 'feedback' khen ngợi học sinh đã tự mình đúc kết kiến thức cốt lõi thành công, và 'question' thông báo: 'Thầy đã mở khóa Sơ đồ Tư duy Dạng Nhánh cho em rồi đó! Em hãy mở sơ đồ ra để xem các nhánh kiến thức và ghi nhớ bài học nhé!'. 'micro_hint' gợi ý: 'Em hãy bấm nút Xem Sơ đồ Tư duy Dạng Nhánh 🌿 để khám phá sơ đồ rẽ nhánh và lưu vào sổ tay nhé!'.\n\n"
                 "4. CẤU TRÚC PHẢN HỒI (CHỈ TRẢ VỀ JSON - KHÔNG KÈM TEXT NGOÀI):\n"
                 "{\n"
                 "  \"analysis\": \"Phân tích logic từng ý: Câu hỏi cần gì? Học sinh nói gì? Có ý nào thực sự đúng khoa học không? Kết luận trạng thái.\",\n"
                 "  \"student_state\": \"correct\" | \"partial\" | \"misconception\" | \"off_topic\" | \"unknown\" | \"answer_plea\",\n"
+                "  \"is_completed\": true | false,\n"
                 "  \"feedback\": \"Nhận xét sư phạm ngắn gọn (1-2 câu). Tuyệt đối không trả lời luôn, không nói hộ định nghĩa khái niệm trong feedback.\",\n"
                 "  \"question\": \"ĐÚNG 1 câu hỏi gợi mở tiếp theo kết thúc bằng dấu chấm hỏi, không kèm câu hỏi phụ.\",\n"
                 "  \"micro_hint\": \"Gợi ý vi mô định hướng tư duy (<= 140 ký tự), không tiết lộ công thức hay đáp số.\"\n"
@@ -491,8 +507,17 @@ class SocraticEngine:
                         if hint and re.search(sp, hint, re.IGNORECASE):
                             hint = "Hãy suy nghĩ xem tốc độ thể hiện quãng đường đi được trong 1 đơn vị thời gian như thế nào nhé."
 
+                is_completed = bool(data.get("is_completed", False))
+                unlock_keywords = [
+                    "mở khóa sơ đồ", "thầy đã mở khóa", "đã mở khóa sơ đồ",
+                    "mở khóa sơ đồ tư duy dạng nhánh", "đã mở khóa sđtd"
+                ]
+                combined_check = (str(q or "") + " " + str(fb or "")).lower()
+                if any(kw in combined_check for kw in unlock_keywords):
+                    is_completed = True
+
                 model = get_ai_config()["model"]
-                return fb, q, hint, "ai", model, evaluated_state
+                return fb, q, hint, "ai", model, evaluated_state, is_completed
         except Exception:
             pass
         return None

@@ -837,7 +837,7 @@ class MindmapSummaryView:
         # Chi tiết bài học đang xem
         detail_container = ft.Container(expand=True)
 
-        def display_entry_detail(item: Dict[str, Any]):
+        def display_entry_detail(item: Dict[str, Any], update_page: bool = True):
             takeaways_list = []
             for t in item.get("key_takeaways", []):
                 takeaways_list.append(
@@ -902,7 +902,11 @@ class MindmapSummaryView:
                 ], spacing=10)
             ], spacing=10, scroll=ft.ScrollMode.AUTO)
 
-            self.page.update()
+            if update_page:
+                try:
+                    self.page.update()
+                except Exception:
+                    pass
 
         # Danh sách bài học bên trái
         list_items = []
@@ -927,7 +931,7 @@ class MindmapSummaryView:
                 list_items.append(card)
 
             # Mặc định hiển thị bài đầu tiên
-            display_entry_detail(entries[0])
+            display_entry_detail(entries[0], update_page=False)
         else:
             list_items.append(
                 ft.Container(
@@ -959,11 +963,8 @@ class MindmapSummaryView:
         )
 
         def close_dialog(_):
-            if hasattr(self.page, "close"):
-                self.page.close(dialog)
-            else:
-                dialog.open = False
-                self.page.update()
+            dialog.open = False
+            self.page.update()
 
         dialog = ft.AlertDialog(
             title=ft.Row([
@@ -982,12 +983,10 @@ class MindmapSummaryView:
             actions_alignment=ft.MainAxisAlignment.END
         )
 
-        if hasattr(self.page, "open"):
-            self.page.open(dialog)
-        else:
-            self.page.dialog = dialog
-            dialog.open = True
-            self.page.update()
+        if dialog not in self.page.overlay:
+            self.page.overlay.append(dialog)
+        dialog.open = True
+        self.page.update()
 
     def build(self) -> ft.Control:
         """Trả về toàn bộ giao diện của Chức năng 5."""

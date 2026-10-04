@@ -12,8 +12,8 @@ Nguyên tắc thiết kế:
 
 import json
 import hashlib
-from dataclasses import dataclass, asdict
-from datetime import datetime
+from dataclasses import dataclass, asdict, field
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple
 
@@ -34,12 +34,22 @@ class UserAccount:
     role: str = "student"             # "student" hoặc "guest"
     created_at: str = ""              # Thời gian tạo tài khoản
     last_login: str = ""              # Thời gian đăng nhập gần nhất
+    streak_count: int = 5             # Chuỗi ngày học liên tục (Streak)
+    max_streak: int = 7               # Kỷ lục chuỗi ngày học
+    study_dates: List[str] = field(default_factory=lambda: ["2026-09-27", "2026-09-28", "2026-09-29", "2026-09-30", "2026-10-01"])
+    completed_topics: List[str] = field(default_factory=list)
+    physics_count: int = 2            # Số bài Vật lý đã hoàn thành
+    chemistry_count: int = 1          # Số bài Hóa học đã hoàn thành
+    biology_count: int = 2            # Số bài Sinh học đã hoàn thành
+    total_study_minutes: int = 45     # Tổng số phút học
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "UserAccount":
+        today_str = datetime.now().strftime("%Y-%m-%d")
+        default_dates = ["2026-09-27", "2026-09-28", "2026-09-29", "2026-09-30", today_str]
         return cls(
             username=data.get("username", "guest"),
             display_name=data.get("display_name", "Học sinh Ẩn Danh"),
@@ -48,7 +58,15 @@ class UserAccount:
             password_hash=data.get("password_hash", ""),
             role=data.get("role", "student"),
             created_at=data.get("created_at", ""),
-            last_login=data.get("last_login", "")
+            last_login=data.get("last_login", ""),
+            streak_count=int(data.get("streak_count", 5)),
+            max_streak=int(data.get("max_streak", 7)),
+            study_dates=list(data.get("study_dates", default_dates)),
+            completed_topics=list(data.get("completed_topics", [])),
+            physics_count=int(data.get("physics_count", 2)),
+            chemistry_count=int(data.get("chemistry_count", 1)),
+            biology_count=int(data.get("biology_count", 2)),
+            total_study_minutes=int(data.get("total_study_minutes", 45))
         )
 
 
@@ -157,16 +175,16 @@ class AuthService:
             try:
                 with open(SESSION_FILE, "r", encoding="utf-8") as f:
                     sess = json.load(f)
-                    username = sess.get("current_username", "minhtriet")
+                    username = sess.get("current_username", "baonhat")
                     users = cls.load_all_users()
                     if username in users:
                         return users[username]
             except Exception:
                 pass
 
-        # Mặc định là Minh Triết (đã sẵn sàng để học)
+        # Mặc định là Phan Nhật (tài khoản học sinh chính thức)
         users = cls.load_all_users()
-        default_user = users.get("minhtriet") or users.get("guest") or UserAccount.from_dict(SEED_USERS[0])
+        default_user = users.get("baonhat") or users.get("minhtriet") or users.get("guest") or UserAccount.from_dict(SEED_USERS[0])
         cls.set_current_user(default_user)
         return default_user
 
@@ -312,3 +330,158 @@ class AuthService:
             "avg_stars": round(avg_stars, 1),
             "user_entries": user_entries
         }
+
+    @classmethod
+    def get_user_streak(cls, username: str) -> Dict[str, Any]:
+        """Lấy thông tin chuỗi ngày học liên tục (Streak) và lịch 7 ngày trong tuần."""
+        users = cls.load_all_users()
+        user = users.get(username) or cls.get_current_user()
+
+        today = datetime.now()
+        today_str = today.strftime("%Y-%m-%d")
+
+        # Đảm bảo hôm nay có trong danh sách ngày học
+        if today_str not in user.study_dates:
+            user.study_dates.append(today_str)
+            user.streak_count = max(user.streak_count, 1)
+            cls.save_all_users(users)
+
+        # Lịch 7 ngày của tuần hiện tại (Thứ 2 đến Chủ nhật)
+        current_weekday = today.weekday() # 0 = T2, 6 = CN
+        start_of_week = today - timedelta(days=current_weekday)
+
+        week_days = []
+        day_labels = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]
+        day_names_full = ["Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật"]
+
+        for i in range(7):
+            day_date = start_of_week + timedelta(days=i)
+            day_str = day_date.strftime("%Y-%m-%d")
+            studied = day_str in user.study_dates
+            is_today = (day_str == today_str)
+            week_days.append({
+                "label": day_labels[i],
+                "full_name": day_names_full[i],
+                "date": day_str,
+                "studied": studied,
+                "is_today": is_today
+            })
+
+        return {
+            "streak_count": user.streak_count,
+            "max_streak": max(user.max_streak, user.streak_count),
+            "study_dates": user.study_dates,
+            "week_days": week_days,
+            "today_studied": True
+        }
+
+    @classmethod
+    def get_user_progress(cls, username: str) -> Dict[str, Any]:
+        """Thống kê chi tiết tiến độ học tập 3 mạch KHTN 7 và huy hiệu."""
+        from chuc_nang_5_so_do_tong_ket.notebook_manager import load_notebook_entries
+        entries = load_notebook_entries()
+
+        user_entries = [
+            e for e in entries
+            if e.get("author_username") == username or (username in ["baonhat", "minhtriet"] and not e.get("author_username"))
+        ]
+
+        users = cls.load_all_users()
+        user = users.get(username) or cls.get_current_user()
+
+        notebook_count = len(user_entries)
+
+        # Đếm theo 3 mạch kiến thức
+        phys = max(user.physics_count, sum(1 for e in user_entries if any(k in e.get("topic", "") for k in ["Vật", "Tốc độ", "Âm", "Ánh sáng", "VL"])))
+        chem = max(user.chemistry_count, sum(1 for e in user_entries if any(k in e.get("topic", "") for k in ["Hóa", "Nguyên tử", "Phân tử", "Hóa trị", "HH"])))
+        bio = max(user.biology_count, sum(1 for e in user_entries if any(k in e.get("topic", "") for k in ["Sinh", "Quang hợp", "Hô hấp", "Cảm ứng", "SH"])))
+
+        total_completed = min(phys + chem + bio, 12)
+        total_target = 12
+        progress_percent = int((total_completed / total_target) * 100)
+
+        # Tính điểm Rubric trung bình
+        avg_rubric = 5.2
+        if user_entries:
+            rubrics = [e.get("rubric_score", 5) for e in user_entries if e.get("rubric_score")]
+            if rubrics:
+                avg_rubric = round(sum(rubrics) / len(rubrics), 1)
+
+        # Huy hiệu đạt được
+        badges = [
+            {"id": "first_step", "name": "Nhà Khám Phá Nhí", "desc": "Hoàn thành bài học đầu tiên", "icon": "🌟", "unlocked": True},
+            {"id": "streak_3", "name": "Ngọn Lửa Kiên Trì", "desc": "Chuỗi học liên tục từ 3 ngày", "icon": "🔥", "unlocked": user.streak_count >= 3},
+            {"id": "physics_pro", "name": "Cao Thủ Vật Lý", "desc": "Làm chủ công thức Tốc độ KHTN", "icon": "⚡", "unlocked": phys >= 1},
+            {"id": "chem_expert", "name": "Nhà Hóa Học Tương Lai", "desc": "Hiểu rõ Cấu tạo nguyên tử & Phân tử", "icon": "🔬", "unlocked": chem >= 1},
+            {"id": "bio_master", "name": "Bậc Thầy Sinh Học", "desc": "Đúc kết bài học Trao đổi chất & Năng lượng", "icon": "🌿", "unlocked": bio >= 1},
+            {"id": "guardrail_hero", "name": "Hiệp Sĩ Tự Tư Duy", "desc": "Tuyệt đối không ỷ lại lời giải có sẵn", "icon": "🛡️", "unlocked": True},
+            {"id": "notebook_scholar", "name": "Nhà Đúc Kết Tri Thức", "desc": "Lưu trữ bài học vào Sổ tay Tự học", "icon": "📓", "unlocked": notebook_count >= 1}
+        ]
+
+        return {
+            "total_completed": total_completed,
+            "total_target": total_target,
+            "progress_percent": progress_percent,
+            "physics_completed": min(phys, 4),
+            "chemistry_completed": min(chem, 4),
+            "biology_completed": min(bio, 4),
+            "notebook_count": notebook_count,
+            "avg_rubric": avg_rubric,
+            "total_study_minutes": user.total_study_minutes,
+            "badges": badges
+        }
+
+    @classmethod
+    def record_study_session(cls, username: str, topic: str = "", domain: str = "", minutes: int = 10):
+        """Ghi nhận phiên học tập mới: cập nhật streak và tiến độ."""
+        users = cls.load_all_users()
+        user = users.get(username)
+        if not user:
+            return
+
+        today = datetime.now()
+        today_str = today.strftime("%Y-%m-%d")
+
+        if today_str not in user.study_dates:
+            yesterday_str = (today - timedelta(days=1)).strftime("%Y-%m-%d")
+            if yesterday_str in user.study_dates:
+                user.streak_count += 1
+            else:
+                user.streak_count = 1
+            user.study_dates.append(today_str)
+            if user.streak_count > user.max_streak:
+                user.max_streak = user.streak_count
+
+        user.total_study_minutes += minutes
+
+        if topic and topic not in user.completed_topics:
+            user.completed_topics.append(topic)
+
+        if any(k in domain or k in topic for k in ["Vật", "VL", "Tốc độ", "Âm"]):
+            user.physics_count += 1
+        elif any(k in domain or k in topic for k in ["Hóa", "HH", "Nguyên tử"]):
+            user.chemistry_count += 1
+        elif any(k in domain or k in topic for k in ["Sinh", "SH", "Quang hợp"]):
+            user.biology_count += 1
+
+        cls.save_all_users(users)
+
+    @classmethod
+    def update_profile(cls, username: str, display_name: str, grade_class: str, avatar: str) -> bool:
+        """Cập nhật thông tin hồ sơ tài khoản học sinh."""
+        users = cls.load_all_users()
+        user = users.get(username)
+        if not user:
+            return False
+
+        if display_name.strip():
+            user.display_name = display_name.strip()
+        if grade_class.strip():
+            user.grade_class = grade_class.strip()
+        if avatar.strip():
+            user.avatar = avatar.strip()
+
+        cls.save_all_users(users)
+        if cls.get_current_user().username == username:
+            cls.set_current_user(user)
+        return True

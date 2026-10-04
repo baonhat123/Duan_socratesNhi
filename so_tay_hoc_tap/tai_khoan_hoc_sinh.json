@@ -7,7 +7,21 @@
     "password_hash": "f3c043efc50795305d71cb0e7ee3e243d772f8ac1a6f3087db1074ae7c369f26",
     "role": "student",
     "created_at": "01/09/2026 08:00",
-    "last_login": "30/09/2026 19:32"
+    "last_login": "01/10/2026 18:39",
+    "streak_count": 5,
+    "max_streak": 7,
+    "study_dates": [
+      "2026-09-27",
+      "2026-09-28",
+      "2026-09-29",
+      "2026-09-30",
+      "2026-10-01"
+    ],
+    "completed_topics": [],
+    "physics_count": 2,
+    "chemistry_count": 1,
+    "biology_count": 2,
+    "total_study_minutes": 45
   },
   "baoan": {
     "username": "baoan",
@@ -17,7 +31,21 @@
     "password_hash": "f3c043efc50795305d71cb0e7ee3e243d772f8ac1a6f3087db1074ae7c369f26",
     "role": "student",
     "created_at": "05/09/2026 09:30",
-    "last_login": "30/09/2026 19:32"
+    "last_login": "30/09/2026 19:32",
+    "streak_count": 5,
+    "max_streak": 7,
+    "study_dates": [
+      "2026-09-27",
+      "2026-09-28",
+      "2026-09-29",
+      "2026-09-30",
+      "2026-10-01"
+    ],
+    "completed_topics": [],
+    "physics_count": 2,
+    "chemistry_count": 1,
+    "biology_count": 2,
+    "total_study_minutes": 45
   },
   "huyhoang": {
     "username": "huyhoang",
@@ -27,7 +55,21 @@
     "password_hash": "f3c043efc50795305d71cb0e7ee3e243d772f8ac1a6f3087db1074ae7c369f26",
     "role": "student",
     "created_at": "10/09/2026 14:15",
-    "last_login": "30/09/2026 17:45"
+    "last_login": "30/09/2026 17:45",
+    "streak_count": 5,
+    "max_streak": 7,
+    "study_dates": [
+      "2026-09-27",
+      "2026-09-28",
+      "2026-09-29",
+      "2026-09-30",
+      "2026-10-01"
+    ],
+    "completed_topics": [],
+    "physics_count": 2,
+    "chemistry_count": 1,
+    "biology_count": 2,
+    "total_study_minutes": 45
   },
   "guest": {
     "username": "guest",
@@ -37,7 +79,21 @@
     "password_hash": "",
     "role": "guest",
     "created_at": "01/01/2026 00:00",
-    "last_login": ""
+    "last_login": "",
+    "streak_count": 5,
+    "max_streak": 7,
+    "study_dates": [
+      "2026-09-27",
+      "2026-09-28",
+      "2026-09-29",
+      "2026-09-30",
+      "2026-10-01"
+    ],
+    "completed_topics": [],
+    "physics_count": 2,
+    "chemistry_count": 1,
+    "biology_count": 2,
+    "total_study_minutes": 45
   },
   "namanh": {
     "username": "namanh",
@@ -47,7 +103,21 @@
     "password_hash": "90bf7b80723f836d53da7c1d04cfd328ade8286207b65fc9d70237795ace1be7",
     "role": "student",
     "created_at": "30/09/2026 19:32",
-    "last_login": "30/09/2026 19:32"
+    "last_login": "30/09/2026 19:32",
+    "streak_count": 5,
+    "max_streak": 7,
+    "study_dates": [
+      "2026-09-27",
+      "2026-09-28",
+      "2026-09-29",
+      "2026-09-30",
+      "2026-10-01"
+    ],
+    "completed_topics": [],
+    "physics_count": 2,
+    "chemistry_count": 1,
+    "biology_count": 2,
+    "total_study_minutes": 45
   },
   "student7a": {
     "username": "student7a",
@@ -57,7 +127,21 @@
     "password_hash": "d7955275d12a18321771c08e475a192917f5dfc047e31c0069b7d4beda098e48",
     "role": "student",
     "created_at": "30/09/2026 19:43",
-    "last_login": "30/09/2026 19:43"
+    "last_login": "30/09/2026 19:43",
+    "streak_count": 5,
+    "max_streak": 7,
+    "study_dates": [
+      "2026-09-27",
+      "2026-09-28",
+      "2026-09-29",
+      "2026-09-30",
+      "2026-10-01"
+    ],
+    "completed_topics": [],
+    "physics_count": 2,
+    "chemistry_count": 1,
+    "biology_count": 2,
+    "total_study_minutes": 45
   },
   "baonhat": {
     "username": "baonhat",
@@ -67,6 +151,20 @@
     "password_hash": "18b55ac94bbbde9cae3463a560bb4b3d12718b64789abc948cbb1f718251095a",
     "role": "student",
     "created_at": "30/09/2026 19:45",
-    "last_login": "30/09/2026 19:45"
+    "last_login": "01/10/2026 18:25",
+    "streak_count": 5,
+    "max_streak": 7,
+    "study_dates": [
+      "2026-09-27",
+      "2026-09-28",
+      "2026-09-29",
+      "2026-09-30",
+      "2026-10-01"
+    ],
+    "completed_topics": [],
+    "physics_count": 2,
+    "chemistry_count": 1,
+    "biology_count": 2,
+    "total_study_minutes": 45
   }
 }

@@ -1,0 +1,16 @@
+# ==============================================================================
+# SOCRATES NHÍ v3.0 — DANH MỤC THƯ VIỆN PHỤ THUỘC (DEPENDENCIES)
+# Cuộc thi Sáng tạo trẻ Quốc gia trong lĩnh vực Trí tuệ Nhân tạo 2026 — Bảng A
+# ==============================================================================
+
+# Giao diện người dùng đa nền tảng
+flet>=0.25.0
+
+# Xử lý hình ảnh và kiểm tra độ nét ảnh bài tập
+pillow>=10.0.0
+
+# Nạp biến môi trường từ tệp .env
+python-dotenv>=1.0.0
+
+# (Tùy chọn) Đóng gói ứng dụng thành file .exe độc lập cho Windows
+pyinstaller>=6.0.0

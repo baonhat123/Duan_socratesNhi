@@ -1,0 +1,15 @@
+{
+  "session_id": "1bb50944",
+  "topic": "Vật lý – Chuyển động và Tốc độ",
+  "strand": "Cơ học / Đại lượng vật lý",
+  "total_turns": 4,
+  "final_phase": "generalize",
+  "rating_stars": 5,
+  "student_summary": {
+    "rule_learned": "Luôn luôn sử dụng đúng đơn vị đo",
+    "pitfall_avoided": "luôn phải xem xét kĩ đơn vị đo của đề",
+    "next_step": "đổi v/km sang v/s"
+  },
+  "created_at": "2026-10-01T15:19:08.197373",
+  "pii_protected": true
+}
