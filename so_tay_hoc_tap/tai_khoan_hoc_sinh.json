@@ -21,7 +21,16 @@
     "physics_count": 2,
     "chemistry_count": 1,
     "biology_count": 2,
-    "total_study_minutes": 45
+    "total_study_minutes": 45,
+    "daily_study_minutes": {
+      "2026-09-27": 45,
+      "2026-09-28": 45,
+      "2026-09-29": 45,
+      "2026-09-30": 45,
+      "2026-10-01": 45
+    },
+    "security_question": "Môn học KHTN em yêu thích nhất?",
+    "security_answer_hash": ""
   },
   "baoan": {
     "username": "baoan",
@@ -45,7 +54,16 @@
     "physics_count": 2,
     "chemistry_count": 1,
     "biology_count": 2,
-    "total_study_minutes": 45
+    "total_study_minutes": 45,
+    "daily_study_minutes": {
+      "2026-09-27": 45,
+      "2026-09-28": 45,
+      "2026-09-29": 45,
+      "2026-09-30": 45,
+      "2026-10-01": 45
+    },
+    "security_question": "Môn học KHTN em yêu thích nhất?",
+    "security_answer_hash": ""
   },
   "huyhoang": {
     "username": "huyhoang",
@@ -69,7 +87,16 @@
     "physics_count": 2,
     "chemistry_count": 1,
     "biology_count": 2,
-    "total_study_minutes": 45
+    "total_study_minutes": 45,
+    "daily_study_minutes": {
+      "2026-09-27": 45,
+      "2026-09-28": 45,
+      "2026-09-29": 45,
+      "2026-09-30": 45,
+      "2026-10-01": 45
+    },
+    "security_question": "Môn học KHTN em yêu thích nhất?",
+    "security_answer_hash": ""
   },
   "guest": {
     "username": "guest",
@@ -93,7 +120,16 @@
     "physics_count": 2,
     "chemistry_count": 1,
     "biology_count": 2,
-    "total_study_minutes": 45
+    "total_study_minutes": 45,
+    "daily_study_minutes": {
+      "2026-09-27": 45,
+      "2026-09-28": 45,
+      "2026-09-29": 45,
+      "2026-09-30": 45,
+      "2026-10-01": 45
+    },
+    "security_question": "Môn học KHTN em yêu thích nhất?",
+    "security_answer_hash": ""
   },
   "namanh": {
     "username": "namanh",
@@ -117,7 +153,16 @@
     "physics_count": 2,
     "chemistry_count": 1,
     "biology_count": 2,
-    "total_study_minutes": 45
+    "total_study_minutes": 45,
+    "daily_study_minutes": {
+      "2026-09-27": 45,
+      "2026-09-28": 45,
+      "2026-09-29": 45,
+      "2026-09-30": 45,
+      "2026-10-01": 45
+    },
+    "security_question": "Môn học KHTN em yêu thích nhất?",
+    "security_answer_hash": ""
   },
   "student7a": {
     "username": "student7a",
@@ -141,7 +186,16 @@
     "physics_count": 2,
     "chemistry_count": 1,
     "biology_count": 2,
-    "total_study_minutes": 45
+    "total_study_minutes": 45,
+    "daily_study_minutes": {
+      "2026-09-27": 45,
+      "2026-09-28": 45,
+      "2026-09-29": 45,
+      "2026-09-30": 45,
+      "2026-10-01": 45
+    },
+    "security_question": "Môn học KHTN em yêu thích nhất?",
+    "security_answer_hash": ""
   },
   "baonhat": {
     "username": "baonhat",
@@ -151,7 +205,7 @@
     "password_hash": "18b55ac94bbbde9cae3463a560bb4b3d12718b64789abc948cbb1f718251095a",
     "role": "student",
     "created_at": "30/09/2026 19:45",
-    "last_login": "01/10/2026 18:25",
+    "last_login": "14/10/2026 21:10",
     "streak_count": 5,
     "max_streak": 7,
     "study_dates": [
@@ -165,6 +219,15 @@
     "physics_count": 2,
     "chemistry_count": 1,
     "biology_count": 2,
-    "total_study_minutes": 45
+    "total_study_minutes": 45,
+    "daily_study_minutes": {
+      "2026-09-27": 45,
+      "2026-09-28": 45,
+      "2026-09-29": 45,
+      "2026-09-30": 45,
+      "2026-10-01": 45
+    },
+    "security_question": "Môn học KHTN em yêu thích nhất?",
+    "security_answer_hash": ""
   }
 }

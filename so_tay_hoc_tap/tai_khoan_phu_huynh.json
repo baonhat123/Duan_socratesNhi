@@ -1,0 +1,61 @@
+{
+  "ph_baonhat": {
+    "username": "ph_baonhat",
+    "display_name": "Bác Phan Văn An (Bố em Phan Nhật)",
+    "phone_number": "0912345678",
+    "password_hash": "f3c043efc50795305d71cb0e7ee3e243d772f8ac1a6f3087db1074ae7c369f26",
+    "role": "parent",
+    "avatar": "👨‍💼",
+    "created_at": "10/09/2026 08:30",
+    "last_login": "14/10/2026 21:04",
+    "children_usernames": [
+      "baonhat"
+    ],
+    "active_child_username": "baonhat",
+    "daily_target_minutes": 45,
+    "weekly_target_lessons": 5,
+    "encouragement_notes": {
+      "baonhat": {
+        "text": "Ba mẹ rất tự hào về nỗ lực tự học của con hôm nay!",
+        "badge": "⭐",
+        "date": "14/10/2026 21:04",
+        "sender": "Bác Phan Văn An (Bố em Phan Nhật)"
+      }
+    }
+  },
+  "ph_minhtriet": {
+    "username": "ph_minhtriet",
+    "display_name": "Cô Trần Thu Hà (Mẹ em Minh Triết & Bảo An)",
+    "phone_number": "0987654321",
+    "password_hash": "f3c043efc50795305d71cb0e7ee3e243d772f8ac1a6f3087db1074ae7c369f26",
+    "role": "parent",
+    "avatar": "👩‍🏫",
+    "created_at": "05/09/2026 09:15",
+    "last_login": "14/10/2026 15:20",
+    "children_usernames": [
+      "minhtriet",
+      "baoan"
+    ],
+    "active_child_username": "minhtriet",
+    "daily_target_minutes": 45,
+    "weekly_target_lessons": 5,
+    "encouragement_notes": {}
+  },
+  "ph_baonhat1": {
+    "username": "ph_baonhat1",
+    "display_name": "Phan Ngọc Hiển",
+    "phone_number": "0938102461",
+    "password_hash": "481d0b683c82b355d204803e3b3e17b8001a36b31b49b13eb40f3bb834c71c27",
+    "role": "parent",
+    "avatar": "👨‍💼",
+    "created_at": "14/10/2026 19:01",
+    "last_login": "14/10/2026 19:01",
+    "children_usernames": [
+      "baonhat"
+    ],
+    "active_child_username": "baonhat",
+    "daily_target_minutes": 45,
+    "weekly_target_lessons": 5,
+    "encouragement_notes": {}
+  }
+}

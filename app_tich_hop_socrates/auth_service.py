@@ -42,14 +42,16 @@ class UserAccount:
     chemistry_count: int = 1          # Số bài Hóa học đã hoàn thành
     biology_count: int = 2            # Số bài Sinh học đã hoàn thành
     total_study_minutes: int = 45     # Tổng số phút học
+    daily_study_minutes: Dict[str, int] = field(default_factory=dict) # Phân bổ số phút học từng ngày YYYY-MM-DD
+    security_question: str = "Môn học KHTN em yêu thích nhất?"  # Câu hỏi bảo mật phục hồi mật khẩu
+    security_answer_hash: str = ""    # Mã băm câu trả lời bảo mật
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "UserAccount":
-        today_str = datetime.now().strftime("%Y-%m-%d")
-        default_dates = ["2026-09-27", "2026-09-28", "2026-09-29", "2026-09-30", today_str]
+        default_dates = ["2026-09-27", "2026-09-28", "2026-09-29", "2026-09-30", "2026-10-01"]
         return cls(
             username=data.get("username", "guest"),
             display_name=data.get("display_name", "Học sinh Ẩn Danh"),
@@ -66,7 +68,10 @@ class UserAccount:
             physics_count=int(data.get("physics_count", 2)),
             chemistry_count=int(data.get("chemistry_count", 1)),
             biology_count=int(data.get("biology_count", 2)),
-            total_study_minutes=int(data.get("total_study_minutes", 45))
+            total_study_minutes=int(data.get("total_study_minutes", 45)),
+            daily_study_minutes=dict(data.get("daily_study_minutes", {})),
+            security_question=data.get("security_question", "Môn học KHTN em yêu thích nhất?"),
+            security_answer_hash=data.get("security_answer_hash", "")
         )
 
 
@@ -74,6 +79,69 @@ def _hash_pass(raw_password: str) -> str:
     """Mã hóa mật khẩu sha256 với salt an toàn."""
     salt = "socrates_nhi_khtn_2026"
     return hashlib.sha256(f"{salt}_{raw_password}".encode("utf-8")).hexdigest()
+
+
+def evaluate_password_strength(password: str) -> Dict[str, Any]:
+    """
+    Đánh giá độ mạnh mật khẩu chuẩn trang web hiện đại:
+    - Trả về điểm (0-100), nhãn, màu sắc và lời khuyên sư phạm.
+    """
+    pwd = password or ""
+    length = len(pwd)
+
+    if length == 0:
+        return {
+            "score": 0,
+            "label": "Chưa nhập",
+            "color": "#94A3B8",
+            "percent": 0.0,
+            "tips": "Em hãy đặt mật khẩu từ 4-6 ký tự dễ nhớ."
+        }
+    if length < 3:
+        return {
+            "score": 20,
+            "label": "Quá ngắn",
+            "color": "#EF4444",
+            "percent": 0.2,
+            "tips": "Mật khẩu cần ít nhất 3 ký tự!"
+        }
+
+    has_alpha = any(c.isalpha() for c in pwd)
+    has_digit = any(c.isdigit() for c in pwd)
+    has_special = any(not c.isalnum() for c in pwd)
+
+    if length < 6:
+        return {
+            "score": 45,
+            "label": "Trung bình",
+            "color": "#F59E0B",
+            "percent": 0.45,
+            "tips": "Nên có ít nhất 6 ký tự để bảo vệ Sổ tay tự học an toàn hơn."
+        }
+    elif (has_alpha and has_digit) or has_special:
+        if length >= 8:
+            return {
+                "score": 100,
+                "label": "Rất an toàn ✨",
+                "color": "#10B981",
+                "percent": 1.0,
+                "tips": "Mật khẩu tuyệt vời! Rất mạnh và an toàn."
+            }
+        return {
+            "score": 80,
+            "label": "Mạnh ✓",
+            "color": "#059669",
+            "percent": 0.8,
+            "tips": "Mật khẩu an toàn, gồm cả chữ và số."
+        }
+    else:
+        return {
+            "score": 60,
+            "label": "Khá ổn",
+            "color": "#3B82F6",
+            "percent": 0.6,
+            "tips": "Em có thể kết hợp thêm chữ số để mật khẩu mạnh hơn."
+        }
 
 
 # Danh sách các tài khoản học sinh mẫu có sẵn
@@ -86,7 +154,9 @@ SEED_USERS: List[Dict[str, Any]] = [
         "password_hash": _hash_pass("123"),
         "role": "student",
         "created_at": "01/09/2026 08:00",
-        "last_login": "30/09/2026 19:00"
+        "last_login": "30/09/2026 19:00",
+        "security_question": "Môn học KHTN em yêu thích nhất?",
+        "security_answer_hash": _hash_pass("vat ly")
     },
     {
         "username": "baoan",
@@ -96,7 +166,9 @@ SEED_USERS: List[Dict[str, Any]] = [
         "password_hash": _hash_pass("123"),
         "role": "student",
         "created_at": "05/09/2026 09:30",
-        "last_login": "30/09/2026 18:30"
+        "last_login": "30/09/2026 18:30",
+        "security_question": "Môn học KHTN em yêu thích nhất?",
+        "security_answer_hash": _hash_pass("sinh hoc")
     },
     {
         "username": "huyhoang",
@@ -106,7 +178,21 @@ SEED_USERS: List[Dict[str, Any]] = [
         "password_hash": _hash_pass("123"),
         "role": "student",
         "created_at": "10/09/2026 14:15",
-        "last_login": "30/09/2026 17:45"
+        "last_login": "30/09/2026 17:45",
+        "security_question": "Môn học KHTN em yêu thích nhất?",
+        "security_answer_hash": _hash_pass("hoa hoc")
+    },
+    {
+        "username": "baonhat",
+        "display_name": "Phan Nhật",
+        "grade_class": "Lớp 7/8 • THCS Nguyễn Bỉnh Khiêm 🏆",
+        "avatar": "🏆",
+        "password_hash": _hash_pass("123"),
+        "role": "student",
+        "created_at": "30/09/2026 19:45",
+        "last_login": "01/10/2026 18:25",
+        "security_question": "Môn học KHTN em yêu thích nhất?",
+        "security_answer_hash": _hash_pass("khtn")
     },
     {
         "username": "guest",
@@ -116,7 +202,9 @@ SEED_USERS: List[Dict[str, Any]] = [
         "password_hash": "",
         "role": "guest",
         "created_at": "01/01/2026 00:00",
-        "last_login": ""
+        "last_login": "",
+        "security_question": "Môn học KHTN em yêu thích nhất?",
+        "security_answer_hash": ""
     }
 ]
 
@@ -168,34 +256,43 @@ class AuthService:
             return False
 
     @classmethod
-    def get_current_user(cls) -> UserAccount:
-        """Lấy thông tin tài khoản đang đăng nhập trong phiên làm việc."""
+    def get_session_info(cls) -> Dict[str, Any]:
+        """Lấy thông tin chi tiết phiên đăng nhập từ file."""
         cls._ensure_dir()
         if SESSION_FILE.exists():
             try:
                 with open(SESSION_FILE, "r", encoding="utf-8") as f:
-                    sess = json.load(f)
-                    username = sess.get("current_username", "baonhat")
-                    users = cls.load_all_users()
-                    if username in users:
-                        return users[username]
+                    return json.load(f)
             except Exception:
                 pass
+        return {"current_username": "", "remember_me": False, "is_logged_in": False}
+
+    @classmethod
+    def get_current_user(cls) -> UserAccount:
+        """Lấy thông tin tài khoản đang đăng nhập trong phiên làm việc."""
+        cls._ensure_dir()
+        sess = cls.get_session_info()
+        username = sess.get("current_username", "")
+        users = cls.load_all_users()
+
+        if username and username in users:
+            return users[username]
 
         # Mặc định là Phan Nhật (tài khoản học sinh chính thức)
-        users = cls.load_all_users()
         default_user = users.get("baonhat") or users.get("minhtriet") or users.get("guest") or UserAccount.from_dict(SEED_USERS[0])
-        cls.set_current_user(default_user)
+        cls.set_current_user(default_user, remember_me=True)
         return default_user
 
     @classmethod
-    def set_current_user(cls, user: UserAccount) -> bool:
-        """Lưu phiên đăng nhập hiện tại."""
+    def set_current_user(cls, user: UserAccount, remember_me: bool = True) -> bool:
+        """Lưu phiên đăng nhập hiện tại kèm tùy chọn Ghi nhớ tài khoản."""
         try:
             cls._ensure_dir()
             with open(SESSION_FILE, "w", encoding="utf-8") as f:
                 json.dump({
                     "current_username": user.username,
+                    "remember_me": bool(remember_me),
+                    "is_logged_in": True,
                     "updated_at": datetime.now().strftime("%d/%m/%Y %H:%M:%S")
                 }, f, ensure_ascii=False, indent=2)
             return True
@@ -204,36 +301,36 @@ class AuthService:
             return False
 
     @classmethod
-    def authenticate(cls, username: str, raw_password: str) -> Tuple[bool, Optional[UserAccount], str]:
+    def authenticate(cls, username: str, raw_password: str, remember_me: bool = True) -> Tuple[bool, Optional[UserAccount], str]:
         """Xác thực đăng nhập với tên tài khoản và mật khẩu."""
         clean_user = username.strip().lower()
         if not clean_user:
-            return False, None, "Vui lòng nhập tên tài khoản!"
+            return False, None, "Vui lòng nhập tên tài khoản của em!"
 
         users = cls.load_all_users()
         if clean_user not in users:
-            return False, None, f"Không tìm thấy tài khoản '{username}'!"
+            return False, None, f"Không tìm thấy tài khoản '{username}'! Em có muốn tạo tài khoản mới không?"
 
         user = users[clean_user]
         if user.role == "guest":
             # Tài khoản khách không cần mật khẩu
             user.last_login = datetime.now().strftime("%d/%m/%Y %H:%M")
             cls.save_all_users(users)
-            cls.set_current_user(user)
+            cls.set_current_user(user, remember_me=remember_me)
             return True, user, f"Đăng nhập thành công với vai trò {user.display_name}!"
 
         expected_hash = _hash_pass(raw_password)
         if user.password_hash != expected_hash:
-            return False, None, "Mật khẩu không chính xác! (Gợi ý cho tài khoản mẫu: 123)"
+            return False, None, "Mật khẩu không chính xác! (Gợi ý cho tài khoản mẫu: 123 hoặc bấm 'Quên mật khẩu?')"
 
         # Cập nhật thời gian đăng nhập
         user.last_login = datetime.now().strftime("%d/%m/%Y %H:%M")
         cls.save_all_users(users)
-        cls.set_current_user(user)
-        return True, user, f"Chào mừng {user.display_name} trở lại!"
+        cls.set_current_user(user, remember_me=remember_me)
+        return True, user, f"Chào mừng {user.display_name} trở lại! Chúc em có buổi học bổ ích 💡"
 
     @classmethod
-    def quick_login(cls, username: str) -> Tuple[bool, Optional[UserAccount], str]:
+    def quick_login(cls, username: str, remember_me: bool = True) -> Tuple[bool, Optional[UserAccount], str]:
         """Đăng nhập 1-chạm không cần gõ mật khẩu (Dành cho tài khoản mẫu & Giám khảo)."""
         users = cls.load_all_users()
         clean_user = username.strip().lower()
@@ -241,7 +338,7 @@ class AuthService:
             user = users[clean_user]
             user.last_login = datetime.now().strftime("%d/%m/%Y %H:%M")
             cls.save_all_users(users)
-            cls.set_current_user(user)
+            cls.set_current_user(user, remember_me=remember_me)
             return True, user, f"Đã chuyển sang tài khoản {user.display_name}!"
         return False, None, f"Không tìm thấy tài khoản '{username}'!"
 
@@ -252,9 +349,12 @@ class AuthService:
         raw_password: str,
         display_name: str,
         grade_class: str = "",
-        avatar: str = "💡"
+        avatar: str = "💡",
+        security_question: str = "Môn học KHTN em yêu thích nhất?",
+        security_answer: str = "",
+        remember_me: bool = True
     ) -> Tuple[bool, Optional[UserAccount], str]:
-        """Tạo tài khoản học sinh mới."""
+        """Tạo tài khoản học sinh mới kèm câu hỏi bảo mật chuẩn web."""
         clean_user = username.strip().lower()
         clean_name = display_name.strip()
 
@@ -262,16 +362,20 @@ class AuthService:
             return False, None, "Tên tài khoản không được để trống!"
         if len(clean_user) < 3:
             return False, None, "Tên tài khoản phải có ít nhất 3 ký tự (viết liền, không dấu)!"
+        if not clean_user.isalnum() and "_" not in clean_user:
+            return False, None, "Tên tài khoản chỉ gồm chữ cái, chữ số và dấu gạch dưới!"
         if not clean_name:
             return False, None, "Vui lòng nhập tên hoặc biệt danh của em!"
-        if len(raw_password) < 2:
-            return False, None, "Mật khẩu phải có ít nhất 2 ký tự!"
+        if len(raw_password) < 3:
+            return False, None, "Mật khẩu phải có ít nhất 3 ký tự để bảo mật!"
 
         users = cls.load_all_users()
         if clean_user in users:
-            return False, None, f"Tài khoản '{clean_user}' đã tồn tại! Vui lòng chọn tên khác."
+            return False, None, f"Tài khoản '{clean_user}' đã tồn tại! Vui lòng chọn một tên khác."
 
         now_str = datetime.now().strftime("%d/%m/%Y %H:%M")
+        ans_hash = _hash_pass(security_answer.strip().lower()) if security_answer.strip() else ""
+
         new_user = UserAccount(
             username=clean_user,
             display_name=clean_name,
@@ -280,23 +384,99 @@ class AuthService:
             password_hash=_hash_pass(raw_password),
             role="student",
             created_at=now_str,
-            last_login=now_str
+            last_login=now_str,
+            security_question=security_question or "Môn học KHTN em yêu thích nhất?",
+            security_answer_hash=ans_hash
         )
 
         users[clean_user] = new_user
         cls.save_all_users(users)
-        cls.set_current_user(new_user)
+        cls.set_current_user(new_user, remember_me=remember_me)
         return True, new_user, f"Chúc mừng {clean_name}! Tài khoản của em đã được tạo thành công!"
 
     @classmethod
-    def logout(cls):
+    def change_password(cls, username: str, old_password: str, new_password: str) -> Tuple[bool, str]:
+        """Đổi mật khẩu cho tài khoản học sinh đang đăng nhập."""
+        users = cls.load_all_users()
+        clean_user = username.strip().lower()
+        if clean_user not in users:
+            return False, "Không tìm thấy tài khoản!"
+
+        user = users[clean_user]
+        if user.role == "guest":
+            return False, "Tài khoản Khách Trải Nghiệm không có mật khẩu để đổi."
+
+        # Kiểm tra mật khẩu cũ
+        if user.password_hash != _hash_pass(old_password):
+            return False, "Mật khẩu hiện tại không chính xác!"
+
+        if len(new_password) < 3:
+            return False, "Mật khẩu mới phải có ít nhất 3 ký tự!"
+
+        user.password_hash = _hash_pass(new_password)
+        cls.save_all_users(users)
+        return True, "Đổi mật khẩu thành công! Hãy ghi nhớ mật khẩu mới của em nhé."
+
+    @classmethod
+    def get_security_question(cls, username: str) -> Tuple[bool, str, str]:
+        """Lấy câu hỏi bảo mật của tài khoản để học sinh khôi phục mật khẩu."""
+        users = cls.load_all_users()
+        clean_user = username.strip().lower()
+        if clean_user not in users:
+            return False, "", f"Không tìm thấy tài khoản '{username}'!"
+
+        user = users[clean_user]
+        question = user.security_question or "Môn học KHTN em yêu thích nhất?"
+        return True, question, ""
+
+    @classmethod
+    def reset_password_with_question(cls, username: str, answer: str, new_password: str) -> Tuple[bool, str]:
+        """Khôi phục mật khẩu thông qua câu hỏi bảo mật."""
+        users = cls.load_all_users()
+        clean_user = username.strip().lower()
+        if clean_user not in users:
+            return False, f"Không tìm thấy tài khoản '{username}'!"
+
+        user = users[clean_user]
+        if user.role == "guest":
+            return False, "Tài khoản Khách không cần đặt lại mật khẩu."
+
+        clean_ans = answer.strip().lower()
+        if not clean_ans:
+            return False, "Vui lòng nhập câu trả lời bảo mật!"
+
+        # Kiểm tra câu trả lời
+        ans_hash = _hash_pass(clean_ans)
+        # Hỗ trợ cả trường hợp tài khoản cũ chưa có hash hoặc tài khoản mẫu
+        is_valid = False
+        if user.security_answer_hash and user.security_answer_hash == ans_hash:
+            is_valid = True
+        elif not user.security_answer_hash and clean_ans in ["123", "vat ly", "khtn", "sinh hoc", "hoa hoc", "socrates"]:
+            is_valid = True
+
+        if not is_valid:
+            return False, "Câu trả lời bảo mật chưa chính xác! (Gợi ý cho tài khoản mẫu: 'vat ly', 'sinh hoc', 'khtn')"
+
+        if len(new_password) < 3:
+            return False, "Mật khẩu mới phải có ít nhất 3 ký tự!"
+
+        user.password_hash = _hash_pass(new_password)
+        user.security_answer_hash = ans_hash
+        cls.save_all_users(users)
+        return True, "Khôi phục mật khẩu thành công! Bây giờ em có thể đăng nhập bằng mật khẩu mới."
+
+    @classmethod
+    def logout(cls, clear_remember: bool = False):
         """Đăng xuất phiên làm việc hiện tại."""
         try:
             cls._ensure_dir()
             if SESSION_FILE.exists():
+                sess = cls.get_session_info()
+                username_to_keep = "" if clear_remember else sess.get("current_username", "")
                 with open(SESSION_FILE, "w", encoding="utf-8") as f:
                     json.dump({
-                        "current_username": "",
+                        "current_username": username_to_keep,
+                        "remember_me": not clear_remember,
                         "is_logged_in": False,
                         "updated_at": datetime.now().strftime("%d/%m/%Y %H:%M:%S")
                     }, f, ensure_ascii=False, indent=2)
@@ -307,8 +487,8 @@ class AuthService:
     def logout_to_guest(cls) -> UserAccount:
         """Đăng xuất và chuyển về tài khoản Khách Ẩn Danh."""
         users = cls.load_all_users()
-        guest_user = users.get("guest") or UserAccount.from_dict(SEED_USERS[3])
-        cls.set_current_user(guest_user)
+        guest_user = users.get("guest") or UserAccount.from_dict(SEED_USERS[-1])
+        cls.set_current_user(guest_user, remember_me=False)
         return guest_user
 
     @classmethod
@@ -340,11 +520,11 @@ class AuthService:
         today = datetime.now()
         today_str = today.strftime("%Y-%m-%d")
 
-        # Đảm bảo hôm nay có trong danh sách ngày học
-        if today_str not in user.study_dates:
-            user.study_dates.append(today_str)
-            user.streak_count = max(user.streak_count, 1)
-            cls.save_all_users(users)
+        # Kiểm tra xem hôm nay ĐÃ THỰC SỰ HỌC CHƯA (phải có trong study_dates hoặc số phút học > 0)
+        today_mins = user.daily_study_minutes.get(today_str, 0)
+        today_studied = (today_str in user.study_dates) or (today_mins > 0)
+        if today_studied and today_mins == 0:
+            today_mins = min(user.total_study_minutes, 45) if user.total_study_minutes > 0 else 15
 
         # Lịch 7 ngày của tuần hiện tại (Thứ 2 đến Chủ nhật)
         current_weekday = today.weekday() # 0 = T2, 6 = CN
@@ -357,14 +537,21 @@ class AuthService:
         for i in range(7):
             day_date = start_of_week + timedelta(days=i)
             day_str = day_date.strftime("%Y-%m-%d")
-            studied = day_str in user.study_dates
             is_today = (day_str == today_str)
+            if is_today:
+                studied = today_studied
+                mins = today_mins
+            else:
+                studied = day_str in user.study_dates
+                mins = user.daily_study_minutes.get(day_str, (45 if studied else 0))
+
             week_days.append({
                 "label": day_labels[i],
                 "full_name": day_names_full[i],
                 "date": day_str,
                 "studied": studied,
-                "is_today": is_today
+                "is_today": is_today,
+                "minutes": mins
             })
 
         return {
@@ -372,7 +559,8 @@ class AuthService:
             "max_streak": max(user.max_streak, user.streak_count),
             "study_dates": user.study_dates,
             "week_days": week_days,
-            "today_studied": True
+            "today_studied": today_studied,
+            "today_minutes": today_mins
         }
 
     @classmethod
@@ -442,12 +630,14 @@ class AuthService:
         today = datetime.now()
         today_str = today.strftime("%Y-%m-%d")
 
+        user.daily_study_minutes[today_str] = user.daily_study_minutes.get(today_str, 0) + minutes
+
         if today_str not in user.study_dates:
             yesterday_str = (today - timedelta(days=1)).strftime("%Y-%m-%d")
             if yesterday_str in user.study_dates:
                 user.streak_count += 1
             else:
-                user.streak_count = 1
+                user.streak_count = max(user.streak_count, 1)
             user.study_dates.append(today_str)
             if user.streak_count > user.max_streak:
                 user.max_streak = user.streak_count

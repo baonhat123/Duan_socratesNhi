@@ -818,6 +818,20 @@ class MindmapSummaryView:
 
         save_notebook_entry(notebook_entry)
 
+        # 1.1 Ghi nhận buổi học thực tế vào hồ sơ học sinh (Streak & Thời gian học)
+        try:
+            from app_tich_hop_socrates.auth_service import AuthService
+            cur_user = AuthService.get_current_user()
+            if cur_user and cur_user.username:
+                AuthService.record_study_session(
+                    username=cur_user.username,
+                    topic=summary.get("topic", "Bài học KHTN 7"),
+                    domain=summary.get("domain", "KHTN 7"),
+                    minutes=15
+                )
+        except Exception:
+            pass
+
         # 2. Lưu nhật ký ẩn danh FR-08
         try:
             save_anonymous_session_log(summary)

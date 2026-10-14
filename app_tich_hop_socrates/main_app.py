@@ -50,6 +50,8 @@ from chuc_nang_7_demo_offline_cache.offline_engine import GLOBAL_OFFLINE_ENGINE
 
 from app_tich_hop_socrates.app_state import SessionState, AppStep
 from app_tich_hop_socrates.auth_service import AuthService, UserAccount
+from app_tich_hop_socrates.parent_service import ParentService, ParentAccount
+from app_tich_hop_socrates.parent_view import ParentPortalView
 from app_tich_hop_socrates.auth_view import LoginScreenView, AuthModalDialog, AuthDialogView
 from app_tich_hop_socrates.dashboard_view import StudentDashboardModal, safe_open_dialog, safe_close_dialog
 
@@ -140,74 +142,78 @@ class SocratesIntegratedApp:
         self.app_brand = ft.Row(
             [
                 ft.Container(
-                    content=ft.Icon(ft.Icons.LIGHTBULB_ROUNDED, color=ft.Colors.WHITE, size=24),
+                    content=ft.Icon(ft.Icons.LIGHTBULB_ROUNDED, color=ft.Colors.WHITE, size=20),
                     bgcolor=ft.Colors.AMBER_500,
-                    width=42,
-                    height=42,
-                    border_radius=21,
+                    width=36,
+                    height=36,
+                    border_radius=18,
                     alignment=ft.Alignment.CENTER,
-                    shadow=ft.BoxShadow(blur_radius=10, color=ft.Colors.with_opacity(0.35, ft.Colors.AMBER_500), offset=ft.Offset(0, 2))
+                    shadow=ft.BoxShadow(blur_radius=8, color=ft.Colors.with_opacity(0.35, ft.Colors.AMBER_500), offset=ft.Offset(0, 2))
                 ),
                 ft.Column(
                     [
-                        ft.Text("SOCRATES NHÍ 💡", size=20, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900),
-                        ft.Text("Trợ lý AI gợi mở tư duy KHTN THCS • Cuộc thi Sáng tạo trẻ Quốc gia AI 2026", size=11, color=ft.Colors.GREY_700)
+                        ft.Text("SOCRATES NHÍ 💡", size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900),
+                        ft.Text("Trợ lý AI gợi mở tư duy KHTN THCS", size=10, color=ft.Colors.GREY_700)
                     ],
-                    spacing=1
+                    spacing=0
                 )
             ],
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
-            spacing=10
+            spacing=8
         )
 
         self.pedagogy_badge = ft.Container(
             content=ft.Row([
-                ft.Icon(ft.Icons.AUTO_AWESOME_ROUNDED, color=ft.Colors.INDIGO_700, size=14),
-                ft.Text("Gia sư Socratic 5 Pha", size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900)
-            ], spacing=4),
+                ft.Icon(ft.Icons.AUTO_AWESOME_ROUNDED, color=ft.Colors.INDIGO_700, size=13),
+                ft.Text("Socratic 5 Pha", size=10, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900)
+            ], spacing=3),
             bgcolor=ft.Colors.INDIGO_50,
-            padding=ft.Padding(10, 6, 10, 6),
-            border_radius=12,
-            border=ft.Border.all(1, ft.Colors.INDIGO_200)
+            padding=ft.Padding(7, 4, 7, 4),
+            border_radius=10,
+            border=ft.Border.all(1, ft.Colors.INDIGO_200),
+            tooltip="Phương pháp Sư phạm Socrates 5 Pha gợi mở tư duy khoa học"
         )
 
         self.offline_btn = ft.Container(
             content=ft.Row([
-                ft.Icon(ft.Icons.BOLT_ROUNDED, color=ft.Colors.AMBER_800, size=15),
-                ft.Text("⚡ Demo Offline (12 Bài) 📚", size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.AMBER_900)
-            ], spacing=4),
+                ft.Icon(ft.Icons.BOLT_ROUNDED, color=ft.Colors.AMBER_800, size=13),
+                ft.Text("Offline ⚡", size=10, weight=ft.FontWeight.BOLD, color=ft.Colors.AMBER_900)
+            ], spacing=3),
             bgcolor=ft.Colors.AMBER_50,
-            padding=ft.Padding(10, 6, 10, 6),
-            border_radius=12,
+            padding=ft.Padding(7, 4, 7, 4),
+            border_radius=10,
             border=ft.Border.all(1, ft.Colors.AMBER_300),
             tooltip="Bấm để mở Bảng điều khiển Demo Offline & Khám phá 12 bài mẫu KHTN 7 (FR-10)",
-            on_click=lambda _: self._open_offline_dashboard()
+            on_click=lambda _: self._open_offline_dashboard(),
+            ink=True
         )
 
         self.guardrail_btn = ft.Container(
             content=ft.Row([
-                ft.Icon(ft.Icons.SHIELD_ROUNDED, color=ft.Colors.GREEN_700, size=14),
-                ft.Text("Khiên An Toàn 🛡️", size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.GREEN_900)
-            ], spacing=4),
+                ft.Icon(ft.Icons.SHIELD_ROUNDED, color=ft.Colors.GREEN_700, size=13),
+                ft.Text("An Toàn 🛡️", size=10, weight=ft.FontWeight.BOLD, color=ft.Colors.GREEN_900)
+            ], spacing=3),
             bgcolor=ft.Colors.GREEN_50,
-            padding=ft.Padding(10, 6, 10, 6),
-            border_radius=12,
+            padding=ft.Padding(7, 4, 7, 4),
+            border_radius=10,
             border=ft.Border.all(1, ft.Colors.GREEN_300),
             tooltip="Bấm để mở Bảng kiểm định & thử nghiệm bẻ khóa AI 3 tầng (FR-07)",
-            on_click=lambda _: self._open_guardrail_dashboard()
+            on_click=lambda _: self._open_guardrail_dashboard(),
+            ink=True
         )
 
         self.rubric_btn = ft.Container(
             content=ft.Row([
-                ft.Icon(ft.Icons.ASSESSMENT_ROUNDED, color=ft.Colors.PURPLE_700, size=14),
-                ft.Text("Đánh Giá Rubric 📊", size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.PURPLE_900)
-            ], spacing=4),
+                ft.Icon(ft.Icons.ASSESSMENT_ROUNDED, color=ft.Colors.PURPLE_700, size=13),
+                ft.Text("Rubric 📊", size=10, weight=ft.FontWeight.BOLD, color=ft.Colors.PURPLE_900)
+            ], spacing=3),
             bgcolor=ft.Colors.PURPLE_50,
-            padding=ft.Padding(10, 6, 10, 6),
-            border_radius=12,
+            padding=ft.Padding(7, 4, 7, 4),
+            border_radius=10,
             border=ft.Border.all(1, ft.Colors.PURPLE_300),
-            tooltip="Bấm để mở Bảng đánh giá Rubric tiến bộ lập luận 0-6đ & 5 Chỉ số khoa học MVP (Mục 16.3 & 3)",
-            on_click=lambda _: self._open_rubric_dashboard()
+            tooltip="Bấm để mở Bảng đánh giá Rubric tiến bộ lập luận 0-6đ & 5 Chỉ số khoa học MVP",
+            on_click=lambda _: self._open_rubric_dashboard(),
+            ink=True
         )
 
         self.ai_status_btn = self._create_ai_status_badge()
@@ -248,15 +254,16 @@ class SocratesIntegratedApp:
 
         self.notebook_btn = ft.Container(
             content=ft.Row([
-                ft.Icon(ft.Icons.MENU_BOOK_ROUNDED, color=ft.Colors.CYAN_800, size=14),
-                ft.Text("Sổ Tay Của Em 📓", size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.CYAN_900)
-            ], spacing=4),
+                ft.Icon(ft.Icons.MENU_BOOK_ROUNDED, color=ft.Colors.CYAN_800, size=13),
+                ft.Text("Sổ Tay 📓", size=10, weight=ft.FontWeight.BOLD, color=ft.Colors.CYAN_900)
+            ], spacing=3),
             bgcolor=ft.Colors.CYAN_50,
-            padding=ft.Padding(10, 6, 10, 6),
-            border_radius=12,
+            padding=ft.Padding(7, 4, 7, 4),
+            border_radius=10,
             border=ft.Border.all(1, ft.Colors.CYAN_300),
             tooltip="Bấm để mở Sổ tay Tự học (Xem lại các bài đã đúc kết và kiến thức cần nhớ)",
-            on_click=lambda _: self._open_notebook_viewer()
+            on_click=lambda _: self._open_notebook_viewer(),
+            ink=True
         )
 
         self.stepper_bar = ft.Container(
@@ -280,26 +287,55 @@ class SocratesIntegratedApp:
 
         cur_user = self.state.current_user or AuthService.get_current_user()
         streak_data = AuthService.get_user_streak(cur_user.username)
-        s_count = streak_data.get("streak_count", 5)
+        s_count = streak_data.get("streak_count", 0)
 
-        self.streak_text = ft.Text(f"{s_count} Ngày", size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.AMBER_900)
+        self.streak_text = ft.Text(f"{s_count} Ngày", size=10, weight=ft.FontWeight.BOLD, color=ft.Colors.AMBER_900)
         self.streak_dashboard_btn = ft.Container(
             content=ft.Row([
-                ft.Text("🔥", size=14),
+                ft.Text("🔥", size=13),
                 self.streak_text,
-                ft.Container(width=1, height=12, bgcolor=ft.Colors.AMBER_300),
-                ft.Text("Tiến Độ 📊", size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900)
-            ], spacing=4),
+                ft.Container(width=1, height=10, bgcolor=ft.Colors.AMBER_300),
+                ft.Text("Tiến Độ 📊", size=10, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900)
+            ], spacing=3),
             bgcolor=ft.Colors.AMBER_50,
-            padding=ft.Padding(10, 6, 12, 6),
-            border_radius=12,
+            padding=ft.Padding(7, 4, 7, 4),
+            border_radius=10,
             border=ft.Border.all(1.5, ft.Colors.AMBER_400),
             tooltip="Bấm để mở Bảng Theo Dõi Học Tập: Streak chuỗi ngày, tiến độ 3 mạch KHTN 7 và quản lý tài khoản",
             on_click=lambda _: self._open_dashboard(),
             ink=True
         )
 
+        self.parent_portal_btn = ft.Container(
+            content=ft.Row([
+                ft.Icon(ft.Icons.FAMILY_RESTROOM_ROUNDED, color=ft.Colors.TEAL_800, size=13),
+                ft.Text("Phụ Huynh 👨‍👩‍👧‍👦", size=10, weight=ft.FontWeight.BOLD, color=ft.Colors.TEAL_900)
+            ], spacing=3),
+            bgcolor=ft.Colors.TEAL_50,
+            padding=ft.Padding(7, 4, 7, 4),
+            border_radius=10,
+            border=ft.Border.all(1, ft.Colors.TEAL_300),
+            tooltip="Bấm để mở Cổng Phụ Huynh theo dõi tiến độ con em",
+            on_click=lambda _: self._open_parent_portal_from_header(),
+            ink=True
+        )
+
         self.user_chip = self._create_user_profile_chip()
+
+        # Nút Đăng xuất nổi bật trên Header
+        self.logout_btn = ft.Container(
+            content=ft.Row([
+                ft.Icon(ft.Icons.LOGOUT_ROUNDED, color=ft.Colors.RED_700, size=13),
+                ft.Text("Đăng xuất 🚪", size=10, weight=ft.FontWeight.BOLD, color=ft.Colors.RED_900)
+            ], spacing=3),
+            bgcolor=ft.Colors.RED_50,
+            padding=ft.Padding(7, 4, 8, 4),
+            border_radius=10,
+            border=ft.Border.all(1, ft.Colors.RED_200),
+            tooltip="Đăng xuất khỏi tài khoản học sinh và trở về màn hình đăng nhập",
+            on_click=lambda _: self._confirm_logout(),
+            ink=True
+        )
 
         self.header_panel = ft.Container(
             content=ft.Row([
@@ -312,13 +348,15 @@ class SocratesIntegratedApp:
                     self.offline_btn,
                     self.guardrail_btn,
                     self.rubric_btn,
-                    self.user_chip
-                ], spacing=8, wrap=True, alignment=ft.MainAxisAlignment.END)
+                    self.parent_portal_btn,
+                    self.user_chip,
+                    self.logout_btn
+                ], spacing=6, alignment=ft.MainAxisAlignment.END, vertical_alignment=ft.CrossAxisAlignment.CENTER)
             ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN, vertical_alignment=ft.CrossAxisAlignment.CENTER),
             bgcolor=ft.Colors.WHITE,
-            padding=ft.Padding(18, 12, 18, 12),
+            padding=ft.Padding(14, 8, 14, 8),
             border=ft.Border(bottom=ft.BorderSide(1, ft.Colors.INDIGO_50)),
-            shadow=ft.BoxShadow(blur_radius=12, color=ft.Colors.with_opacity(0.03, ft.Colors.BLACK), offset=ft.Offset(0, 3))
+            shadow=ft.BoxShadow(blur_radius=10, color=ft.Colors.with_opacity(0.03, ft.Colors.BLACK), offset=ft.Offset(0, 2))
         )
 
     def _update_stepper_visuals(self, active_step: str):
@@ -390,30 +428,34 @@ class SocratesIntegratedApp:
 
         if is_online and has_key:
             short_model = model.split("-202")[0] if "-202" in model else model
+            if len(short_model) > 11:
+                short_model = short_model[:11] + ".."
             return ft.Container(
                 content=ft.Row([
-                    ft.Icon(ft.Icons.CIRCLE, color=ft.Colors.GREEN_600, size=9),
-                    ft.Text(f"AI Trực Tuyến: {short_model}", size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.GREEN_900)
-                ], spacing=6),
+                    ft.Icon(ft.Icons.CIRCLE, color=ft.Colors.GREEN_600, size=8),
+                    ft.Text(f"AI: {short_model}", size=10, weight=ft.FontWeight.BOLD, color=ft.Colors.GREEN_900)
+                ], spacing=4),
                 bgcolor=ft.Colors.GREEN_50,
-                padding=ft.Padding(10, 6, 10, 6),
-                border_radius=12,
+                padding=ft.Padding(7, 4, 7, 4),
+                border_radius=10,
                 border=ft.Border.all(1, ft.Colors.GREEN_300),
                 tooltip=f"AI đang hoạt động ({model}). Bấm để kiểm tra kết nối / cấu hình AI.",
-                on_click=lambda _: self._open_ai_settings_dialog()
+                on_click=lambda _: self._open_ai_settings_dialog(),
+                ink=True
             )
         else:
             return ft.Container(
                 content=ft.Row([
-                    ft.Icon(ft.Icons.CLOUD_OFF_ROUNDED, color=ft.Colors.AMBER_800, size=14),
-                    ft.Text("⚡ Demo Ngoại Tuyến", size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.AMBER_900)
-                ], spacing=5),
+                    ft.Icon(ft.Icons.CLOUD_OFF_ROUNDED, color=ft.Colors.AMBER_800, size=13),
+                    ft.Text("Offline ⚡", size=10, weight=ft.FontWeight.BOLD, color=ft.Colors.AMBER_900)
+                ], spacing=4),
                 bgcolor=ft.Colors.AMBER_50,
-                padding=ft.Padding(10, 6, 10, 6),
-                border_radius=12,
+                padding=ft.Padding(7, 4, 7, 4),
+                border_radius=10,
                 border=ft.Border.all(1, ft.Colors.AMBER_300),
                 tooltip="Đang ở chế độ Ngoại tuyến. Bấm để kích hoạt AI trực tuyến hoặc cấu hình API Key.",
-                on_click=lambda _: self._open_ai_settings_dialog()
+                on_click=lambda _: self._open_ai_settings_dialog(),
+                ink=True
             )
 
     def _refresh_ai_badge(self):
@@ -695,18 +737,18 @@ class SocratesIntegratedApp:
         """Tạo thẻ hiển thị thông tin tài khoản học sinh ở góc phải trên cùng."""
         user = self.state.current_user or AuthService.get_current_user()
 
-        self.user_avatar_text = ft.Text(user.avatar, size=15)
-        self.user_name_text = ft.Text(user.display_name, size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.PURPLE_900)
+        self.user_avatar_text = ft.Text(user.avatar, size=13)
+        self.user_name_text = ft.Text(user.display_name, size=10, weight=ft.FontWeight.BOLD, color=ft.Colors.PURPLE_900)
         class_short = user.grade_class.split("•")[0].strip() if user.grade_class else "Học sinh"
-        self.user_class_text = ft.Text(class_short, size=10, color=ft.Colors.PURPLE_700)
+        self.user_class_text = ft.Text(class_short, size=9, color=ft.Colors.PURPLE_700)
 
         chip = ft.Container(
             content=ft.Row([
                 ft.Container(
                     content=self.user_avatar_text,
-                    width=26,
-                    height=26,
-                    border_radius=13,
+                    width=22,
+                    height=22,
+                    border_radius=11,
                     bgcolor=ft.Colors.PURPLE_100,
                     alignment=ft.Alignment.CENTER
                 ),
@@ -714,11 +756,11 @@ class SocratesIntegratedApp:
                     self.user_name_text,
                     self.user_class_text
                 ], spacing=0),
-                ft.Icon(ft.Icons.ANALYTICS_ROUNDED, color=ft.Colors.PURPLE_800, size=16)
-            ], spacing=6, vertical_alignment=ft.CrossAxisAlignment.CENTER),
+                ft.Icon(ft.Icons.ANALYTICS_ROUNDED, color=ft.Colors.PURPLE_800, size=13)
+            ], spacing=4, vertical_alignment=ft.CrossAxisAlignment.CENTER),
             bgcolor=ft.Colors.PURPLE_50,
-            padding=ft.Padding(8, 4, 10, 4),
-            border_radius=12,
+            padding=ft.Padding(6, 3, 7, 3),
+            border_radius=10,
             border=ft.Border.all(1, ft.Colors.PURPLE_300),
             tooltip="Hồ sơ học sinh • Bấm để mở Dashboard tiến độ, streak và quản lý tài khoản",
             on_click=lambda _: self._open_dashboard(),
@@ -727,11 +769,103 @@ class SocratesIntegratedApp:
         return chip
 
     def _show_login_screen(self):
-        """Hiển thị Màn hình Đăng Nhập & Tạo Tài Khoản khi mới vào ứng dụng."""
+        """Hiển thị Màn hình Đăng Nhập & Tạo Tài Khoản khi mới vào ứng dụng (Học sinh & Phụ huynh)."""
         self.is_logged_in = False
-        login_view = LoginScreenView(self.page, on_login_success=self._on_login_success)
+        login_view = LoginScreenView(
+            self.page,
+            on_login_success=self._on_login_success,
+            on_parent_login_success=self._on_parent_login_success
+        )
         self.main_container.content = login_view.build()
         if hasattr(self.page, "update"):
+            self.page.update()
+
+    def _on_parent_login_success(self, parent: ParentAccount):
+        """Xử lý khi phụ huynh đăng nhập hoặc tạo tài khoản thành công."""
+        self.is_logged_in = True
+        self.state.current_parent = parent
+        self._show_parent_workspace(parent)
+
+        snack = ft.SnackBar(
+            content=ft.Row([
+                ft.Text(parent.avatar, size=20),
+                ft.Text(f"Chào mừng {parent.display_name} đến với Cổng Phụ Huynh Socrates Nhí 👨‍👩‍👧‍👦", color=ft.Colors.WHITE, size=12)
+            ], spacing=8),
+            bgcolor=ft.Colors.TEAL_900
+        )
+        if hasattr(self.page, "open"):
+            self.page.open(snack)
+        else:
+            self.page.snack_bar = snack
+            snack.open = True
+        self.page.update()
+
+    def _show_parent_workspace(self, parent: ParentAccount):
+        """Hiển thị Cổng Phụ Huynh Giám Sát Tiến Độ Con Em."""
+        parent_view = ParentPortalView(
+            page=self.page,
+            parent=parent,
+            on_switch_to_student=self._on_parent_switch_to_student,
+            on_logout=self._on_parent_logout
+        )
+        self.main_container.content = parent_view.build()
+        if hasattr(self.page, "update"):
+            self.page.update()
+
+    def _on_parent_switch_to_student(self, student: UserAccount):
+        """Chuyển từ Cổng Phụ Huynh sang Không gian Học tập của học sinh đó."""
+        self.state.current_user = student
+        self._update_user_chip_display(student)
+        self._show_main_workspace()
+
+        snack = ft.SnackBar(
+            content=ft.Row([
+                ft.Text(student.avatar, size=18),
+                ft.Text(f"Đã chuyển sang không gian học tập của em {student.display_name}! 🎒", color=ft.Colors.WHITE, size=12)
+            ], spacing=6),
+            bgcolor=ft.Colors.INDIGO_900
+        )
+        if hasattr(self.page, "open"):
+            self.page.open(snack)
+        else:
+            self.page.snack_bar = snack
+            snack.open = True
+        self.page.update()
+
+    def _on_parent_logout(self):
+        """Đăng xuất khỏi Cổng Phụ Huynh."""
+        ParentService.logout_parent()
+        self.state.current_parent = None
+        self._show_login_screen()
+
+        snack = ft.SnackBar(
+            content=ft.Row([
+                ft.Icon(ft.Icons.CHECK_CIRCLE_ROUNDED, color=ft.Colors.GREEN_400, size=18),
+                ft.Text("Phụ huynh đã đăng xuất thành công! Hẹn gặp lại quý phụ huynh 👨‍👩‍👧‍👦", color=ft.Colors.WHITE, size=12)
+            ], spacing=6),
+            bgcolor=ft.Colors.GREY_900
+        )
+        if hasattr(self.page, "open"):
+            self.page.open(snack)
+        else:
+            self.page.snack_bar = snack
+            snack.open = True
+        self.page.update()
+
+    def _open_parent_portal_from_header(self):
+        """Mở Cổng Phụ Huynh từ thanh tiêu đề Học sinh."""
+        parent = self.state.current_parent or ParentService.get_current_parent()
+        if parent:
+            self._show_parent_workspace(parent)
+        else:
+            # Mở màn hình đăng nhập với vai trò Phụ huynh
+            login_view = LoginScreenView(
+                self.page,
+                on_login_success=self._on_login_success,
+                on_parent_login_success=self._on_parent_login_success,
+                initial_role="parent"
+            )
+            self.main_container.content = login_view.build()
             self.page.update()
 
     def _on_login_success(self, user: UserAccount):
@@ -771,6 +905,49 @@ class SocratesIntegratedApp:
         )
         self.navigate_to_step_1()
 
+    def _confirm_logout(self):
+        """Hộp thoại xác nhận đăng xuất thân thiện dành cho học sinh."""
+        user = self.state.current_user or AuthService.get_current_user()
+        user_name = user.display_name if user else "Em"
+
+        def do_logout(_):
+            self._safe_close_dialog(dialog)
+            self._on_logout()
+
+        def do_cancel(_):
+            self._safe_close_dialog(dialog)
+
+        dialog = ft.AlertDialog(
+            title=ft.Row([
+                ft.Icon(ft.Icons.LOGOUT_ROUNDED, color=ft.Colors.RED_700, size=24),
+                ft.Text("Xác nhận đăng xuất 🚪", size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.RED_900)
+            ], spacing=8),
+            content=ft.Container(
+                content=ft.Column([
+                    ft.Text(f"Chào em {user_name}! Em có chắc chắn muốn đăng xuất không? 👋", size=13, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_900),
+                    ft.Text("• Toàn bộ tiến độ học tập và sổ tay của em đã được lưu tự động.", size=12, color=ft.Colors.GREY_700),
+                    ft.Text("• Khi đăng xuất, em hoặc phụ huynh có thể đăng nhập tài khoản khác tại màn hình đăng nhập.", size=12, color=ft.Colors.GREY_700),
+                ], spacing=6),
+                width=420,
+                padding=8
+            ),
+            actions=[
+                ft.OutlinedButton(
+                    "Ở lại học tiếp 🎒",
+                    on_click=do_cancel,
+                    style=ft.ButtonStyle(color=ft.Colors.INDIGO_900)
+                ),
+                ft.FilledButton(
+                    "Đăng xuất ngay 🚪",
+                    icon=ft.Icons.LOGOUT_ROUNDED,
+                    on_click=do_logout,
+                    style=ft.ButtonStyle(bgcolor=ft.Colors.RED_700, color=ft.Colors.WHITE)
+                )
+            ],
+            actions_alignment=ft.MainAxisAlignment.END,
+        )
+        self._safe_open_dialog(dialog)
+
     def _on_logout(self):
         """Xử lý khi học sinh bấm Đăng xuất."""
         AuthService.logout()
@@ -778,6 +955,20 @@ class SocratesIntegratedApp:
         self.state.current_user = guest
         self._update_user_chip_display(guest)
         self._show_login_screen()
+
+        snack = ft.SnackBar(
+            content=ft.Row([
+                ft.Icon(ft.Icons.CHECK_CIRCLE_ROUNDED, color=ft.Colors.GREEN_400, size=18),
+                ft.Text("Đã đăng xuất thành công! Hẹn gặp lại em nhé 💡", color=ft.Colors.WHITE, size=12)
+            ], spacing=6),
+            bgcolor=ft.Colors.GREY_900
+        )
+        if hasattr(self.page, "open"):
+            self.page.open(snack)
+        else:
+            self.page.snack_bar = snack
+            snack.open = True
+        self.page.update()
 
     def _update_user_chip_display(self, user: UserAccount):
         """Cập nhật nhãn và avatar của chip tài khoản trên Header."""

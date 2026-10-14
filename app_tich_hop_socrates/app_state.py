@@ -18,6 +18,7 @@ from chuc_nang_2_ocr_xac_nhan.ocr_model import OcrResult, ConfirmedProblem
 from chuc_nang_3_phan_loai_kien_thuc.classifier_model import ClassificationResult
 from chuc_nang_5_so_do_tong_ket.mindmap_model import SessionSummary
 from app_tich_hop_socrates.auth_service import UserAccount
+from app_tich_hop_socrates.parent_service import ParentAccount
 
 
 class AppStep:
@@ -42,6 +43,7 @@ class SessionState:
     is_offline_demo: bool = False
     is_socratic_completed: bool = False  # Đã hoàn thành tự đúc kết kiến thức cốt lõi chưa
     current_user: Optional[UserAccount] = None  # Tài khoản học sinh đang đăng nhập
+    current_parent: Optional[ParentAccount] = None  # Tài khoản phụ huynh (nếu đăng nhập vai trò phụ huynh)
 
     def reset(self):
         """Khôi phục trạng thái ban đầu."""
