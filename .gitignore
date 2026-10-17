@@ -218,3 +218,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Video files (exceed GitHub 100MB limit)
+*.mp4
+*.mkv
+*.avi
+*.mov
+*.wmv
+*.flv
