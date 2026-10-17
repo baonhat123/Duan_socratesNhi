@@ -181,7 +181,7 @@ def build_report():
     add_bullet_p(doc, "Tổng số ảnh thử nghiệm: 20 ảnh thực tế.", bold_prefix="+ ")
     add_bullet_p(doc, "Số ảnh đọc đúng chuẩn xác hoàn toàn: 18 / 20 ảnh (Tỷ lệ đạt 90.0%, vượt chỉ tiêu MVP ≥ 80%).", bold_prefix="+ ")
     add_bullet_p(doc, "Phân tích 2 ca đọc chưa chuẩn (ảnh khó để kiểm thử cơ chế an toàn sư phạm): "
-                      "01 ảnh chụp bài tập SGK thực tế do trang sách bị cong vòm và hơi thiếu độ sáng / đổ bóng (Hình 19 - Độ nét 47% < ngưỡng an toàn); "
+                      "01 ảnh chụp bài tập SGK KHTN 7 thực tế nội dung: '1. Hãy mô tả bóng của vật cản sáng thu được trên màn chắn trong thí nghiệm ở Hình 15.2b. 2. Tìm thêm ví dụ về vùng tối do nguồn sáng hẹp và vùng tối do nguồn sáng rộng.' do trang sách bị cong vòm và hơi thiếu độ sáng / đổ bóng (Hình 19 - Độ nét 47% < ngưỡng an toàn); "
                       "01 ảnh chụp câu hỏi viết tay 'Âm thanh được truyền qua nước thế nào' bị nhòe nét / rung tay (Hình 20 - Độ nét 24% < ngưỡng an toàn). "
                       "Ở cả 2 ca này, thay vì 'đoán mò' gây sai lệch kiến thức, hệ thống chủ động kích hoạt cơ chế an toàn từ chối đọc và phát thông báo lịch sự nhắc học sinh chụp lại ảnh phẳng phiu, đủ sáng và rõ nét hơn.", bold_prefix="+ ")
 

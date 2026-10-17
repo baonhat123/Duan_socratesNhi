@@ -5,7 +5,7 @@
 >   - **17 ảnh đề bài in KHTN 7 (Vật lý - Hóa học - Sinh học - Test case 01 đến 17)**: Gồm các câu hỏi bài tập chọn lọc trích từ SGK KHTN 7 (Kết nối tri thức), mỗi ảnh có đầy đủ đề mục, đề bài, dữ kiện số liệu, câu hỏi rõ ràng với viền lề tự nhiên, không mất bất kỳ một chữ nào.
 >   - **01 ảnh câu hỏi bài tập viết tay thực tế của học sinh trong vở kẻ ô ly (Test case 18)**: Đề bài Sinh học viết tay thực tế của học sinh (*"Cây xanh quang hợp để làm gì?"*) trong vở ô ly, nhận dạng chữ viết tay tự nhiên đạt 92%.
 >   - **02 ảnh khó / ảnh mờ thực tế kiểm tra cơ chế an toàn sư phạm (Test case 19 & 20)**:
->     - *Ảnh 19:* Ảnh chụp bài tập SGK KHTN 7 thực tế do trang sách bị cong vòm và hơi thiếu độ sáng / đổ bóng (Độ nét 47% < ngưỡng an toàn), hệ thống chủ động từ chối đọc và phát cảnh báo nhắc học sinh chụp lại ảnh phẳng phiu, đủ sáng.
+>     - *Ảnh 19:* Ảnh chụp bài tập SGK KHTN 7 thực tế nội dung: *"1. Hãy mô tả bóng của vật cản sáng thu được trên màn chắn trong thí nghiệm ở Hình 15.2b. 2. Tìm thêm ví dụ về vùng tối do nguồn sáng hẹp và vùng tối do nguồn sáng rộng."* Do trang sách bị cong vòm và hơi thiếu độ sáng / đổ bóng (Độ nét 47% < ngưỡng an toàn), hệ thống chủ động từ chối đọc và phát cảnh báo nhắc học sinh chụp lại ảnh phẳng phiu, đủ sáng.
 >     - *Ảnh 20:* Ảnh chụp câu hỏi viết tay 'Âm thanh được truyền qua nước thế nào' bị nhòe nét / rung tay (Độ nét 24% < ngưỡng an toàn), hệ thống từ chối đọc lịch sự, tuân thủ nguyên tắc: **"Không đoán mò khi đề quá mờ"**.
 
 ## BẢNG TỔNG HỢP KẾT QUẢ ĐO KIỂM 20 ẢNH THẬT (MỖI ẢNH 1 CÂU HỎI)
@@ -38,4 +38,4 @@
 - **Số tình huống xử lý chuẩn xác:** 20/20 (100.0%).
 - **17/17 ảnh in & công thức SGK:** Đạt độ nét cao (>80%), trích xuất đúng 100% nội dung, bảo toàn nguyên vẹn chỉ số dưới ($CO_2, H_2O, O_2$) và đơn vị ($km/h, m/s, N, Hz$).
 - **01/01 ảnh viết tay thật rõ nét (18):** Nhận dạng được dòng chữ viết tay học sinh trên giấy, hiển thị kèm cảnh báo xác nhận lại đề bài.
-- **02/02 ảnh khó kiểm thử an toàn sư phạm (19 & 20):** Gồm 01 ảnh chụp bài tập SGK do trang sách bị cong vòm và hơi thiếu độ sáng / đổ bóng (Hình 19) và 01 ảnh câu hỏi viết tay 'Âm thanh được truyền qua nước thế nào' bị nhòe mờ rung tay (Hình 20), hệ thống phát hiện độ nét dưới ngưỡng an toàn, từ chối đọc lịch sự và yêu cầu chụp lại ảnh rõ nét, tuân thủ tuyệt đối quy tắc sư phạm: **"Không đoán mò khi đề quá mờ"**.
+- **02/02 ảnh khó kiểm thử an toàn sư phạm (19 & 20):** Gồm 01 ảnh chụp bài tập SGK về bóng của vật cản sáng / vùng tối (Hình 15.2b) do trang sách bị cong vòm và hơi thiếu độ sáng / đổ bóng (Hình 19) và 01 ảnh câu hỏi viết tay 'Âm thanh được truyền qua nước thế nào' bị nhòe mờ rung tay (Hình 20), hệ thống phát hiện độ nét dưới ngưỡng an toàn, từ chối đọc lịch sự và yêu cầu chụp lại ảnh rõ nét, tuân thủ tuyệt đối quy tắc sư phạm: **"Không đoán mò khi đề quá mờ"**.
