@@ -253,10 +253,10 @@ def build_report():
 
     add_p(doc, "", space_before=4, space_after=2)
 
-    add_p(doc, "Các điểm số liệu ấn tượng dùng để thuyết trình trước Ban Giám khảo:", bold=True)
-    add_bullet_p(doc, "Tỷ lệ làm đúng bài tập tăng gần gấp đôi: Từ trung bình 4.4 / 10 bài (43.8%) trước khi dùng phần mềm tăng vọt lên 8.0 / 10 bài (80.0%) sau khi được Socrates Nhí hướng dẫn.", bold_prefix="• ")
-    add_bullet_p(doc, "Tiến bộ rõ rệt nhất ở nhóm học sinh Trung bình và Đạt: Tăng thêm trung bình 4 bài đúng (+40.0%), học sinh nắm chắc cách đổi đơn vị (km/h sang m/s, phút sang giờ) và tự tin biến đổi linh hoạt công thức tính s và t.", bold_prefix="• ")
-    add_bullet_p(doc, "Năng lực tự lực giải bài mới 100%: Khi làm 10 bài tập mới cùng dạng nhưng đổi số liệu thực tế, cả 8/8 học sinh đều tự phân tích dữ kiện và tự thiết lập phép tính độc lập, không còn thói quen tra mạng chép đáp số.", bold_prefix="• ")
+    add_p(doc, "Phân tích các kết quả thực nghiệm nổi bật:", bold=True)
+    add_bullet_p(doc, "Tỷ lệ làm đúng bài tập tăng gần gấp đôi: Từ trung bình 4.4 / 10 bài (43.8%) trước khi dùng phần mềm, kết quả đã tăng vọt lên 8.0 / 10 bài (80.0%) sau quá trình học tập cùng Socrates Nhí.", bold_prefix="• ")
+    add_bullet_p(doc, "Mức độ tiến bộ rõ rệt nhất ở nhóm học sinh Trung bình và Đạt: Cả 2 nhóm đều tăng thêm trung bình 4 bài đúng (+40.0%), học sinh nắm chắc cách đổi đơn vị (km/h sang m/s, phút sang giờ) và tự tin biến đổi linh hoạt công thức tính s và t.", bold_prefix="• ")
+    add_bullet_p(doc, "Năng lực tự lực giải bài mới đạt 100%: Khi làm 10 bài tập mới cùng dạng nhưng đổi số liệu thực tế, cả 8/8 học sinh đều tự phân tích dữ kiện và tự thiết lập phép tính độc lập, không còn thói quen tra mạng chép đáp số.", bold_prefix="• ")
 
     add_sub_title(doc, "4.3. Kết luận Sư phạm sâu sắc:")
     add_p(doc, 
