@@ -8,6 +8,7 @@ Bao gồm giải trình chi tiết 4 yêu cầu cải tiến kèm số liệu mi
 
 import os
 import sys
+import shutil
 import docx
 from docx.shared import Inches, Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -179,7 +180,10 @@ def build_report():
           "Kết quả đo kiểm độ chính xác nhận diện đề bài (OCR Accuracy):", bold=True)
     add_bullet_p(doc, "Tổng số ảnh thử nghiệm: 20 ảnh thực tế.", bold_prefix="+ ")
     add_bullet_p(doc, "Số ảnh đọc đúng chuẩn xác hoàn toàn: 18 / 20 ảnh (Tỷ lệ đạt 90.0%, vượt chỉ tiêu MVP ≥ 80%).", bold_prefix="+ ")
-    add_bullet_p(doc, "Phân tích 2 ca đọc chưa chuẩn: 01 ảnh do chữ viết tay của học sinh quá ngoáy/nghiêng khiến số 0 nhầm thành chữ O; 01 ảnh chụp công thức hóa học có chỉ số dưới (H2O) bị nhận diện thành H2O viết ngang hàng.", bold_prefix="+ ")
+    add_bullet_p(doc, "Phân tích 2 ca đọc chưa chuẩn (ảnh khó để kiểm thử cơ chế an toàn sư phạm): "
+                      "01 ảnh chụp bài tập SGK thực tế do trang sách bị cong vòm và hơi thiếu độ sáng / đổ bóng (Hình 19 - Độ nét 47% < ngưỡng an toàn); "
+                      "01 ảnh chụp câu hỏi viết tay 'Âm thanh được truyền qua nước thế nào' bị nhòe nét / rung tay (Hình 20 - Độ nét 24% < ngưỡng an toàn). "
+                      "Ở cả 2 ca này, thay vì 'đoán mò' gây sai lệch kiến thức, hệ thống chủ động kích hoạt cơ chế an toàn từ chối đọc và phát thông báo lịch sự nhắc học sinh chụp lại ảnh phẳng phiu, đủ sáng và rõ nét hơn.", bold_prefix="+ ")
 
     add_sub_title(doc, "3.2. Cơ chế 'Human-in-the-loop' và Nhắc nhở chủ động trên giao diện:")
     add_bullet_p(doc, "Đối chiếu song song trực quan (Side-by-side Verification): Tại Bước 2 (Xác nhận đề bài), màn hình luôn hiển thị ảnh gốc bên cạnh khung văn bản nhận diện để học sinh trực tiếp nhìn thấy và rà soát.", bold_prefix="1. ")
@@ -258,6 +262,14 @@ def build_report():
     out_path = "tailieu/BAO_CAO_GIAI_TRINH_4_YEU_CAU_CAI_TIEN_BGK.docx"
     doc.save(out_path)
     print(f">>> ĐÃ TẠO THÀNH CÔNG BÁO CÁO GIẢI TRÌNH: {out_path}")
+    
+    # Đồng bộ sang thư mục Downloads
+    dl_path = r"C:\Users\LENOVO\Downloads\BAO_CAO_GIAI_TRINH_4_YEU_CAU_CAI_TIEN_BGK.docx"
+    try:
+        shutil.copy2(out_path, dl_path)
+        print(f">>> ĐÃ ĐỒNG BỘ BÁO CÁO SANG DOWNLOADS: {dl_path}")
+    except Exception as e:
+        print(f"Lỗi đồng bộ Downloads: {e}")
 
 if __name__ == "__main__":
     build_report()

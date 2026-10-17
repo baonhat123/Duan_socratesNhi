@@ -116,10 +116,10 @@ def _extract_via_openai_vision(image_path: str) -> Optional[str]:
                 "timeout": 20.0
             }
             if is_reasoning:
-                kwargs["max_completion_tokens"] = 800
+                kwargs["max_completion_tokens"] = 2000
             else:
                 kwargs["temperature"] = 0.0
-                kwargs["max_tokens"] = 600
+                kwargs["max_tokens"] = 1000
 
             response = client.chat.completions.create(**kwargs)
             return response.choices[0].message.content.strip()
@@ -128,8 +128,8 @@ def _extract_via_openai_vision(image_path: str) -> Optional[str]:
             response = client.chat.completions.create(
                 model=model_name,
                 messages=messages,
-                max_completion_tokens=800,
-                timeout=20.0
+                max_completion_tokens=2000,
+                timeout=25.0
             )
             return response.choices[0].message.content.strip()
 

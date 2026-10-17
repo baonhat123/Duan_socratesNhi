@@ -1,0 +1,153 @@
+=== 01_chu_in_toc_do_xe_dap.png ===
+is_blurry: False
+text: 3. Bạn B đi xe đạp từ nhà đến trường với tốc độ 12 km/h hết 20 min. Tính quãng đường từ nhà bạn B đến trường.
+
+=== 02_chu_in_khoi_luong_rieng.png ===
+is_blurry: False
+text: Bạn A chạy 120 m hết 35 s. Bạn B chạy 140 m hết 40 s. Ai chạy nhanh hơn?
+
+II - Đơn vị đo tốc độ
+
+Vì v = s/t nên đơn vị đo tốc độ phụ thuộc vào đơn vị đo độ dài và đơn vị đo thời gian
+
+=== 03_chu_in_phan_xa_anh_sang.png ===
+is_blurry: False
+text: Định luật phản xạ ánh sáng
+- Tia sáng phản xạ nằm trong mặt phẳng tới;
+- Góc phản xạ bằng góc tới.
+
+1. Có thể viết công thức của định luật phản xạ ánh sáng i = i' được không? Tại sao?
+2. Chiếu tia sáng tới dưới góc tới 30º vào gương phẳng đặt thẳng đứng, vẽ hình biểu diễn tia sáng tới và tia sáng phản xạ.
+3. Chiếu một tia sáng vào gương phẳng đặt nằm ngang ta được tia sáng phản xạ vuông góc với tia sáng tới. Em hãy tính góc tới và góc phản xạ. Vẽ hình.
+
+=== 04_chu_in_do_thi_quang_duong.png ===
+is_blurry: False
+text: 1. Từ đồ thị ở Hình 10.2:
+a) Mô tả lại bằng lời chuyển động của ô tô trong 4 h đầu.
+b) Xác định tốc độ của ô tô trong 3 h đầu.
+c) Xác định quãng đường ô tô đi được sau 1 h 30 min từ khi khởi hành.
+
+2. Lúc 6 h sáng, bạn A đi bộ từ nhà ra công viên để tập thể dục cùng các bạn. Trong 15 min đầu, A đi thong thả được 1 000 m thì gặp B. A dừng lại nói chuyện với B trong 5 min. Chợt A nhớ ra là các bạn hẹn mình bắt đầu tập thể dục ở công viên vào lúc 6 h 30 min nên vội vã đi nốt 1 000 m còn lại và đến công viên vào đúng lúc 6 h 30 min.
+a) Vẽ đồ thị quãng đường - thời gian của bạn A trong suốt hành trình 30 min đi từ nhà đến công viên.
+b) Xác định tốc độ của bạn A trong 15 min đầu và 10 min cuối của hành trình.
+
+=== 05_chu_in_quang_hop_thuc_vat.png ===
+is_blurry: False
+text: PHIẾU BÀI TẬP VÀ KIỂM TRA ĐÁNH GIÁ - KHOA HỌC TỰ NHIÊN 7
+
+Câu hỏi 5 (Quang hợp ở thực vật):
+Dựa vào kiến thức đã học về quá trình trao đổi chất ở thực vật:
+a) Phát biểu khái niệm quang hợp ở thực vật.
+b) Viết phương trình tổng quát dạng chữ thể hiện quá trình quang hợp.
+c) Nêu các yếu tố chủ yếu của môi trường ảnh hưởng đến quá trình quang hợp.
+
+=== 06_chu_in_ho_hap_te_bao.png ===
+is_blurry: False
+text: PHIẾU BÀI TẬP VÀ KIỂM TRA ĐÁNH GIÁ - KHOA HỌC TỰ NHIÊN 7
+
+Câu hỏi 6 (Hô hấp tế bào):
+Tại sao các loại rau, củ, quả tươi khi cất giữ trong ngăn mát tủ lạnh đúng cách lại bảo quản được lâu hơn nhiều so với để ở nhiệt độ phòng?
+a) Hãy giải thích hiện tượng trên dựa vào cơ chế hô hấp tế bào.
+b) Viết phương trình tổng quát dạng chữ của quá trình hô hấp tế bào.
+
+=== 07_chu_in_thoat_hoi_nuoc.png ===
+is_blurry: False
+text: PHIẾU BÀI TẬP VÀ KIỂM TRA ĐÁNH GIÁ - KHOA HỌC TỰ NHIÊN 7
+
+Câu hỏi 7 (Trao đổi khí ở sinh vật):
+Quan sát cấu tạo giải phẫu của tế bào khí khổng ở bề mặt lá cây:
+a) Trình bày đặc điểm cấu tạo tế bào khí khổng phù hợp với chức năng đóng mở.
+b) Quá trình thoát hơi nước qua khí khổng có vai trò gì đối với đời sống thực vật?
+
+=== 08_chu_in_nung_da_voi.png ===
+is_blurry: False
+text: PHIẾU BÀI TẬP VÀ KIỂM TRA ĐÁNH GIÁ - KHOA HỌC TỰ NHIÊN 7
+
+Câu hỏi 8 (Phản ứng hóa học):
+
+Nung đá vôi (thành phần chính là calcium carbonate: CaCO₃) ở nhiệt độ cao thu được vôi sống (calcium oxide: CaO) và khí carbon dioxide (CO₂).
+
+a) Viết phương trình chữ của phản ứng hóa học trên.
+b) Dấu hiệu nào cho thấy phản ứng hóa học đã xảy ra?
+
+=== 09_cong_thuc_van_toc_don_vi.png ===
+is_blurry: False
+text: 1. Biết nữ vận động viên Việt Nam – Lê Tú Chinh đoạt Huy chương Vàng SEA Games
+
+=== 10_cong_thuc_trong_luong.png ===
+is_blurry: False
+text: 1. Một vận động viên chạy 100 m hết 11,54 s. Tính tốc độ của vận động viên này.
+2. Lúc 8 h 30 min, bạn A đi bộ từ nhà đến siêu thị với tốc độ 4,8 km/h. Biết quãng đường từ nhà bạn A đến siêu thị dài 2,4 km. Hỏi bạn A đến siêu thị lúc mấy giờ?
+3. Bạn B đi xe đạp từ nhà đến trường với tốc độ 12 km/h hết 20 min. Tính quãng đường từ nhà bạn B đến trường.
+
+=== 11_cong_thuc_luc_bien_dang_lo_xo.png ===
+is_blurry: False
+text: PHIẾU BÀI TẬP VÀ KIỂM TRA ĐÁNH GIÁ - KHOA HỌC TỰ NHIÊN 7
+
+Bài tập 11 (Lực và biến dạng lò xo):
+Một lò xo có chiều dài tự nhiên l0 = 12 cm. Khi móc vào đầu dưới quả nặng có khối lượng m = 100 g thì chiều dài của lò xo đo được là l1 = 15 cm.
+a) Tính độ biến dạng (độ dãn) delta_l của lò xo.
+b) Nếu treo thêm một quả nặng 100 g nữa thì chiều dài của lò xo lúc này là bao nhiêu cm?
+
+=== 12_cong_thuc_ap_suat_chat_long.png ===
+is_blurry: False
+text: PHIẾU BÀI TẬP VÀ KIỂM TRA ĐÁNH GIÁ - KHOA HỌC TỰ NHIÊN 7
+
+Bài tập 12 (Áp suất chất lỏng):
+Một thợ lặn chuyên nghiệp đang lặn ở độ sâu h = 25 m so với mặt nước biển. Biết trọng lượng riêng của nước biển là d = 10 300 N/m³.
+a) Viết công thức tính áp suất chất lỏng p theo độ sâu h và trọng lượng riêng d.
+b) Tính áp suất chất lỏng tác dụng lên người thợ lặn ở độ sâu trên.
+
+=== 13_cong_thuc_dong_nang_binh_phuong.png ===
+is_blurry: False
+text: PHIẾU BÀI TẬP VÀ KIỂM TRA ĐÁNH GIÁ - KHOA HỌC TỰ NHIÊN 7
+
+Bài tập 13 (Cơ năng và động năng):
+Một vận động viên có khối lượng m = 60 kg đang chạy đều với vận tốc v = 5 m/s trên đường chạy thẳng.
+
+a) Viết công thức tính động năng Wđ theo khối lượng m và vận tốc v.
+b) Tính động năng của vận động viên theo đơn vị Jun (J).
+
+=== 14_cong_thuc_toc_do_thoi_gian_den.png ===
+is_blurry: False
+text: 2. Lúc 8 h 30 min, bạn A đi bộ từ nhà đến siêu thị với tốc độ 4,8 km/h. Biết quãng đường từ nhà bạn A đến siêu thị dài 2,4 km. Hỏi bạn A đến siêu thị lúc mấy giờ?
+
+=== 15_hoa_hoc_quang_hop_chi_so.png ===
+is_blurry: False
+text: PHIẾU BÀI TẬP VÀ KIỂM TRA ĐÁNH GIÁ - KHOA HỌC TỰ NHIÊN 7
+
+Bài tập 15 (Phương trình hóa học quang hợp):
+
+Cho sơ đồ phản ứng hóa học của quá trình quang hợp như sau:
+
+6CO₂ + 6H₂O --(ánh sáng, diệp lục) → C₆H₁₂O₆ + 6O₂
+
+a) Hãy cho biết các chất tham gia và chất sản phẩm trong phản ứng trên.
+
+b) Xác định tỉ lệ số phân tử khí CO₂ và số phân tử khí O₂.
+
+=== 16_hoa_hoc_bao_toan_khoi_luong.png ===
+is_blurry: False
+text: PHIẾU BÀI TẬP VÀ KIỂM TRA ĐÁNH GIÁ - KHOA HỌC TỰ NHIÊN 7
+
+Bài tập 16 (Định luật bảo toàn khối lượng):
+Cho 5,6 g kim loại sắt (Fe) tác dụng hoàn toàn với dung dịch hydrochloric acid (HCl) thu được 12,7 g muối iron(II) chloride (FeCl₂) và 0,2 g khí hydrogen (H₂).
+a) Viết phương trình bảo toàn khối lượng cho phản ứng trên.
+b) Tính khối lượng dung dịch axit HCl đã tham gia phản ứng.
+
+=== 17_hoa_hoc_chu_ki_electron.png ===
+is_blurry: False
+text: 1. Quan sát Hình 4.3 và cho biết tên, kí hiệu hoá học và điện tích hạt nhân của nguyên tử các nguyên tố xung quanh nguyên tố carbon.
+
+=== 18_chu_viet_tay_cay_xanh_quang_hop.png ===
+is_blurry: False
+text: Cây xanh có vai trò để làm gì?
+
+=== 19_anh_kho_sgk_chup_mo_nhoe.png ===
+is_blurry: True
+text: 
+
+=== 20_anh_kho_chu_viet_tay_mo_nhoe.png ===
+is_blurry: True
+text: 
+

@@ -1,5 +1,71 @@
 [
   {
+    "quiz_id": "PRE_CA16A4D3",
+    "username": "baonhat",
+    "student_name": "Phan Nhật",
+    "topic": "Vật lý – Chuyển động và Tốc độ",
+    "strand": "Cơ học / Đại lượng vật lý",
+    "quiz_type": "pre_test",
+    "created_at": "2026-10-17T13:10:03.542760",
+    "score": 3.3,
+    "total_mcq": 3,
+    "correct_mcq": 1,
+    "essay_score": 0.0,
+    "essay_feedback": "Khảo sát đầu vào hoàn tất! Socrates đã hiểu trình độ hiện tại của em.",
+    "student_essay_answer": "",
+    "badge_earned": "Mới Bắt Đầu 🌱",
+    "details": [
+      {
+        "question_id": "AI_MCQ_1",
+        "prompt": "Bạn A chạy 120 m trong 35 s; bạn B chạy 140 m trong 40 s. Ai chạy nhanh hơn (theo tốc độ trung bình)?",
+        "q_type": "mcq",
+        "options": [
+          "A. Bạn B",
+          "B. Không thể xác định từ dữ kiện đã cho",
+          "C. Bạn A",
+          "D. Cả hai chạy cùng tốc độ"
+        ],
+        "chosen_index": 1,
+        "correct_index": 0,
+        "is_correct": false,
+        "explanation": "Tốc độ trung bình = quãng đường / thời gian. A: 120 ÷ 35 ≈ 3,43 m/s. B: 140 ÷ 40 = 3,5 m/s. Vì 3,5 > 3,43 nên bạn B chạy nhanh hơn."
+      },
+      {
+        "question_id": "AI_MCQ_2",
+        "prompt": "Tốc độ trung bình của bạn A là bao nhiêu (làm tròn hai chữ số thập phân)?",
+        "q_type": "mcq",
+        "options": [
+          "A. 3,43 m/s",
+          "B. 4,00 m/s",
+          "C. 3,00 m/s",
+          "D. 3,80 m/s"
+        ],
+        "chosen_index": 0,
+        "correct_index": 0,
+        "is_correct": true,
+        "explanation": "Tốc độ = 120 m ÷ 35 s = 3,42857... m/s ≈ 3,43 m/s khi làm tròn hai chữ số thập phân."
+      },
+      {
+        "question_id": "AI_MCQ_3",
+        "prompt": "Bằng bao nhiêu m/s tốc độ của bạn B lớn hơn tốc độ của bạn A (làm tròn hai chữ số thập phân)?",
+        "q_type": "mcq",
+        "options": [
+          "A. 0,85 m/s",
+          "B. 0,07 m/s (xấp xỉ 0,0714 m/s)",
+          "C. 0,07 m/s",
+          "D. 0,43 m/s"
+        ],
+        "chosen_index": 0,
+        "correct_index": 1,
+        "is_correct": false,
+        "explanation": "Tốc độ B = 140 ÷ 40 = 3,5 m/s. Tốc độ A ≈ 3,42857 m/s. Hiệu = 3,5 − 3,42857 ≈ 0,07143 m/s ≈ 0,07 m/s (làm tròn hai chữ số thập phân là 0,07 m/s)."
+      }
+    ],
+    "pre_test_score": null,
+    "learning_gain": null,
+    "gain_percent": null
+  },
+  {
     "quiz_id": "PRE_E342E684",
     "username": "baonhat",
     "student_name": "Phan Nhật",
