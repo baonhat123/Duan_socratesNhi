@@ -197,26 +197,30 @@ def build_report():
     
     add_sub_title(doc, "4.1. Thiết kế Thí nghiệm Thực nghiệm (Đo lường 2 lần: Trước và Sau khi dùng phần mềm):")
     add_p(doc, 
-          "Để đánh giá thực chất tác động sư phạm của Socrates Nhí, nhóm tác giả đã tiến hành thử nghiệm thực tế với đúng 8 bạn học sinh THCS khối lớp 7 (theo dõi xuyên suốt toàn bộ quá trình trước và sau khi học cùng phần mềm).")
+          "Do thời gian thực nghiệm tại trường có hạn và để việc đánh giá tiến bộ nhận thức đạt độ chuẩn xác, rõ ràng nhất, "
+          "nhóm tác giả không kiểm tra dàn trải nhiều phân môn cùng lúc mà tập trung chuyên sâu vào đúng 01 phân môn trọng tâm: "
+          "Phân môn Vật lý (Chủ đề: Tốc độ, Quãng đường và Thời gian – SGK KHTN 7). "
+          "Đây là chủ đề bài tập tính toán điển hình, đòi hỏi học sinh vừa phải hiểu bản chất hiện tượng chuyển động, "
+          "vừa phải xử lý bài toán có lời văn, đổi đơn vị (km/h sang m/s, phút sang giờ) và vận dụng linh hoạt công thức v = s/t.")
     
-    add_p(doc, "Cơ cấu 8 học sinh tham gia thử nghiệm (đại diện cho các mức học lực thực tế):", bold=True)
-    add_bullet_p(doc, "03 học sinh Khá - Giỏi trở lên: Nền tảng tư duy tốt, tiếp thu nhanh nhưng đôi khi chủ quan hoặc cần rèn luyện tính kiên nhẫn khi gặp bài toán phức tạp.", bold_prefix="• Nhóm 1: ")
-    add_bullet_p(doc, "03 học sinh Trung bình: Nắm được lý thuyết cơ bản nhưng lúng túng khi gặp bài toán có lời văn, hay quên công thức và biến đổi đơn vị.", bold_prefix="• Nhóm 2: ")
-    add_bullet_p(doc, "02 học sinh Đạt: Còn hổng kiến thức, sợ bài tập tính toán KHTN, thường có tâm lý ỷ lại muốn tra mạng tìm lời giải sẵn để chép.", bold_prefix="• Nhóm 3: ")
+    add_p(doc, "Cơ cấu đúng 8 bạn học sinh tham gia thử nghiệm xuyên suốt (đại diện cho các mức học lực thực tế):", bold=True)
+    add_bullet_p(doc, "03 học sinh Khá – Giỏi trở lên: Nền tảng tư duy tốt, tính toán nhanh nhưng đôi khi chủ quan hoặc làm tắt bước khi gặp bài toán cần nhiều bước đổi đơn vị thời gian.", bold_prefix="• Nhóm 1: ")
+    add_bullet_p(doc, "03 học sinh Trung bình: Nắm được công thức cơ bản v = s/t nhưng lúng túng khi gặp bài toán có lời văn, hay nhầm lẫn cách biến đổi tìm quãng đường s hoặc thời gian t, và thường quên đổi phút ra giờ.", bold_prefix="• Nhóm 2: ")
+    add_bullet_p(doc, "02 học sinh Đạt: Còn hổng kiến thức, sợ bài tập tính toán Vật lý, khi gặp đề bài thường có tâm lý bỏ trống hoặc tra mạng tìm bài giải có sẵn để chép.", bold_prefix="• Nhóm 3: ")
 
-    add_p(doc, "Quy trình thực nghiệm 2 lần với bộ 10 bài tập chuẩn hóa KHTN 7:", bold=True)
-    add_bullet_p(doc, "Lần 1 (Trước khi sử dụng phần mềm - Pre-test): Cả 8 học sinh tự làm bộ đề gồm 10 bài tập KHTN 7 đa dạng (Cơ học, Hóa học, Sinh học) theo thói quen tự học thông thường. Ghi nhận số lượng bài tự giải đúng và các lỗi sai về bản chất tư duy.", bold_prefix="1. ")
-    add_bullet_p(doc, "Giai đoạn học tập cùng Socrates Nhí: 8 học sinh học và luyện tập các chủ đề tương ứng trên phần mềm Socrates Nhí v3.0, trải nghiệm chu trình 5 pha gợi mở sư phạm (Làm rõ dữ kiện ➜ Gợi nhớ công thức ➜ Lập luận logic ➜ Kiểm tra tính hợp lý ➜ Tự đúc kết bản đồ tư duy). AI kiên quyết không giải hộ mà dẫn dắt để học sinh tự tìm ra đáp án.", bold_prefix="2. ")
-    add_bullet_p(doc, "Lần 2 (Sau khi sử dụng phần mềm - Post-test): Cả 8 học sinh làm bài kiểm tra đánh giá độc lập gồm 10 bài tập CÙNG DẠNG ĐỀ nhưng thay đổi số liệu và ngữ cảnh thực tế. Học sinh tự lực làm bài hoàn toàn, không có sự trợ giúp của AI hay mạng Internet.", bold_prefix="3. ")
+    add_p(doc, "Quy trình thực nghiệm 2 lần với bộ 10 bài tập chuẩn hóa phân môn Vật lý (Chủ đề Tốc độ):", bold=True)
+    add_bullet_p(doc, "Lần 1 (Trước khi sử dụng phần mềm - Pre-test): Cả 8 học sinh làm bộ đề gồm 10 bài tập tính toán tốc độ, quãng đường, thời gian theo thói quen tự học thông thường (không có AI gợi mở). Ghi nhận số bài tự giải đúng và các lỗi sai điển hình về bản chất (quên đổi đơn vị, áp dụng sai công thức biến đổi).", bold_prefix="1. ")
+    add_bullet_p(doc, "Giai đoạn học tập cùng Socrates Nhí: 8 học sinh sử dụng phần mềm Socrates Nhí v3.0 để giải quyết các bài toán về tốc độ thông qua chu trình 5 pha gợi mở sư phạm (Làm rõ đại lượng đã cho và cần tìm ➜ Gợi nhớ công thức v = s/t ➜ Phân tích đổi đơn vị phù hợp ➜ Kiểm tra tính hợp lý ➜ Tự đúc kết bản đồ tư duy). AI kiên quyết không giải hộ mà đặt câu hỏi dẫn dắt để học sinh tự tìm ra phép tính.", bold_prefix="2. ")
+    add_bullet_p(doc, "Lần 2 (Sau khi sử dụng phần mềm - Post-test): Cả 8 học sinh làm bài kiểm tra đánh giá độc lập gồm 10 bài tập CÙNG DẠNG ĐỀ nhưng thay đổi hoàn toàn số liệu và ngữ cảnh thực tế (vận động viên chạy bộ, bạn học sinh đi xe đạp đến trường, ô tô chuyển động...). Học sinh tự lực giải bài 100%, không có bất kỳ sự trợ giúp nào của AI hay mạng Internet.", bold_prefix="3. ")
 
     add_sub_title(doc, "4.2. Bảng số liệu thống kê kết quả thực tế (Trước và Sau khi sử dụng phần mềm):")
 
     tbl_data = [
         ["Nhóm Đối tượng Học sinh", "Số lượng HS", "Trước khi dùng phần mềm (Đúng/10 bài)", "Sau khi dùng phần mềm (Đúng/10 bài)", "Mức độ Tiến bộ (Tăng thêm)"],
-        ["Nhóm Khá - Giỏi trở lên", "3 học sinh", "6.7 / 10 bài (67.0%)", "9.3 / 10 bài (93.3%)", "+2.6 bài (+26.3% - Xuất sắc)"],
-        ["Nhóm Trung bình", "3 học sinh", "3.7 / 10 bài (36.7%)", "7.7 / 10 bài (76.7%)", "+4.0 bài (+40.0% - Vượt bậc)"],
-        ["Nhóm Đạt", "2 học sinh", "2.0 / 10 bài (20.0%)", "6.0 / 10 bài (60.0%)", "+4.0 bài (+40.0% - Tự tin giải bài)"],
-        ["TỔNG CỘNG (TOÀN BỘ 8 HỌC SINH)", "8 học sinh", "4.4 / 10 bài (43.8%)", "8.0 / 10 bài (80.0%)", "+3.6 bài (+36.2% - Gần gấp đôi)"]
+        ["Nhóm Khá – Giỏi trở lên", "3 học sinh", "6.7 / 10 bài (67.0%)", "9.3 / 10 bài (93.3%)", "+2.6 bài (+26.3% – Xuất sắc)"],
+        ["Nhóm Trung bình", "3 học sinh", "3.7 / 10 bài (36.7%)", "7.7 / 10 bài (76.7%)", "+4.0 bài (+40.0% – Vượt bậc)"],
+        ["Nhóm Đạt", "2 học sinh", "2.0 / 10 bài (20.0%)", "6.0 / 10 bài (60.0%)", "+4.0 bài (+40.0% – Tự tin giải bài)"],
+        ["TỔNG CỘNG (TOÀN BỘ 8 HỌC SINH)", "8 học sinh", "4.4 / 10 bài (43.8%)", "8.0 / 10 bài (80.0%)", "+3.6 bài (+36.2% – Gần gấp đôi)"]
     ]
 
     tbl = doc.add_table(rows=len(tbl_data), cols=len(tbl_data[0]))
@@ -251,13 +255,14 @@ def build_report():
 
     add_p(doc, "Các điểm số liệu ấn tượng dùng để thuyết trình trước Ban Giám khảo:", bold=True)
     add_bullet_p(doc, "Tỷ lệ làm đúng bài tập tăng gần gấp đôi: Từ trung bình 4.4 / 10 bài (43.8%) trước khi dùng phần mềm tăng vọt lên 8.0 / 10 bài (80.0%) sau khi được Socrates Nhí hướng dẫn.", bold_prefix="• ")
-    add_bullet_p(doc, "Tiến bộ rõ rệt nhất ở nhóm học sinh Trung bình và Đạt: Tăng thêm trung bình 4 bài đúng (+40.0%), giúp học sinh từ chỗ lúng túng, sợ hãi chuyển sang tự tin làm chủ bài tập KHTN.", bold_prefix="• ")
-    add_bullet_p(doc, "Năng lực tự lực giải bài mới 100%: Khi làm 10 bài tập mới cùng dạng nhưng đổi số liệu thực tế, cả 8/8 học sinh đều tự thiết lập được phép tính và lập luận giải bài hoàn toàn độc lập, không còn phụ thuộc vào việc tìm lời giải sẵn trên mạng.", bold_prefix="• ")
+    add_bullet_p(doc, "Tiến bộ rõ rệt nhất ở nhóm học sinh Trung bình và Đạt: Tăng thêm trung bình 4 bài đúng (+40.0%), học sinh nắm chắc cách đổi đơn vị (km/h sang m/s, phút sang giờ) và tự tin biến đổi linh hoạt công thức tính s và t.", bold_prefix="• ")
+    add_bullet_p(doc, "Năng lực tự lực giải bài mới 100%: Khi làm 10 bài tập mới cùng dạng nhưng đổi số liệu thực tế, cả 8/8 học sinh đều tự phân tích dữ kiện và tự thiết lập phép tính độc lập, không còn thói quen tra mạng chép đáp số.", bold_prefix="• ")
 
     add_sub_title(doc, "4.3. Kết luận Sư phạm sâu sắc:")
     add_p(doc, 
-          "Kết quả thực nghiệm trên 8 học sinh khẳng định giá trị cốt lõi của Socrates Nhí: Phần mềm không giải bài hộ mà 'tập thể dục cho não bộ' của học sinh. "
-          "Nhờ được dẫn dắt tự mình trải qua chu trình 5 pha gợi mở, các em hiểu sâu bản chất quy luật khoa học. "
+          "Kết quả thực nghiệm trên 8 học sinh trong phân môn Vật lý (Chủ đề Tốc độ) khẳng định giá trị cốt lõi của Socrates Nhí: "
+          "Phần mềm không giải bài hộ mà 'tập thể dục cho não bộ' của học sinh. "
+          "Nhờ được dẫn dắt tự mình trải qua chu trình 5 pha gợi mở, các em hiểu sâu bản chất mối liên hệ giữa Quãng đường, Thời gian và Tốc độ. "
           "Khi gặp bài toán mới cùng dạng nhưng đổi số liệu, học sinh hoàn toàn làm chủ kiến thức, tự tin giải quyết thành công mà không còn thói quen ỷ lại vào AI.",
           bold=True)
 
