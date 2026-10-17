@@ -25,6 +25,7 @@ class SocraticStateMachine:
         self.current_phase: SocraticPhase = SocraticPhase.CLARIFY
         self.turn_count: int = 1
         self.consecutive_unknown_count: int = 0
+        self.consecutive_wrong_count: int = 0
         self.max_turns: int = max_turns
         self.unlimited_turns: bool = unlimited_turns
         self.is_session_closed: bool = False
@@ -34,7 +35,23 @@ class SocraticStateMachine:
         self.current_phase = SocraticPhase.CLARIFY
         self.turn_count = 1
         self.consecutive_unknown_count = 0
+        self.consecutive_wrong_count = 0
         self.is_session_closed = False
+
+    def get_scaffolding_level(self) -> int:
+        """
+        Xác định cấp độ giàn giáo sư phạm (Scaffolding Level) khi học sinh gặp khó khăn:
+        - Mức 1 (Sai lần 1): Gợi mở nhẹ nhàng định hướng dữ kiện.
+        - Mức 2 (Sai lần 2): Ví dụ tương tự đời sống (Analogical Scaffolding, số liệu khác hoàn toàn).
+        - Mức 3 (Sai lần 3+): Chỉ dẫn SGK KHTN 7 + Thu hẹp thành câu hỏi lựa chọn nhị phân.
+        Tuyệt đối không lộ đáp số ở bất kỳ cấp độ nào.
+        """
+        if self.consecutive_wrong_count <= 1:
+            return 1
+        elif self.consecutive_wrong_count == 2:
+            return 2
+        else:
+            return 3
 
     def transition(self, student_state: StudentState) -> Tuple[SocraticPhase, SocraticPhase, str]:
         """
@@ -43,11 +60,16 @@ class SocraticStateMachine:
         """
         start_phase = self.current_phase
 
-        # 1. Cập nhật bộ đếm 'unknown' liên tiếp
+        # 1. Cập nhật bộ đếm 'unknown' liên tiếp và 'wrong' liên tiếp
         if student_state == StudentState.UNKNOWN:
             self.consecutive_unknown_count += 1
-        else:
+            self.consecutive_wrong_count += 1
+        elif student_state in [StudentState.MISCONCEPTION, StudentState.OFF_TOPIC]:
             self.consecutive_unknown_count = 0
+            self.consecutive_wrong_count += 1
+        elif student_state == StudentState.CORRECT:
+            self.consecutive_unknown_count = 0
+            self.consecutive_wrong_count = 0
 
         # 2. Xử lý giới hạn lượt (CHỈ KHI chế độ giới hạn được bật tường minh: unlimited_turns=False)
         if not self.unlimited_turns:

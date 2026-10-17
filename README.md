@@ -5,7 +5,7 @@
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
 [![UI Framework](https://img.shields.io/badge/GUI-Flet%201.0%2B-5c6bc0.svg?logo=flutter&logoColor=white)](https://flet.dev/)
-[![Unit Tests](https://img.shields.io/badge/Tests-94%2F94%20Passed%20(100%25)-success.svg)](#-10-kết-quả-kiểm-thử-đảm-bảo-chất-lượng-9494-tests)
+[![Unit Tests](https://img.shields.io/badge/Tests-101%2F101%20Passed%20(100%25)-success.svg)](#-10-kết-quả-kiểm-thử-đảm-bảo-chất-lượng-101101-tests)
 [![Guardrail](https://img.shields.io/badge/Guardrail-3--Tier%20Anti--Leak-critical.svg)](#1-khiên-an-toàn-hậu-kiểm-3-tầng-khiên-an-toàn-️)
 [![Offline Ready](https://img.shields.io/badge/Offline%20Mode-12%20Lessons%20Cache-brightgreen.svg)](#2-chế-độ-demo-offline--12-bài-mẫu-khtn-7--demo-offline-)
 [![License](https://img.shields.io/badge/License-MIT-orange.svg)](LICENSE)
@@ -29,10 +29,14 @@ Hệ thống đóng vai trò như một người gia sư sư phạm kiên nhẫn
 1. **Hành trình 5 Trạm Khám Phá học tập khép kín:** Dẫn dắt học sinh từng bước mạch lạc từ nhập đề, chuẩn hóa OCR, xác định mạch kiến thức, trò chuyện gợi mở 5 pha đến đúc kết sơ đồ tư duy.
 2. **Khiên An Toàn Hậu Kiểm 3 Tầng (Three-Tier Guardrail):** Chặn đứng 100% mọi nỗ lực bẻ khóa (jailbreak), nài ép xin đáp án hoặc giải trọn gói.
 3. **Cổng Phụ Huynh Giám Sát & Đồng Hành (Parent Portal & Multi-child Monitoring):** Phân quyền đăng nhập Phụ huynh / Học sinh rõ ràng. Phụ huynh liên kết tài khoản con em (yêu cầu mật khẩu của con để bảo mật quyền riêng tư), giám sát tiến độ 3 phân môn KHTN, chuỗi streak, xem sổ tay bài học của con; hỗ trợ tính năng **"Thêm người theo dõi"** và **"Đổi người"** linh hoạt giữa nhiều con em.
-4. **Chế độ Demo Offline & 12 Bài Mẫu KHTN 7 chuẩn SGK:** Tự động kích hoạt khi timeout (> 20s) hoặc mất mạng, đảm bảo buổi thuyết trình của học sinh và đánh giá của Ban Giám khảo diễn ra liên tục 100%.
-5. **Hệ thống Quản lý Học tập & Sổ tay Tự học (Personal Notebook):** Học sinh có tài khoản cá nhân, theo dõi streak chuỗi ngày học, xem biểu đồ phân bố 3 môn Lý - Hóa - Sinh, và lưu trữ bài học để ôn tập.
-6. **Rubric Sư phạm 0–6 điểm & 5 Chỉ số Đo lường Khoa học (MVP):** Định lượng minh bạch năng lực lập luận của học sinh và hiệu quả hệ thống.
-7. **Bộ cài đặt Windows 1-Click & Đóng gói Desktop (.exe):** Có sẵn shortcut desktop, file bat/vbs chạy ngay không hiện cửa sổ dòng lệnh đen và script PyInstaller đóng gói độc lập.
+4. **Hệ Thống Kiểm Tra Củng Cố & Ôn Tập Ngắt Quãng (Quiz & Spaced Repetition):** 
+   - *Học xong kiểm tra ngay:* Tại Trạm 5 sau khi lưu sơ đồ, học sinh làm ngay bài test 3 phút để kiểm tra độ hiểu sâu (3 câu trắc nghiệm khách quan + 1 câu tự luận mở ứng dụng thực tế).
+   - *Ôn tập ngắt quãng ngày hôm sau:* Banner tự động gợi nhắc bài học hôm trước khi học sinh đăng nhập ngày mới, giúp củng cố trí nhớ dài hạn.
+   - *Chấm điểm & Nhận xét Socratic:* Chấm điểm tự luận 0-4đ dựa trên bộ từ khóa khoa học, Socrates đưa ra lời khuyên gợi mở và lưu trực tiếp vào Cổng Phụ huynh.
+5. **Chế độ Demo Offline & 12 Bài Mẫu KHTN 7 chuẩn SGK:** Tự động kích hoạt khi timeout (> 20s) hoặc mất mạng, đảm bảo buổi thuyết trình của học sinh và đánh giá của Ban Giám khảo diễn ra liên tục 100%.
+6. **Hệ thống Quản lý Học tập & Sổ tay Tự học (Personal Notebook):** Học sinh có tài khoản cá nhân, theo dõi streak chuỗi ngày học, xem biểu đồ phân bố 3 môn Lý - Hóa - Sinh, và lưu trữ bài học để ôn tập.
+7. **Rubric Sư phạm 0–6 điểm & 5 Chỉ số Đo lường Khoa học (MVP):** Định lượng minh bạch năng lực lập luận của học sinh và hiệu quả hệ thống.
+8. **Bộ cài đặt Windows 1-Click & Đóng gói Desktop (.exe):** Có sẵn shortcut desktop, file bat/vbs chạy ngay không hiện cửa sổ dòng lệnh đen và script PyInstaller đóng gói độc lập.
 
 ---
 

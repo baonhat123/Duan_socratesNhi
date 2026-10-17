@@ -12,8 +12,9 @@ from app_tich_hop_socrates.dashboard_view import StudentDashboardModal, safe_ope
 
 class TestDashboardAndAuthService(unittest.TestCase):
     def setUp(self):
-        # Sao lưu danh sách user gốc
+        # Sao lưu danh sách user gốc và phiên đăng nhập
         self.orig_users = AuthService.load_all_users()
+        self.orig_session = AuthService.get_session_info()
 
         # Thiết lập user mẫu để kiểm tra
         self.user = UserAccount(
@@ -40,8 +41,12 @@ class TestDashboardAndAuthService(unittest.TestCase):
         AuthService.save_all_users(users)
 
     def tearDown(self):
-        # Khôi phục danh sách user gốc
+        # Khôi phục danh sách user gốc và phiên đăng nhập
         AuthService.save_all_users(self.orig_users)
+        if self.orig_session.get("current_username"):
+            orig_u = self.orig_users.get(self.orig_session["current_username"])
+            if orig_u:
+                AuthService.set_current_user(orig_u, remember_me=self.orig_session.get("remember_me", True))
 
     def test_streak_calculation(self):
         """Kiểm tra logic tính chuỗi ngày học streak và lịch 7 ngày trong tuần."""
@@ -345,6 +350,39 @@ class TestDashboardAndAuthService(unittest.TestCase):
         do_logout_btn = opened_dlg.actions[1]
         do_logout_btn.on_click(None)
         self.assertTrue(len(logout_called) > 0)
+
+    def test_new_user_has_zero_streak(self):
+        """Kiểm tra tài khoản mới tạo phải có streak = 0, study_dates rỗng và chưa giải bài nào."""
+        ok, new_user, _ = AuthService.register_account(
+            username="test_fresh_student",
+            raw_password="123",
+            display_name="Học Sinh Mới",
+            grade_class="Lớp 7E",
+            remember_me=False
+        )
+        self.assertTrue(ok)
+        self.assertIsNotNone(new_user)
+        self.assertEqual(new_user.streak_count, 0)
+        self.assertEqual(len(new_user.study_dates), 0)
+        self.assertEqual(new_user.solved_exercises_count, 0)
+        self.assertEqual(new_user.total_study_minutes, 0)
+
+        # Kiểm tra get_user_streak cho tài khoản mới
+        streak_data = AuthService.get_user_streak("test_fresh_student")
+        self.assertEqual(streak_data["streak_count"], 0)
+        self.assertFalse(streak_data["today_studied"])
+
+        # Khi giải 1 bài tập: streak phải tăng lên đúng 1
+        res = AuthService.record_exercise_solved("test_fresh_student", topic="Tốc độ chuyển động", domain="Vật lý", minutes=15)
+        self.assertTrue(res["success"])
+        self.assertEqual(res["streak_count"], 1)
+        self.assertTrue(res["today_studied"])
+        self.assertEqual(res["solved_exercises_count"], 1)
+
+        # Giải thêm bài thứ 2 trong cùng ngày: streak vẫn là 1 (không tăng ảo) nhưng solved_count tăng lên 2
+        res2 = AuthService.record_exercise_solved("test_fresh_student", topic="Định luật bảo toàn khối lượng", domain="Hóa học", minutes=15)
+        self.assertEqual(res2["streak_count"], 1)
+        self.assertEqual(res2["solved_exercises_count"], 2)
 
 
 if __name__ == "__main__":

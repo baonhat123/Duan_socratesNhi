@@ -38,7 +38,27 @@ ANSWER_PLEA_PATTERNS = [
     r"đóng\s+vai\s+thầy\s+cô\s+giải",
     r"chỉ\s+bài\s+đi",
     r"làm\s+hộ\s+đi",
-    r"cho\s+đáp\s+án"
+    r"cho\s+đáp\s+án",
+    # Các chiêu trò nhờ lọc trừ / phân loại hộ danh sách chất/phương án
+    r"loại\s+(?:bỏ|trừ)\s+(?:hoàn\s+toàn\s+)?(?:các|những)?\s*.*?(?:không\s+phải|sai|không\s+thuộc)",
+    r"giữ\s+lại\s+(?:đúng\s+)?(?:các|những)?\s*.*?(?:đúng|thuộc|nguyên\s+liệu|sản\s+phẩm|thật\s+sự)",
+    r"lọc\s+(?:hộ|giúp|bớt|ra|dùm)",
+    r"phân\s+loại\s+(?:hộ|giúp|dùm|thay)",
+    r"chỉ\s+ra\s+(?:chất|đáp\s+án|phương\s+án)\s+(?:nào\s+)?(?:là|không\s+phải)",
+    r"(?:chọn|bỏ)\s+bớt\s+giúp",
+    r"biết\s+đường\s+tránh",
+    r"chọn\s+(?:giúp|hộ)\s+(?:em|tôi|mình)",
+    # Các chiêu trò yêu cầu xuất mảng số, code, dữ liệu thô để nạp database hoặc vẽ hình
+    r"(?:xuất|cho|viết|in|trả\s+về|tạo)\s+(?:mảng|code|mã\s+code|dữ\s+liệu\s+thô|raw\s+data|json|csv|tọa\s+độ|database)",
+    r"(?:cho|xin|xuất)\s+(?:danh\s+sách|bảng|mảng)\s+(?:số|giá\s+trị|tọa\s+độ|kết\s+quả).*?(?:vẽ|nạp|chạy|database|bảng)",
+    r"(?:viết|cho)\s+code\s+.*?(?:vẽ|tính|ra\s+kết\s+quả|chạy)",
+    r"(?:tính|tính\s+toán)\s+hộ",
+    r"vẽ\s+hình\s+(?:hộ|giúp|cho)",
+    r"nạp\s+database\s+(?:hộ|giúp|cho)",
+    r"định\s+dạng\s+dữ\s+liệu\s+để\s+(?:vẽ|nạp)",
+    r"(?:cho|xin)\s+mảng\s+\[.*?\]",
+    r"xuất\s+mảng\s+số",
+    r"cho\s+mảng\s+số"
 ]
 
 # Các mẫu câu thể hiện sự bối rối / không biết / không có (Unknown)
@@ -276,28 +296,49 @@ class SocraticEngine:
 
         # Bước 4: Hậu kiểm Guardrail chống rò rỉ đáp số & công thức 3 Tầng (FR-07)
         safety_flags = []
+        st_history = " ".join([m.content for m in self.conversation_history if m.sender == "student"] + [student_message])
         if self.guardrail:
             # 1. Hậu kiểm feedback
-            audit_fb = self.guardrail.inspect_response(feedback)
+            audit_fb = self.guardrail.inspect_response(feedback, student_text_history=st_history)
             if not audit_fb.is_safe:
                 safety_flags.extend(audit_fb.safety_flags)
-                if student_state == StudentState.CORRECT:
+                if student_state == StudentState.ANSWER_PLEA:
+                    st_lower = student_message.lower()
+                    if any(w in st_lower for w in ["mảng", "code", "raw data", "dữ liệu thô", "database", "vẽ hình"]):
+                        feedback = "Thầy Socrates Nhí tuyệt đối không xuất mảng số hay mã code tính toán hộ đâu nhé! Em hãy tự điền con số vào cấu trúc trống mẫu."
+                    else:
+                        feedback = "Thầy Socrates Nhí sẽ không làm hộ hay đưa đáp án thay em đâu nè! Mục tiêu là để chính em tự nhận biết và suy luận."
+                elif student_state == StudentState.CORRECT:
                     feedback = "Rất tốt! Thầy ghi nhận suy nghĩ chính xác của em, chúng mình cùng bước tiếp nhé."
                 else:
                     feedback = "Thầy đang cùng em tìm hiểu từng bước. Chúng mình cùng suy luận tiếp nào!"
+            else:
+                feedback = audit_fb.sanitized_text
 
             # 2. Hậu kiểm next_question
-            audit_q = self.guardrail.inspect_response(next_question)
+            audit_q = self.guardrail.inspect_response(next_question, student_text_history=st_history)
             if not audit_q.is_safe:
                 safety_flags.extend(audit_q.safety_flags)
                 next_question = audit_q.sanitized_text or "Theo em, bước suy luận tiếp theo ta cần làm gì?"
                 micro_hint = "Em hãy chú ý mối liên hệ giữa các đại lượng đề bài đã cho."
-            elif micro_hint:
-                audit_h = self.guardrail.inspect_response(micro_hint)
-                if not audit_h.is_safe:
-                    safety_flags.extend(audit_h.safety_flags)
-                    micro_hint = "Em hãy chú ý các đại lượng đề bài đã cho trước."
+            else:
+                next_question = audit_q.sanitized_text
+                if micro_hint:
+                    audit_h = self.guardrail.inspect_response(micro_hint, student_text_history=st_history)
+                    if not audit_h.is_safe:
+                        safety_flags.extend(audit_h.safety_flags)
+                        micro_hint = "Em hãy chú ý các đại lượng đề bài đã cho trước."
+                    else:
+                        micro_hint = audit_h.sanitized_text
         else:
+            try:
+                from chuc_nang_6_guardrail_chong_ro_dap_an.guardrail_engine import sanitize_unearned_substances
+                next_question, _ = sanitize_unearned_substances(next_question, st_history)
+                feedback, _ = sanitize_unearned_substances(feedback, st_history)
+                if micro_hint:
+                    micro_hint, _ = sanitize_unearned_substances(micro_hint, st_history)
+            except Exception:
+                pass
             if self._detect_answer_leak(feedback):
                 safety_flags.append("answer_leak")
                 feedback = "Ý kiến của em cần xem xét lại một chút nhé!"
@@ -373,6 +414,8 @@ class SocraticEngine:
                 r = "assistant" if msg.sender == "socrates" else "user"
                 recent_msgs.append({"role": r, "content": msg.content})
 
+            scaffolding_lvl = self.state_machine.get_scaffolding_level()
+
             sys_prompt = (
                 "Bạn là Chuyên gia Khảo thí & Trợ lý Gia sư Sư phạm Socrates Nhí môn Khoa học Tự nhiên 7 (Bộ GD&ĐT Việt Nam).\n"
                 "Mô hình tư duy: Phân tích kiểm tra logic khoa học ở cấp độ cao nhất. Tuyệt đối không qua loa, không khen sai, không ba phải.\n\n"
@@ -380,45 +423,54 @@ class SocraticEngine:
                 "1. BƯỚC PHÂN TÍCH TỪNG Ý ('analysis'):\n"
                 "   - Viết trường 'analysis' súc tích (1-2 câu ngắn gọn): Học sinh đã trả lời ý gì? Ý đó có đúng về mặt khoa học không? Kết luận trạng thái.\n"
                 "   - TUYỆT ĐỐI CẤM thói khen ngợi ba phải, vuốt ve sáo rỗng hoặc tự tiện nói 'bạn làm được 1 phần đúng' / 'ý của em đã đúng một phần' khi học sinh TRẢ LỜI SAI, đoán mò, hoặc câu trả lời không hề có ý nào đúng về mặt khoa học!\n"
-                "   - CHỈ ĐƯỢC GÁN 'student_state': 'partial' KHI VÀ CHỈ KHI học sinh đã nêu ĐƯỢC ÍT NHẤT 1 Ý HOÀN TOÀN CHÍNH XAC VỀ MẶT KHOA HỌC trả lời một phần câu hỏi.\n"
+                "   - CHỈ ĐƯỢC GÁN 'student_state': 'partial' KHI VÀ CHỈ KHI học sinh đã nêu ĐƯỢC ÍT NHẤT 1 Ý HOÀN TOÀN CHÍNH XÁC VỀ MẶT KHOA HỌC trả lời một phần câu hỏi.\n"
                 "   - NẾU HỌC SINH NÊU SAI CÔNG THỨC (ví dụ v = s * t), nêu sai bản chất vật lý (ví dụ ánh sáng đi xuyên qua gương phẳng), hoặc đoán mò vô căn cứ:\n"
                 "     + BẮT BUỘC gán 'student_state': 'misconception'.\n"
                 "     + 'feedback': Thẳng thắn, lịch sự chỉ rõ câu trả lời chưa đúng, nêu điểm mâu thuẫn để học sinh tự thấy vô lý. TUYỆT ĐỐI KHÔNG KHEN 'đúng một phần'!\n"
-                "     + 'question': Đặt ĐÚNG 1 CÂU HỎI dẫn dắt trực quan đời sống giúp học sinh tự suy nghĩ và tự sửa sai.\n"
-                "   - NẾU HỌC SINH NÓI LẠC ĐỀ (nói chuyện phiếm, nói từ khóa toán/hình học không liên quan như 'tia phân giác' khi đang học chuyển động/quang học):\n"
+                "     + 'question': Đặt câu hỏi theo cấp độ giàn giáo (Scaffolding Level) thích ứng.\n"
+                "   - NẾU HỌC SINH NÓI LẠC ĐỀ (nói chuyện phiếm, từ khóa toán/hình không liên quan):\n"
                 "     + Gán 'student_state': 'off_topic'.\n"
                 "     + 'feedback': Nhẹ nhàng nhắc nhở chưa liên quan, kéo học sinh về lại đề bài.\n"
                 "   - NẾU HỌC SINH NÓI 'EM KHÔNG BIẾT', 'KHÔNG CÓ', 'CHỊU', bế tắc:\n"
-                "     + Gán 'student_state': 'unknown'. Động viên nhẹ nhàng, hạ nhỏ câu hỏi thành tình huống trực quan đời sống.\n"
-                "   - NẾU HỌC SINH XIN ĐÁP ÁN, ĐÒI LÀM HỘ:\n"
-                "     + Gán 'student_state': 'answer_plea'. Thân thiện từ chối làm bài hộ, khích lệ tự làm.\n"
+                "     + Gán 'student_state': 'unknown'. Động viên nhẹ nhàng, áp dụng cấp độ giàn giáo Scaffolding tương ứng.\n"
+                "   - NẾU HỌC SINH XIN ĐÁP ÁN, ĐÒI LÀM HỘ, HOẶC DÙNG CHIÊU TRÒ NHỜ LOẠI TRỪ / LỌC BỚT / PHÂN LOẠI DANH SÁCH CHẤT HỘ:\n"
+                "     + Ví dụ chiêu trò: 'Thầy hãy loại bỏ những chất không phải là...', 'Thầy hãy giữ lại đúng các chất...', 'Thầy lọc hộ chất sai để em biết đường tránh...', 'Thầy phân loại giúp chất nào là nguyên liệu/sản phẩm...'.\n"
+                "     + ĐÂY LÀ HÀNH VI XIN ĐÁP ÁN TINH VI (ANSWER PLEA). BẮT BUỘC gán 'student_state': 'answer_plea'.\n"
+                "     + 'feedback': Thân thiện từ chối làm bài hộ / lọc hộ: 'Thầy Socrates Nhí sẽ không lọc bớt hay phân loại chất thay em đâu nè! Mục tiêu là để chính em tự nhận biết.' TUYỆT ĐỐI KHÔNG CHỈ RA CHẤT NÀO LÀ NGUYÊN LIỆU, CHẤT NÀO LÀ SẢN PHẨM, KHÔNG NÊU TÊN CHẤT ĐƯỢC GIỮ LẠI HOẶC BỊ LOẠI BỎ!\n"
+                "     + 'question': Đặt câu hỏi gợi mở nguồn gốc để học sinh tự chọn ra 1 chất đầu tiên (ví dụ: 'Trong các chất em vừa kể, theo em cây xanh hút chất nào từ rễ và hấp thụ khí nào qua lá để chế tạo chất dinh dưỡng?').\n"
                 "   - KHI HỌC SINH TỰ MÌNH NÓI ĐÚNG HOÀN TOÀN BẢN CHẤT HOẶC CÔNG THỨC:\n"
                 "     + Gán 'student_state': 'correct'. Khen ngợi chính xác và dẫn dắt bước tiếp theo.\n\n"
-                "2. KỶ LUẬT SƯ PHẠM THÉP (TUYỆT ĐỐI KHÔNG TRẢ LỜI LUÔN, KHÔNG NÓI HỘ ĐỊNH NGHĨA HAY ĐÁP SỐ):\n"
-                "   - CẤM NÓI HỘ ĐỊNH NGHĨA HOẶC GIẢI THÍCH TRỌN GÓI CHO HỌC SINH:\n"
-                "     + Khi học sinh nói 'em không biết X là gì' (ví dụ: 'em không biết pháp tuyến là gì', 'quang hợp là gì'):\n"
-                "     + CẤM viết vào feedback câu định nghĩa như: 'Pháp tuyến là đường thẳng vuông góc...', 'Tốc độ là...', 'Quang hợp là...'.\n"
-                "     + Nếu nói luôn định nghĩa hoặc trả lời luôn là VI PHẠM NGUYÊN TẮC SƯ PHẠM NGHIÊM TRỌNG!\n"
-                "     + 'feedback' chỉ khích lệ ngắn gọn (1 câu), TUYỆT ĐỐI KHÔNG định nghĩa hộ;\n"
-                "     + 'question' phải đặt câu hỏi trực quan liên hệ đời sống (ví dụ cọc cắm vuông góc 90 độ lên sàn) để học sinh TỰ NHẬN RA ĐẶC ĐIỂM và TỰ ĐỊNH NGHĨA!\n"
-                "   - CẤM VIẾT RA CÔNG THỨC ĐÍCH: 'v = s/t', 'v = s:t', 's/t' hoặc '24 km/h' khi học sinh CHƯA TỰ MÌNH PHÁT BIỂU ĐƯỢC.\n"
-                "   - CẤM TIẾT LỘ CÔNG THỨC trong cả 'feedback', 'question' và 'micro_hint'.\n"
-                "   - 'feedback' chỉ dùng để: nhận xét ngắn gọn, chỉ ra mâu thuẫn hoặc động viên. TUYỆT ĐỐI KHÔNG BIẾN FEEDBACK THÀNH NƠI GIẢNG BÀI HAY TRẢ LỜI HỘ!\n\n"
-                "3. NGUYÊN TẮC ĐỒNG HÀNH KHÔNG GIỚI HẠN & ĐIỀU KIỆN HOÀN THÀNH:\n"
-                "   - PHIÊN HỘI THOẠI KHÔNG GIỚI HẠN SỐ LƯỢT: Không bao giờ được nóng vội đóng phiên. Nếu học sinh chưa hiểu, trả lời chưa chính xác hoặc còn thiếu sót, bạn BẮT BUỘC tiếp tục kiên trì đặt câu hỏi gợi mở trực quan (gần gũi đời sống) để học sinh tự suy nghĩ và sửa sai.\n"
-                "   - TUYỆT ĐỐI KHÔNG kết thúc phiên hay chúc mừng hoàn thành sớm khi học sinh chưa hiểu bài hoặc câu trả lời chưa chính xác.\n"
-                "   - Khi ở Pha 5 (generalize - Khái quát hóa & Tự đúc kết kiến thức cốt lõi):\n"
-                "     + BẮT BUỘC yêu cầu học sinh TỰ ĐÚC KẾT KIẾN THỨC CỐT LÕI (quy tắc, bài học hoặc công thức quan trọng nhất) theo cách hiểu của học sinh.\n"
-                "     + Nếu học sinh trả lời chưa đúng hoặc chưa khái quát được bản chất: gán 'student_state': 'misconception' (hoặc 'partial'/'unknown'), 'is_completed': false, chỉ ra điểm mâu thuẫn trong feedback và TIẾP TỤC ĐẶT CÂU HỎI gợi mở để học sinh đúc kết lại.\n"
-                "     + CHỈ KHI học sinh đã tự mình đúc kết được bài học/quy tắc cốt lõi một cách chính xác: gán 'student_state': 'correct', gán 'is_completed': true. Lúc này 'feedback' khen ngợi học sinh đã tự mình đúc kết kiến thức cốt lõi thành công, và 'question' thông báo: 'Thầy đã mở khóa Sơ đồ Tư duy Dạng Nhánh cho em rồi đó! Em hãy mở sơ đồ ra để xem các nhánh kiến thức và ghi nhớ bài học nhé!'. 'micro_hint' gợi ý: 'Em hãy bấm nút Xem Sơ đồ Tư duy Dạng Nhánh 🌿 để khám phá sơ đồ rẽ nhánh và lưu vào sổ tay nhé!'.\n\n"
-                "4. CẤU TRÚC PHẢN HỒI (CHỈ TRẢ VỀ JSON - KHÔNG KÈM TEXT NGOÀI):\n"
+                "=== KỸ THUẬT GỢI MỞ RÕ HƠN DẦN (MULTI-LEVEL SCAFFOLDING) KHI SAI LIÊN TIẾP ===\n"
+                f"Cấp độ giàn giáo hiện tại ở bước này: CẤP {scaffolding_lvl}/3\n"
+                "• Cấp 1 (Sai lần 1): Gợi mở nhẹ nhàng định hướng lại dữ kiện và từ khóa đề bài.\n"
+                "• Cấp 2 (Sai lần 2): ĐỔI CÁCH HỎI, KHÔNG LẶP LẠI CÂU HỎI CŨ! Đưa ra một VÍ DỤ TƯƠNG TỰ ĐỜI SỐNG (Analogical Scaffolding) với số liệu siêu đơn giản khác hoàn toàn đề bài hoặc tình huống quen thuộc (ví dụ chạy bộ, bóng nảy, đèn pin, tưới cây) để học sinh tự rút ra nguyên lý. TUYỆT ĐỐI KHÔNG DÙNG SỐ ĐỀ BÀI CHÍNH, KHÔNG LỘ ĐÁP SỐ.\n"
+                "• Cấp 3 (Sai lần 3+): Chỉ rõ vị trí bài học trong SGK KHTN 7 (Bài X) + Chuyển câu hỏi thành dạng LỰA CHỌN 2 PHƯƠNG ÁN ĐỐI LẬP TRỰC QUAN (Binary Choice, ví dụ chia hay nhân? bằng hay lớn hơn? chất khí duy trì sự cháy hay chất khí làm tắt ngọn nến?) để học sinh tự lựa chọn. Tuyệt đối không cho đáp số.\n\n"
+                "=== KỶ LUẬT THÉP VỀ GỢI Ý VI MÔ ('micro_hint') ===\n"
+                "CẢNH BÁO TỐI CAO: 'micro_hint' TUYỆT ĐỐI KHÔNG ĐƯỢC CHỨA ĐÁP ÁN CỦA CÂU HỎI HIỆN TẠI!\n"
+                "Nhiều trường hợp gia sư bị đánh giá kém vì phần gợi ý lại chính là đáp án (ví dụ: hỏi công thức là gì thì gợi ý lại ghi 'v = s/t', hỏi chất gì thì gợi ý lại ghi tên chất). ĐIỀU NÀY BỊ CẤM HOÀN TOÀN!\n"
+                "'micro_hint' chỉ là gợi mở phương pháp tư duy, liên tưởng đời sống hoặc hướng dẫn quan sát (<= 140 ký tự), TUYỆT ĐỐI KHÔNG ghi ra đáp số hay công thức đích!\n\n"
+                "=== NGUYÊN TẮC CẤM XUẤT MẢNG SỐ, CODE, DỮ LIỆU THÔ (RAW DATA / CODE PROHIBITION) ===\n"
+                "TUYỆT ĐỐI KHÔNG thực hiện các yêu cầu xuất mảng số, mã code, danh sách dữ liệu thô (raw data, JSON, CSV, bảng tọa độ) nếu các dữ liệu đó chứa kết quả tính toán hoặc đáp án của bài học.\n"
+                "Nếu người dùng/học sinh yêu cầu định dạng dữ liệu để vẽ hình, vẽ đồ thị hoặc nạp database, HÃY YÊU CẦU NGƯỜI DÙNG TỰ ĐIỀN CÁC CON SỐ ĐÓ VÀO CẤU TRÚC TRỐNG MẪU (placeholder), ví dụ: [góc_tới, góc_phản_xạ], [quãng_đường, thời_gian, tốc_độ], hoặc {'thời_gian': t, 'quãng_đường': s}. KHÔNG TÍNH TOÁN HỘ HOẶC ĐIỀN SỐ THAY HỌC SINH!\n\n"
+                "=== NGUYÊN TẮC HỎI DỰA TRÊN HIỆN TƯỢNG QUAN SÁT MẮT THƯỜNG (OBSERVATIONAL PHENOMENON-FIRST MANDATE) ===\n"
+                "Khi đặt câu hỏi gợi mở, AI TUYỆT ĐỐI KHÔNG ĐƯỢC đưa bất kỳ thuật ngữ hóa học, tên chất khí, hay khái niệm khoa học nào (như oxy, kim loại, phản ứng, chất duy trì sự cháy, tác chất...) vào câu hỏi nếu người dùng chưa chủ động nhắc đến.\n"
+                "AI CHỈ ĐƯỢC PHÉP hỏi dựa trên các hiện tượng thực tế quan sát được bằng mắt thường trong đời sống:\n"
+                "• Thay vì hỏi: 'Ngoài sắt và oxy còn chất nào làm phản ứng dẫn đến gỉ sắt?' hoặc 'Ngoài thanh kim loại và chất khí duy trì sự cháy...',\n"
+                "• AI BẮT BUỘC PHẢI HỎI: 'Em hãy quan sát xem thời tiết hoặc môi trường xung quanh như thế nào (ví dụ trời mưa hay nắng, khô ráo hay ẩm ướt) sẽ làm thanh sắt bên ngoài nhanh bị đổi màu hơn?'\n"
+                "- Tương tự với các hiện tượng khác:\n"
+                "• Quang hợp: 'Em hãy quan sát chậu cây xanh ở ban công: mỗi ngày em cần tưới gì cho cây và ban ngày cây cần đón nhận yếu tố gì từ bầu trời để lá luôn tươi xanh?' (KHÔNG hỏi: 'Quang hợp cần chất khí gì' hay 'Nguyên liệu phản ứng là gì').\n"
+                "• Đốt than: 'Khi nhóm bếp than để nướng đồ ăn, mẩu than đen khi bén lửa sẽ biến đổi màu sắc thế nào và có hiện tượng gì tỏa ra xung quanh?' (KHÔNG hỏi: 'Phản ứng cacbon với oxy').\n"
+                "CHỈ KHI HỌC SINH ĐÃ CHỦ ĐỘNG GÕ TỪ KHÓA ĐÓ trong phiên chat, bạn mới được phép dùng lại từ đó để phản hồi và đào sâu tiếp!\n\n"
+                "=== NGUYÊN TẮC ĐỒNG HÀNH KHÔNG GIỚI HẠN & ĐIỀU KIỆN HOÀN THÀNH ===\n"
+                "Phiên hội thoại không giới hạn số lượt, chỉ kết thúc khi học sinh đã tự mình hiểu bài và đúc kết chính xác ở Pha 5.\n\n"
+                "=== CẤU TRÚC PHẢN HỒI JSON (KHÔNG KÈM TEXT NGOÀI) ===\n"
                 "{\n"
-                "  \"analysis\": \"Phân tích logic từng ý: Câu hỏi cần gì? Học sinh nói gì? Có ý nào thực sự đúng khoa học không? Kết luận trạng thái.\",\n"
+                "  \"analysis\": \"Phân tích logic từng ý: Học sinh nói gì? Đúng hay sai? Trạng thái.\",\n"
                 "  \"student_state\": \"correct\" | \"partial\" | \"misconception\" | \"off_topic\" | \"unknown\" | \"answer_plea\",\n"
                 "  \"is_completed\": true | false,\n"
-                "  \"feedback\": \"Nhận xét sư phạm ngắn gọn (1-2 câu). Tuyệt đối không trả lời luôn, không nói hộ định nghĩa khái niệm trong feedback.\",\n"
-                "  \"question\": \"ĐÚNG 1 câu hỏi gợi mở tiếp theo kết thúc bằng dấu chấm hỏi, không kèm câu hỏi phụ.\",\n"
-                "  \"micro_hint\": \"Gợi ý vi mô định hướng tư duy (<= 140 ký tự), không tiết lộ công thức hay đáp số.\"\n"
+                "  \"feedback\": \"Nhận xét sư phạm ngắn gọn (1-2 câu).\",\n"
+                "  \"question\": \"ĐÚNG 1 câu hỏi dẫn dắt phù hợp với cấp độ Scaffolding.\",\n"
+                "  \"micro_hint\": \"Gợi ý vi mô định hướng tư duy (<= 140 ký tự), TUYỆT ĐỐI KHÔNG CHỨA ĐÁP ÁN.\"\n"
                 "}"
             )
 
@@ -429,9 +481,9 @@ class SocraticEngine:
                 "role": "user",
                 "content": (
                     f"Pha hội thoại hiện tại: {current_phase.value}\n"
-                    f"Lượt trao đổi hiện tại: {turn_num} (Phiên hội thoại mở, không giới hạn số lượt).\n"
+                    f"Lượt trao đổi hiện tại: {turn_num} (Cấp độ Scaffolding: {scaffolding_lvl}/3).\n"
                     f"Học sinh vừa trả lời: '{student_message}'\n"
-                    "Hãy thực hiện bước 'analysis' phân tích kỹ lưỡng các ý, đánh giá trạng thái câu trả lời và tạo phản hồi sư phạm."
+                    "Hãy phân tích và tạo phản hồi sư phạm đúng cấp độ Scaffolding."
                 )
             })
 
@@ -471,19 +523,29 @@ class SocraticEngine:
                                 fb = "Ý kiến này chưa liên quan đến câu hỏi chúng mình đang thảo luận rồi nè!"
                             break
 
-                # Bộ lọc chống trả lời luôn / giải thích tuột định nghĩa trong feedback
+                # Bộ lọc chống trả lời luôn / giải thích tuột định nghĩa / rò rỉ nguyên liệu sản phẩm trong feedback
                 def_spoilers = [
                     r"pháp\s+tuyến\s+là\s+đường\s+thẳng\s+vuông\s+góc",
                     r"pháp\s+tuyến\s+là\s+đường\s+vuông\s+góc",
                     r"định\s+nghĩa\s+pháp\s+tuyến\s+là",
-                    r"tốc\s+độ\s+là\s+quãng\s+đường\s+chia"
+                    r"tốc\s+độ\s+là\s+quãng\s+đường\s+chia",
+                    r"(?:nước|co2|carbon dioxide|h2o|khí cacbonic)\s+.*?\blà\s+nguyên\s+liệu\b",
+                    r"(?:oxygen|o2|khí oxi|glucose|glucozo|chất hữu cơ|đường)\s+.*?\blà\s+sản\s+phẩm\b",
+                    r"(?:nguyên\s+liệu|sản\s+phẩm)\s+(?:của\s+[\w\s]+\s+)?(?:là|gồm)\s*[:=]?\s*(?:nước|co2|carbon dioxide|h2o|oxygen|o2|glucose|glucozo|chất hữu cơ|đường)",
+                    r"loại\s+bỏ\s+.*?(?:giữ\s+lại|những\s+chất\s+thật\s+sự|không\s+liên\s+quan)",
+                    r"giữ\s+lại\s+.*?(?:là\s+nguyên\s+liệu|là\s+sản\s+phẩm|thật\s+sự\s+tham\s+gia)",
+                    r"(?:là|thuộc)\s+nguyên\s+liệu.*?(?:là|thuộc)\s+sản\s+phẩm"
                 ]
                 for ds in def_spoilers:
                     if re.search(ds, fb, re.IGNORECASE):
-                        fb = "Không sao cả, khi mới tiếp cận thuật ngữ này em bỡ ngỡ là điều bình thường! Chúng mình cùng tìm hiểu từng bước nhé."
-                        if any(w in student_message.lower() for w in ["pháp tuyến", "phap tuyen"]):
-                            q = "Em hãy tưởng tượng khi cắm một cây bút dựng đứng vuông góc 90 độ lên mặt gương phẳng, đường thẳng đứng đó tạo với mặt gương một góc bao nhiêu độ?"
-                            hint = "Hãy chú ý đến góc vuông 90 độ tại điểm tới."
+                        if any(k in ds for k in ["nguyên liệu", "sản phẩm", "loại bỏ", "giữ lại"]):
+                            fb = "Thầy sẽ không phân loại hay lọc bớt chất hộ em đâu nè! Mục tiêu là để chính em tự nhận biết và suy luận."
+                            q = "Trong các chất em vừa kể, theo em cây xanh hút chất nào từ rễ và hấp thụ khí nào qua lá để chế tạo chất dinh dưỡng?"
+                            hint = "Em hãy nhớ lại: cây xanh cần tưới gì vào gốc và hít thở khí gì từ bầu khí quyển ban ngày nhé."
+                        else:
+                            fb = "Không sao cả, khi mới tiếp cận thuật ngữ này em bỡ ngỡ là điều bình thường! Chúng mình cùng tìm hiểu từng bước nhé."
+                            if any(w in student_message.lower() for w in ["pháp tuyến", "phap tuyen"]):
+                                q = "Em hãy tưởng tượng khi cắm một cây bút dựng đứng vuông góc 90 độ lên mặt gương phẳng, đường thẳng đứng đó tạo với mặt gương một góc bao nhiêu độ?"
                         break
 
                 # Lớp phòng vệ tức thì: Khử ngay mọi câu AI vô tình nói lộ công thức v = s/t khi học sinh chưa tự giải được
@@ -513,8 +575,15 @@ class SocraticEngine:
                     "mở khóa sơ đồ tư duy dạng nhánh", "đã mở khóa sđtd"
                 ]
                 combined_check = (str(q or "") + " " + str(fb or "")).lower()
-                if any(kw in combined_check for kw in unlock_keywords):
-                    is_completed = True
+                try:
+                    from chuc_nang_6_guardrail_chong_ro_dap_an.guardrail_engine import sanitize_unearned_substances
+                    st_hist = " ".join([m.content for m in self.conversation_history if m.sender == "student"] + [student_message])
+                    q, _ = sanitize_unearned_substances(q, st_hist)
+                    fb, _ = sanitize_unearned_substances(fb, st_hist)
+                    if hint:
+                        hint, _ = sanitize_unearned_substances(hint, st_hist)
+                except Exception:
+                    pass
 
                 model = get_ai_config()["model"]
                 return fb, q, hint, "ai", model, evaluated_state, is_completed
@@ -532,85 +601,166 @@ class SocraticEngine:
         turn_num: int
     ) -> Tuple[str, str, Optional[str], str, Optional[str]]:
         prob_lower = problem_text.lower()
+        scaffolding_lvl = self.state_machine.get_scaffolding_level()
 
         # 1. Xử lý khi bị ép xin đáp án (Answer Plea) - Chế độ Offline / Fallback
         if student_state == StudentState.ANSWER_PLEA:
+            st_lower = student_text.lower()
+            # Nhận diện yêu cầu xuất mảng số, mã code, raw data, nạp database, vẽ hình
+            is_code_or_raw_data_plea = any(
+                w in st_lower for w in [
+                    "mảng", "code", "mã code", "dữ liệu thô", "raw data", "json", "csv",
+                    "tọa độ", "database", "vẽ hình", "đồ thị", "vẽ đồ thị", "nạp database",
+                    "bảng số", "mảng số"
+                ]
+            )
+            if is_code_or_raw_data_plea:
+                fb = (
+                    "Thầy Socrates Nhí tuyệt đối không thực hiện các yêu cầu xuất mảng số, mã code hay dữ liệu thô "
+                    "chứa kết quả tính toán hoặc đáp án của bài học đâu nhé! Thầy không tính toán hộ con số đâu nè."
+                )
+                if any(w in prob_lower or w in st_lower for w in ["gương", "gương phẳng", "phản xạ", "ánh sáng", "góc tới", "góc_tới"]):
+                    q = (
+                        "Nếu em cần định dạng dữ liệu để vẽ hình hoặc nạp database, em hãy tự điền các con số đó vào "
+                        "cấu trúc trống mẫu: [góc_tới, góc_phản_xạ]. Theo định luật phản xạ ánh sáng, khi biết góc tới, "
+                        "em tính ra góc phản xạ bằng bao nhiêu độ để điền vào cấu trúc này?"
+                    )
+                    hint = "Định luật phản xạ ánh sáng: Góc phản xạ luôn có mối liên hệ như thế nào với góc tới nhỉ?"
+                elif any(w in prob_lower or w in st_lower for w in ["tốc độ", "quãng đường", "thời gian", "vận tốc", "chuyển động", "xe"]):
+                    q = (
+                        "Nếu em cần định dạng dữ liệu để vẽ hình hoặc nạp database, em hãy tự điền các con số đó vào "
+                        "cấu trúc trống mẫu: [quãng_đường, thời_gian, tốc_độ]. Em hãy tự lấy quãng đường chia cho thời gian "
+                        "để điền con số tốc độ của mình vào nhé!"
+                    )
+                    hint = "Tự mình tính toán và nạp số liệu sẽ giúp em nhớ sâu và hiểu bản chất khoa học hơn rất nhiều!"
+                else:
+                    q = (
+                        "Nếu em cần định dạng dữ liệu để vẽ hình hoặc nạp database, em hãy tự điền các con số đó vào "
+                        "cấu trúc trống mẫu: [dữ_kiện_đã_cho, kết_quả_tính_được]. Theo em con số kết quả là bao nhiêu để điền vào đây?"
+                    )
+                    hint = "Em hãy tự thực hiện phép tính của mình, không phụ thuộc vào mảng số hay code tính sẵn nhé."
+                return fb, q, hint, "offline", None
+
             fb = "Socrates Nhí ở đây để đồng hành giúp em tự hiểu bản chất, chứ không đưa đáp số sẵn đâu nè!"
             if any(w in prob_lower for w in ["gương", "gương phẳng", "phản xạ", "ánh sáng"]):
                 q = "Chúng mình cùng làm từng bước nhé! Theo em, khi ánh sáng gặp mặt gương, nó đi tiếp xuyên qua hay hắt trở lại?"
-                hint = "Gợi ý: Mặt gương nhẵn bóng và tráng bạc phía sau."
+                hint = "Em hãy liên tưởng đến hiện tượng khi soi gương mỗi ngày."
             else:
                 q = "Để bắt đầu, em hãy nhìn lại đề bài và cho mình biết: Đề bài đang hỏi đại lượng nào cần tìm?"
                 hint = "Đọc kỹ câu hỏi cuối cùng của đề bài nhé."
             return fb, q, hint, "offline", None
 
-        # 2. Xử lý khi học sinh nói 'em không biết' (Unknown) - Chế độ Offline / Fallback
-        if student_state == StudentState.UNKNOWN:
-            fb = "Không sao cả, ai mới học cũng có lúc bối rối! Mình cùng chia nhỏ vấn đề ra nhé."
-            if any(w in prob_lower for w in ["gương", "gương phẳng", "phản xạ", "ánh sáng"]):
+        # 2. Xử lý khi học sinh nói 'em không biết' (Unknown) hoặc nhầm lẫn (Misconception) qua 3 CẤP ĐỘ SCAFFOLDING
+        if student_state in [StudentState.UNKNOWN, StudentState.MISCONCEPTION, StudentState.OFF_TOPIC]:
+            # CẤP ĐỘ 2: ANALOGICAL SCAFFOLDING (Ví dụ tương tự đời sống khi sai lần 2)
+            if scaffolding_lvl == 2:
+                fb = "Em đừng lo lắng nhé! Chúng mình cùng quan sát qua một ví dụ đời sống thực tế rất gần gũi nè:"
+                if any(w in prob_lower for w in ["gương", "gương phẳng", "phản xạ", "ánh sáng"]):
+                    q = "Khi em ném một quả bóng cao su vuông góc vào bức tường phẳng, quả bóng sẽ bị bức tường bật ngược trở lại hay bay xuyên qua tường?"
+                    hint = "Bề mặt nhẵn bóng giữ lại và đẩy chuyển động ngược trở về môi trường cũ."
+                elif any(w in prob_lower for w in ["quang hợp", "lá cây", "diệp lục"]):
+                    q = "Mỗi ngày khi em tưới nước cho chậu cây đặt ngoài ban công có ánh nắng, em thấy cây phát triển xanh tốt nhờ hấp thụ những yếu tố nào từ đất và không khí?"
+                    hint = "Em hãy quan sát cây xanh cần được tưới nước và đón ánh nắng mặt trời thế nào nhé."
+                elif any(w in prob_lower for w in ["đốt than", "cháy", "bảo toàn khối lượng"]):
+                    q = "Khi em đun một ấm nước có nắp đậy kín so với ấm mở nắp, phần hơi nước bay đi vào không khí có làm chiếc ấm mở nắp nhẹ hơn ban đầu không?"
+                    hint = "Dù là chất khí bay lên, vật chất vẫn tồn tại và có khối lượng trong tự nhiên."
+                else:
+                    q = "Nếu em chạy bộ một quãng đường 10 mét hết 2 giây, thì trung bình mỗi 1 giây em chạy được bao nhiêu mét? Em dùng phép tính nào để tìm ra điều đó?"
+                    hint = "Hãy suy nghĩ xem phép chia đều quãng đường cho thời gian giúp tìm ra điều gì nhé."
+                return fb, q, hint, "offline", None
+
+            # CẤP ĐỘ 3: SGK GUIDANCE & BINARY CHOICE (Chỉ dẫn SGK KHTN 7 + Câu hỏi lựa chọn 2 phương án đối lập)
+            elif scaffolding_lvl >= 3:
+                fb = "Kiến thức nền tảng của phần này nằm trong SGK KHTN 7 đó em! Để em dễ suy luận, chúng mình cùng lựa chọn nhé:"
+                if any(w in prob_lower for w in ["gương", "gương phẳng", "phản xạ", "ánh sáng"]):
+                    q = "Theo Định luật phản xạ ánh sáng (Bài 16 SGK KHTN 7), góc phản xạ sẽ bằng góc tới hay lớn hơn góc tới?"
+                    hint = "Em hãy xem lại bài học Phản xạ ánh sáng trong SGK KHTN 7 và chọn phương án hợp lý nhé."
+                elif any(w in prob_lower for w in ["quang hợp", "lá cây", "diệp lục"]):
+                    q = "Theo bài học Quang hợp ở thực vật (Bài 21 SGK KHTN 7), chất khí mà lá cây giải phóng vào ban ngày giúp sinh giới hô hấp là chất khí duy trì sự cháy hay chất khí làm tắt ngọn nến?"
+                    hint = "Em hãy nhớ lại thí nghiệm thu khí từ cành rong ngoài ánh sáng làm bùng cháy tàn đóm đỏ nhé."
+                elif any(w in prob_lower for w in ["đốt than", "cháy", "bảo toàn khối lượng"]):
+                    q = "Theo Định luật bảo toàn khối lượng (Bài 6 SGK KHTN 7), tổng khối lượng các chất trước phản ứng sẽ bằng hay khác tổng khối lượng các chất sau phản ứng?"
+                    hint = "Em hãy xem lại định luật bảo toàn khối lượng trong SGK KHTN 7 nhé."
+                else:
+                    q = "Theo công thức tốc độ chuyển động (Bài 8 SGK KHTN 7), để tìm tốc độ (quãng đường đi trong 1 đơn vị thời gian), ta lấy quãng đường chia cho thời gian hay lấy quãng đường nhân với thời gian?"
+                    hint = "Em hãy mở Bài 8 SGK KHTN 7 và chọn giữa phép chia hoặc phép nhân nhé."
+                return fb, q, hint, "offline", None
+
+            # CẤP ĐỘ 1: GỢI MỞ ĐỊNH HƯỚNG CƠ BẢN (Lần sai đầu tiên)
+            else:
+                if student_state == StudentState.UNKNOWN:
+                    fb = "Không sao cả, ai mới học cũng có lúc bối rối! Mình cùng chia nhỏ vấn đề ra nhé."
+                else:
+                    fb = "Khái niệm này chưa phù hợp với hiện tượng chúng ta đang tìm hiểu rồi nè. Không sao, mình cùng xem xét lại nhé!"
+
+                if any(w in prob_lower for w in ["gương", "gương phẳng", "phản xạ", "ánh sáng"]):
+                    if start_phase == SocraticPhase.CLARIFY:
+                        q = "Em hãy thử nhớ lại: Khi em soi gương mỗi sáng, em thấy ảnh mình ở trước gương đúng không? Nếu ánh sáng đi xuyên qua như tấm kính trong suốt thì ta có nhìn thấy ảnh mình không?"
+                        hint = "Em hãy nghĩ đến việc gương có mặt tráng bạc giữ lại ánh sáng như thế nào."
+                    elif start_phase == SocraticPhase.RECALL:
+                        q = "Tia sáng chiếu tới mặt gương gọi là tia tới. Em đoán xem tia sáng bị hắt ngược lại sẽ mang tên là tia gì nào?"
+                        hint = "Tên gọi của tia sáng này gắn liền với hiện tượng ánh sáng bị dội ngược trở lại."
+                    elif start_phase == SocraticPhase.REASON:
+                        q = "Nếu góc tới là 0 độ (chiếu vuông góc với mặt gương), thì góc phản xạ cũng bằng bao nhiêu độ theo định luật trên?"
+                        hint = "Em hãy nhớ lại mối quan hệ bằng nhau giữa góc phản xạ và góc tới nhé."
+                    elif start_phase == SocraticPhase.CHECK:
+                        q = "Khi em đứng trước gương phẳng, ảnh của em nhìn thấy trong gương có độ lớn bằng em hay to hơn/nhỏ hơn?"
+                        hint = "Em hãy liên hệ đến hình ảnh thật của bản thân khi đứng trước gương phẳng ở nhà."
+                    else:
+                        q = "Em hãy nhắc lại ngắn gọn: Ánh sáng khi gặp gương phẳng sẽ xảy ra hiện tượng gì?"
+                        hint = "Hiện tượng ánh sáng bị dội ngược trở lại môi trường cũ."
+                    return fb, q, hint, "offline", None
+
+                elif any(w in prob_lower for w in ["quang hợp", "lá cây", "diệp lục"]):
+                    if start_phase == SocraticPhase.CLARIFY:
+                        q = "Lá cây cần những nguyên liệu đầu vào nào lấy từ đất và không khí để thực hiện quang hợp?"
+                        hint = "Cây hút chất lỏng gì dưới đất và hấp thụ chất khí quen thuộc nào trong không khí qua lá?"
+                    else:
+                        q = "Nhờ ánh sáng mặt trời, lá cây tạo ra chất hữu cơ và giải phóng khí gì cho chúng ta thở?"
+                        hint = "Chất khí duy trì sự hô hấp của con người và động vật mỗi ngày đó em."
+                    return fb, q, hint, "offline", None
+
+                elif any(w in prob_lower for w in ["gỉ sắt", "rỉ sắt", "sắt", "kim loại", "gỉ", "gỉ kim loại", "rỉ"]):
+                    if start_phase == SocraticPhase.CLARIFY:
+                        q = "Em hãy quan sát xem thời tiết hoặc môi trường xung quanh như thế nào (ví dụ trời mưa hay nắng, khô ráo hay ẩm ướt) sẽ làm thanh sắt bên ngoài nhanh bị đổi màu hơn?"
+                        hint = "Em hãy nhớ lại chiếc đinh hoặc thanh sắt để ngoài trời mưa ẩm so với để trong nhà khô ráo nhé."
+                    elif start_phase == SocraticPhase.RECALL:
+                        q = "Khi thanh sắt để ngoài trời ẩm lâu ngày bị đổi màu, em quan sát thấy bề mặt của nó chuyển sang màu gì và lớp vảy đó cứng bóng hay xốp mềm?"
+                        hint = "Quan sát lớp vảy màu nâu đỏ bám bên ngoài thanh sắt để ngoài mưa gió nhé."
+                    elif start_phase == SocraticPhase.REASON:
+                        q = "Em hãy quan sát xem người ta thường làm gì với những cánh cổng sắt hay hàng rào sắt (ví dụ quét sơn hay bôi dầu mỡ) để chúng không bị đổi màu nâu đỏ khi gặp mưa gió?"
+                        hint = "Lớp sơn bên ngoài giúp ngăn bề mặt sắt tiếp xúc trực tiếp với không khí ẩm ướt."
+                    elif start_phase == SocraticPhase.CHECK:
+                        q = "Theo em, khi thanh sắt bị đổi màu và đóng thành lớp vảy nâu đỏ dày lên, cầm vào thấy nặng hơn hay nhẹ hơn thanh sắt sạch ban đầu?"
+                        hint = "Thanh sắt ban đầu đã giữ lại thêm các phần tử từ không khí ẩm bám chặt vào."
+                    else:
+                        q = "Em hãy tóm tắt ngắn gọn: Hiện tượng thanh sắt bị đổi màu nâu đỏ ngoài trời là một sự biến đổi tạo ra chất mới hay vẫn là thanh sắt cũ?"
+                        hint = "Dấu hiệu có chất mới sinh ra với màu sắc và tính chất khác biệt."
+                    return fb, q, hint, "offline", None
+
                 if start_phase == SocraticPhase.CLARIFY:
-                    q = "Em hãy thử nhớ lại: Khi em soi gương mỗi sáng, em thấy ảnh mình ở trước gương đúng không? Nếu ánh sáng đi xuyên qua như tấm kính trong suốt thì ta có nhìn thấy ảnh mình không?"
-                    hint = "Gương soi giữ lại và hắt ánh sáng trở lại mắt ta."
+                    q = "Đề bài có nhắc đến những con số nào kèm đơn vị đo? Em hãy liệt kê các con số đó ra giúp mình nhé."
+                    hint = "Em hãy tìm các con số kèm đơn vị đo lường trong đề bài nhé."
                 elif start_phase == SocraticPhase.RECALL:
-                    q = "Tia sáng chiếu tới mặt gương gọi là tia tới. Em đoán xem tia sáng bị hắt ngược lại sẽ mang tên là tia gì nào?"
-                    hint = "Đó là tia phản xạ, và góc phản xạ luôn bằng góc tới đấy."
+                    q = "Trong bài học trước, khi muốn biết một vật chuyển động nhanh hay chậm, chúng mình dùng công thức tính tốc độ nào?"
+                    hint = "Tốc độ thể hiện quãng đường đi được trong 1 đơn vị thời gian."
                 elif start_phase == SocraticPhase.REASON:
-                    q = "Nếu góc tới là 0 độ (chiếu vuông góc với mặt gương), thì góc phản xạ cũng bằng bao nhiêu độ theo định luật trên?"
-                    hint = "Góc phản xạ i' = i = 0 độ, tức là tia sáng bật thẳng ngược trở lại theo phương cũ."
+                    q = "Trước khi áp dụng công thức, em thấy đơn vị của thời gian trong đề đã chuẩn giờ (h) hoặc giây (s) chưa?"
+                    hint = "Em hãy đối chiếu đơn vị của thời gian với đơn vị của tốc độ đề bài yêu cầu tìm nhé."
                 elif start_phase == SocraticPhase.CHECK:
-                    q = "Khi em đứng trước gương phẳng, ảnh của em nhìn thấy trong gương có độ lớn bằng em hay to hơn/nhỏ hơn?"
-                    hint = "Ảnh trong gương phẳng có độ lớn bằng đúng vật thật."
+                    q = "Sau khi tính xong, em hãy đối chiếu xem đơn vị của tốc độ là km/h hay m/s nhé?"
+                    hint = "Kiểm tra sự đồng nhất giữa quãng đường và thời gian."
                 else:
-                    q = "Em hãy nhắc lại ngắn gọn: Ánh sáng khi gặp gương phẳng sẽ xảy ra hiện tượng gì?"
-                    hint = "Hiện tượng phản xạ ánh sáng (bị hắt ngược trở lại)."
+                    q = "Em hãy tóm tắt lại 1 quy tắc quan trọng nhất vừa dùng trong bài toán này nhé."
+                    hint = "Ghi lại bài học hoặc quy tắc cốt lõi mà em đúc kết được."
                 return fb, q, hint, "offline", None
-
-            elif any(w in prob_lower for w in ["quang hợp", "lá cây", "diệp lục"]):
-                if start_phase == SocraticPhase.CLARIFY:
-                    q = "Lá cây cần những nguyên liệu đầu vào nào lấy từ đất và không khí để thực hiện quang hợp?"
-                    hint = "Nước (H2O) từ rễ và khí Carbon dioxide (CO2) qua khí khổng của lá."
-                else:
-                    q = "Nhờ ánh sáng mặt trời, lá cây tạo ra chất hữu cơ và giải phóng khí gì cho chúng ta thở?"
-                    hint = "Giải phóng khí Oxygen (O2)."
-                return fb, q, hint, "offline", None
-
-            if start_phase == SocraticPhase.CLARIFY:
-                q = "Đề bài có nhắc đến những con số nào kèm đơn vị đo? Em hãy liệt kê các con số đó ra giúp mình nhé."
-                hint = "Ví dụ: quãng đường là bao nhiêu km, thời gian là bao nhiêu phút?"
-            elif start_phase == SocraticPhase.RECALL:
-                q = "Trong bài học trước, khi muốn biết một vật chuyển động nhanh hay chậm, chúng mình dùng công thức tính tốc độ nào?"
-                hint = "Tốc độ bằng quãng đường chia cho thời gian."
-            elif start_phase == SocraticPhase.REASON:
-                q = "Trước khi áp dụng công thức, em thấy đơn vị của thời gian trong đề đã chuẩn giờ (h) hoặc giây (s) chưa?"
-                hint = "Nếu đề cho thời gian là 30 phút thì đổi ra giờ bằng bao nhiêu?"
-            elif start_phase == SocraticPhase.CHECK:
-                q = "Sau khi tính xong, em hãy đối chiếu xem đơn vị của tốc độ là km/h hay m/s nhé?"
-                hint = "Quãng đường km chia thời gian giờ sẽ ra km/h."
-            else:
-                q = "Em hãy tóm tắt lại 1 công thức quan trọng nhất vừa dùng trong bài toán này nhé."
-                hint = "Viết lại công thức tổng quát mà em ghi nhớ."
-            return fb, q, hint, "offline", None
-
-        # 3. Xử lý khi học sinh nhầm lẫn hoặc lạc đề (Misconception / Off-Topic) - Chế độ Offline / Fallback
-        if student_state in [StudentState.MISCONCEPTION, StudentState.OFF_TOPIC]:
-            fb = "Khái niệm này chưa phù hợp với hiện tượng chúng ta đang tìm hiểu rồi nè. Không sao, mình cùng xem xét lại nhé!"
-            if any(w in prob_lower for w in ["gương", "gương phẳng", "phản xạ", "ánh sáng"]):
-                q = "Khi chiếu một chùm sáng vào tấm gương phẳng nhẵn bóng, tia sáng sẽ đi xuyên qua luôn hay bị bề mặt gương hắt ngược trở lại?"
-                hint = "Mặt sau của gương phẳng thường được tráng một lớp bạc để phản chiếu ánh sáng."
-            elif any(w in prob_lower for w in ["quang hợp", "lá cây", "diệp lục"]):
-                q = "Để quang hợp, cây xanh chủ yếu sử dụng lá để hấp thụ ánh sáng và chất khí nào từ không khí?"
-                hint = "Khí này có công thức hóa học là CO2."
-            else:
-                q = "Em hãy nhìn lại đề bài: Đề bài đang cho những dữ kiện nào và muốn chúng ta tìm đại lượng gì?"
-                hint = "Xác định rõ dữ kiện cho trước và đại lượng cần tìm."
-            return fb, q, hint, "offline", None
 
         # 4. Xử lý khi học sinh trả lời đúng một phần (Partial) - Chế độ Offline / Fallback
         if student_state == StudentState.PARTIAL:
             fb = "Ý kiến của em đã đúng ở một phần dữ kiện, nhưng câu trả lời vẫn còn thiếu một điểm quan trọng nữa nè!"
             if any(w in prob_lower for w in ["gương", "gương phẳng", "phản xạ", "ánh sáng"]):
                 q = "Hiện tượng tia sáng bị bề mặt gương phẳng hắt ngược trở lại môi trường cũ được gọi tên khoa học là gì?"
-                hint = "Hiện tượng 'phản xạ' ánh sáng."
+                hint = "Hiện tượng tia sáng bị dội ngược lại mang từ ghép có từ 'xạ'."
             else:
                 q = "Em hãy bổ sung thêm dữ kiện hoặc công thức tương ứng để câu trả lời hoàn chỉnh hơn nhé?"
                 hint = "Đọc kỹ các dữ kiện đề bài đã cho."
@@ -626,17 +776,17 @@ class SocraticEngine:
             elif next_phase == SocraticPhase.RECALL:
                 fb = "Rất chính xác! Ánh sáng không đi xuyên qua mà bị hắt ngược trở lại môi trường cũ, hiện tượng đó gọi là 'Sự phản xạ ánh sáng'."
                 q = "Em có nhớ định luật phản xạ ánh sáng phát biểu về mối liên hệ giữa góc phản xạ (i') và góc tới (i) như thế nào không?"
-                hint = "Góc phản xạ i' luôn bằng góc tới i (i' = i)."
+                hint = "Em hãy nhớ lại tính đối xứng của tia tới và tia phản xạ qua đường pháp tuyến vuông góc nhé."
                 return fb, q, hint
             elif next_phase == SocraticPhase.REASON:
                 fb = "Rất chuẩn! Góc phản xạ luôn bằng góc tới (i' = i) và cùng nằm trong mặt phẳng tới."
                 q = "Vậy nếu em chiếu một tia sáng vuông góc với mặt gương phẳng (góc tới i = 0°), tia phản xạ sẽ bị bật ngược lại theo hướng nào?"
-                hint = "Tia sáng sẽ bị bật thẳng ngược trở lại theo đúng phương truyền tới."
+                hint = "Khi chiếu vuông góc (góc tới 0 độ), tia sáng sẽ phản xạ như thế nào so với phương chiếu tới?"
                 return fb, q, hint
             elif next_phase == SocraticPhase.CHECK:
                 fb = "Lập luận rất sắc bén! Em nắm hiện tượng rất chắc."
                 q = "Khi em đứng trước gương phẳng, ảnh của em nhìn thấy trong gương có đặc điểm gì (ảnh thật hay ảnh ảo, lớn hơn hay bằng em)?"
-                hint = "Ảnh trong gương phẳng là ảnh ảo, không hứng được trên màn và có độ lớn bằng đúng vật."
+                hint = "Em hãy liên hệ đến hình ảnh của chính mình khi soi vào gương phẳng mỗi ngày nhé."
                 return fb, q, hint
             elif next_phase == SocraticPhase.GENERALIZE:
                 if start_phase == SocraticPhase.GENERALIZE and student_state == StudentState.CORRECT:
@@ -646,7 +796,7 @@ class SocraticEngine:
                 else:
                     fb = "Tuyệt đỉnh! Em đã hiểu trọn vẹn quy luật đường truyền của ánh sáng khi gặp gương phẳng!"
                     q = "Bây giờ, em hãy tự đúc kết lại kiến thức cốt lõi: 2 quy luật quan trọng nhất của định luật phản xạ ánh sáng trên gương phẳng là gì?"
-                    hint = "1. Tia phản xạ nằm trong mặt phẳng tới; 2. Góc phản xạ bằng góc tới (i' = i)."
+                    hint = "Nhớ lại 2 quy luật: một về mặt phẳng chứa tia và một về mối liên hệ giữa hai góc."
                 return fb, q, hint
 
         # Xử lý chuyên sâu cho câu hỏi Sinh học / Quang hợp
@@ -654,22 +804,22 @@ class SocraticEngine:
             if next_phase == SocraticPhase.CLARIFY:
                 fb = "Đúng hướng rồi! Quá trình quang hợp diễn ra chủ yếu ở lá cây."
                 q = "Lá cây cần những nguyên liệu đầu vào nào lấy từ đất và không khí để quang hợp?"
-                hint = "Nước từ rễ và khí Carbon dioxide (CO2) qua khí khổng của lá."
+                hint = "Cây hút chất lỏng gì dưới đất qua rễ và hấp thụ khí gì trong không khí qua lá?"
                 return fb, q, hint
             elif next_phase == SocraticPhase.RECALL:
                 fb = "Chính xác! Cây lấy nước và khí CO2 để quang hợp."
                 q = "Nhờ năng lượng ánh sáng mặt trời, lá cây biến đổi nước và CO2 thành những chất nào?"
-                hint = "Tạo ra chất hữu cơ (Glucose/tinh bột) và giải phóng khí Oxygen (O2)."
+                hint = "Chất dinh dưỡng nuôi cây và chất khí cần thiết cho sự sống của con người và động vật."
                 return fb, q, hint
             elif next_phase == SocraticPhase.REASON:
                 fb = "Rất chuẩn! Cây tổng hợp chất hữu cơ nuôi cây và tạo ra O2 cho sự sống."
                 q = "Vì sao vào ban đêm khi không có ánh sáng, chúng ta không nên để nhiều chậu hoa cây cảnh trong phòng ngủ đóng kín cửa?"
-                hint = "Ban đêm không có ánh sáng để quang hợp, cây chỉ hô hấp hút O2 và thải CO2."
+                hint = "Ban đêm không có ánh sáng thì cây xanh có thực hiện được quang hợp không?"
                 return fb, q, hint
             elif next_phase == SocraticPhase.CHECK:
                 fb = "Lập luận rất thực tế và chính xác!"
                 q = "Em hãy kiểm tra lại: Quá trình quang hợp có ý nghĩa gì đối với việc điều hòa khí hậu Trái Đất?"
-                hint = "Quang hợp giúp giảm hiệu ứng nhà kính bằng cách hấp thụ bớt khí CO2."
+                hint = "Cây xanh hấp thụ lượng lớn khí carbon dioxide giúp thanh lọc bầu khí quyển."
                 return fb, q, hint
             elif next_phase == SocraticPhase.GENERALIZE:
                 if start_phase == SocraticPhase.GENERALIZE and student_state == StudentState.CORRECT:
@@ -679,7 +829,40 @@ class SocraticEngine:
                 else:
                     fb = "Tuyệt vời! Em đã nắm vững bản chất của quá trình quang hợp."
                     q = "Bây giờ, em hãy tự đúc kết lại kiến thức cốt lõi: Phương trình chữ của quá trình quang hợp ở thực vật là gì?"
-                    hint = "Nước + Carbon dioxide + Ánh sáng -> Chất hữu cơ + Oxygen."
+                    hint = "Sắp xếp theo thứ tự: Nguyên liệu đầu vào --(Điều kiện)--> Sản phẩm tạo thành."
+                return fb, q, hint
+
+        # Xử lý chuyên sâu cho câu hỏi Hóa học / Hiện tượng thanh sắt bị đổi màu (Gỉ sắt)
+        if any(w in prob_lower for w in ["gỉ sắt", "rỉ sắt", "sắt", "kim loại", "gỉ", "gỉ kim loại", "rỉ"]):
+            if next_phase == SocraticPhase.CLARIFY:
+                fb = "Em đang quan sát rất đúng hướng đó! Cùng suy nghĩ từ hiện tượng thực tế xung quanh chúng mình nhé."
+                q = "Em hãy quan sát xem thời tiết hoặc môi trường xung quanh như thế nào (ví dụ trời mưa hay nắng, khô ráo hay ẩm ướt) sẽ làm thanh sắt bên ngoài nhanh bị đổi màu hơn?"
+                hint = "Em hãy nhớ lại chiếc đinh hoặc thanh sắt để ngoài trời mưa ẩm so với để trong nhà khô ráo nhé."
+                return fb, q, hint
+            elif next_phase == SocraticPhase.RECALL:
+                fb = "Rất chính xác! Độ ẩm và nước mưa làm thanh sắt biến đổi rất nhanh."
+                q = "Khi thanh sắt để ngoài trời ẩm lâu ngày bị đổi màu, em quan sát thấy bề mặt của nó chuyển sang màu gì và lớp vảy đó cứng bóng hay xốp mềm?"
+                hint = "Quan sát lớp vảy màu nâu đỏ bám bên ngoài thanh sắt để ngoài mưa gió nhé."
+                return fb, q, hint
+            elif next_phase == SocraticPhase.REASON:
+                fb = "Quan sát rất tinh tế! Bề mặt thanh sắt đã chuyển sang màu nâu đỏ và mủn ra."
+                q = "Em hãy quan sát xem người ta thường làm gì với những cánh cổng sắt hay hàng rào sắt (ví dụ quét sơn hay bôi dầu mỡ) để chúng không bị đổi màu nâu đỏ khi gặp mưa gió?"
+                hint = "Lớp sơn bên ngoài giúp ngăn bề mặt sắt tiếp xúc trực tiếp với không khí ẩm ướt."
+                return fb, q, hint
+            elif next_phase == SocraticPhase.CHECK:
+                fb = "Rất thực tế và chuẩn xác!"
+                q = "Theo em, khi thanh sắt bị đổi màu và đóng thành lớp vảy nâu đỏ dày lên, cầm vào thấy nặng hơn hay nhẹ hơn thanh sắt sạch ban đầu?"
+                hint = "Thanh sắt ban đầu đã giữ lại thêm các phần tử từ không khí ẩm bám chặt vào."
+                return fb, q, hint
+            elif next_phase == SocraticPhase.GENERALIZE:
+                if start_phase == SocraticPhase.GENERALIZE and student_state == StudentState.CORRECT:
+                    fb = "Xuất sắc! Em đã tự mình làm chủ bản chất của hiện tượng biến đổi tạo chất mới từ thanh sắt!"
+                    q = "Thầy đã mở khóa Sơ đồ Tư duy Dạng Nhánh cho em rồi đó! Em hãy mở sơ đồ ra để xem các nhánh kiến thức và ghi nhớ bài học nhé!"
+                    hint = "Em hãy bấm nút 'Xem Sơ đồ Tư duy Dạng Nhánh 🌿' để xem cây tri thức rẽ nhánh và lưu vào Sổ tay nhé!"
+                else:
+                    fb = "Tuyệt vời! Em đã nắm vững bản chất của hiện tượng này."
+                    q = "Bây giờ, em hãy tự đúc kết lại: Dấu hiệu thực tế nào chứng minh thanh sắt để ngoài trời mưa ẩm đã bị biến đổi thành một chất mới?"
+                    hint = "Dấu hiệu xuất hiện màu sắc mới và tính chất xốp giòn khác biệt hoàn toàn."
                 return fb, q, hint
 
         # Nếu đang ở Chế độ Demo Offline (FR-10): Dùng lời thoại chuẩn đã duyệt sư phạm CHỈ KHI khớp bài mẫu
@@ -719,7 +902,7 @@ class SocraticEngine:
                 else:
                     fb = "Ý đúc kết của em cần xem xét và điều chỉnh lại một chút nhé!"
                     q = "Em hãy nhìn lại quy luật mà chúng mình vừa tìm ra, em hãy thử tự đúc kết lại một câu ngắn gọn về kiến thức cốt lõi của bài này nhé?"
-                    hint = "Gợi ý: Tự đúc kết 1 câu về công thức hoặc bài học quan trọng nhất (ví dụ: v = s / t)."
+                    hint = "Gợi ý: Tự đúc kết 1 câu ngắn gọn về bài học hoặc quy tắc cốt lõi mà em vừa làm chủ nhé."
             else:
                 fb = "Tuyệt vời! Em đã hiểu bài và tự mình chinh phục trọn vẹn bài toán KHTN này!"
                 q = "Bây giờ, em hãy tự đúc kết lại kiến thức cốt lõi (quy tắc, bài học hoặc công thức quan trọng nhất) theo cách hiểu của em nhé!"

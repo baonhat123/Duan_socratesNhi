@@ -653,8 +653,8 @@ class SocraticChatView:
     def _show_completion_banner(self, auto_update: bool = True):
         """Hiển thị thông báo khi khép phiên ở Pha 5 (Generalize) sau khi học sinh đúc kết đạt."""
         btn_open_mindmap = ft.FilledButton(
-            "Khám Phá Sơ đồ Tư duy Dạng Nhánh 🌿",
-            icon=ft.Icons.WORKSPACE_PREMIUM_ROUNDED,
+            "Kiểm Tra Củng Cố & Xem Sơ Đồ 📝🌿",
+            icon=ft.Icons.AUTO_AWESOME_ROUNDED,
             style=ft.ButtonStyle(bgcolor=ft.Colors.GREEN_700, color=ft.Colors.WHITE),
             on_click=lambda _: self.on_session_complete({
                 "turn_count": self.engine.state_machine.turn_count,

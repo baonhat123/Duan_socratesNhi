@@ -34,35 +34,35 @@ OFFLINE_SAMPLE_PROBLEMS: Dict[str, OfflineSampleProblem] = {
                 phase_name="clarify",
                 feedback="Chào em! Chúng mình cùng bắt đầu khám phá bài toán chuyển động nhé.",
                 question="Đề bài cho biết quãng đường và thời gian là bao nhiêu? Đơn vị của chúng đã đồng nhất để tính ra km/h chưa?",
-                micro_hint="Đề bài cho s = 12 km và t = 30 phút. Em hãy chú ý đơn vị phút nhé.",
+                micro_hint="Em hãy chú ý xem đề bài cho thời gian bằng phút hay bằng giờ nhé.",
                 quick_replies=["s = 12 km, t = 30 phút", "Cần đổi 30 phút ra giờ", "Thời gian là phút, cần đổi ra giờ"]
             ),
             "recall": SocraticPhaseDialogue(
                 phase_name="recall",
                 feedback="Rất tốt! Em đã phát hiện ra dữ kiện và sự chưa đồng nhất đơn vị thời gian.",
                 question="Để tính tốc độ khi biết quãng đường s và thời gian t, em sử dụng công thức nào đã học?",
-                micro_hint="Công thức liên hệ tốc độ, quãng đường và thời gian: v = s / t.",
+                micro_hint="Tốc độ thể hiện quãng đường đi được trong 1 đơn vị thời gian. Phép toán nào giúp chia đều quãng đường cho thời gian nhỉ?",
                 quick_replies=["v = s / t", "v = s chia t", "Tốc độ bằng quãng đường chia thời gian"]
             ),
             "reason": SocraticPhaseDialogue(
                 phase_name="reason",
                 feedback="Chính xác! Công thức v = s / t hoàn toàn đúng.",
                 question="Trước khi thay số vào tính, em hãy đổi 30 phút sang đơn vị giờ (h) bằng cách nào?",
-                micro_hint="1 giờ có 60 phút. Muốn đổi từ phút sang giờ, ta lấy số phút chia cho 60.",
+                micro_hint="1 giờ có 60 phút. Để đổi từ phút sang giờ, em hãy so sánh 30 phút với 60 phút nhé.",
                 quick_replies=["30 phút = 30/60 = 0.5 giờ", "30 phút = 1/2 giờ", "Chia cho 60 ra 0.5 h"]
             ),
             "check": SocraticPhaseDialogue(
                 phase_name="check",
                 feedback="Lập luận rất chuẩn xác! Bước đổi đơn vị thời gian sang giờ rất quan trọng.",
                 question="Sau khi tính ra tốc độ theo km/h, để đổi sang đơn vị m/s, em chia cho con số nào?",
-                micro_hint="Quy tắc chuẩn KHTN 7: đổi từ km/h sang m/s ta chia cho 3.6.",
+                micro_hint="Vì 1 km = 1000 m và 1 h = 3600 s, em thử tìm con số quy đổi quen thuộc khi lấy 3600 chia 1000 nhé.",
                 quick_replies=["Chia cho 3.6", "1 m/s = 3.6 km/h nên ta lấy kết quả chia 3.6", "Chia cho 3.6 để ra m/s"]
             ),
             "generalize": SocraticPhaseDialogue(
                 phase_name="generalize",
                 feedback="Tuyệt vời! Em đã làm chủ trọn vẹn phương pháp giải bài toán tính tốc độ!",
                 question="Em hãy tóm tắt lại: Khi tính tốc độ chuyển động, cần đặc biệt lưu ý bước kiểm tra nào trước khi thay số?",
-                micro_hint="Luôn đồng nhất đơn vị đo (km tương ứng với giờ, mét tương ứng với giây).",
+                micro_hint="Luôn đối chiếu sự đồng nhất giữa các đơn vị đo (km tương ứng với giờ, mét tương ứng với giây).",
                 quick_replies=["Luôn đổi đơn vị thời gian về cùng hệ đo", "Đồng nhất km đi với h, m đi với s", "Kiểm tra đơn vị trước khi tính"]
             )
         }
@@ -85,35 +85,35 @@ OFFLINE_SAMPLE_PROBLEMS: Dict[str, OfflineSampleProblem] = {
                 phase_name="clarify",
                 feedback="Chào em! Đoàn tàu đang chạy với tốc độ ổn định nè.",
                 question="Đề bài cho biết những đại lượng nào và yêu cầu chúng mình tìm đại lượng gì?",
-                micro_hint="Tìm xem v và t bằng bao nhiêu, và câu hỏi yêu cầu tính s hay v nhé.",
+                micro_hint="Em hãy tìm xem đề bài cho con số gắn liền với km/h và phút là đại lượng nào nhé.",
                 quick_replies=["Cho v = 45 km/h, t = 20 phút, tìm s", "Tìm quãng đường s", "Cho tốc độ và thời gian"]
             ),
             "recall": SocraticPhaseDialogue(
                 phase_name="recall",
                 feedback="Đúng rồi! Chúng mình cần tìm quãng đường s.",
-                question="Từ công thức gốc v = s / t, em hãy suy ra công thức để tính quãng đường s?",
-                micro_hint="Muốn tìm số bị chia (quãng đường), ta lấy thương nhân với số chia: s = v * t.",
+                question="Để tính quãng đường s khi đã biết tốc độ v và thời gian t, em sử dụng mối liên hệ hay công thức nào giữa ba đại lượng này?",
+                micro_hint="Em hãy nhớ lại tam giác đại lượng: muốn tìm đại lượng ở trên đỉnh, ta nhân hai đại lượng ở dưới đáy.",
                 quick_replies=["s = v * t", "s = v nhân t", "Quãng đường bằng tốc độ nhân thời gian"]
             ),
             "reason": SocraticPhaseDialogue(
                 phase_name="reason",
                 feedback="Xuất sắc! Công thức s = v * t rất chính xác.",
                 question="Tốc độ đang tính theo km/h, vậy thời gian 20 phút cần chuyển đổi ra đơn vị nào trước khi nhân?",
-                micro_hint="Cần đổi 20 phút ra giờ bằng cách lấy 20 chia cho 60 (ra phân số 1/3 giờ).",
+                micro_hint="1 giờ có 60 phút. Để đổi phút sang giờ, em hãy so sánh 20 phút với 60 phút xem bằng mấy phần giờ nhé.",
                 quick_replies=["Đổi 20 phút ra giờ: 20/60 = 1/3 h", "Đổi ra giờ bằng cách chia 60", "20 phút = 1/3 giờ"]
             ),
             "check": SocraticPhaseDialogue(
                 phase_name="check",
                 feedback="Lập luận rất sắc bén! Phép đổi đơn vị 20 phút = 1/3 giờ rất chuẩn.",
                 question="Khi lấy v (km/h) nhân với t (h), đơn vị của kết quả quãng đường s thu được sẽ là gì?",
-                micro_hint="km/h nhân h thì đơn vị giờ triệt tiêu, còn lại kilômét (km).",
+                micro_hint="Khi nhân km/h với giờ (h), đơn vị thời gian giờ sẽ triệt tiêu lẫn nhau, còn lại đơn vị độ dài.",
                 quick_replies=["Đơn vị là km (kilômét)", "Đơn vị là km", "Quãng đường có đơn vị là kilômét"]
             ),
             "generalize": SocraticPhaseDialogue(
                 phase_name="generalize",
                 feedback="Chúc mừng em! Em đã tự mình giải quyết bài toán biến đổi công thức rất khéo léo.",
                 question="Theo em, tam giác công thức giữa s, v, t giúp em ghi nhớ các phép biến đổi như thế nào?",
-                micro_hint="s ở đỉnh tam giác, v và t ở hai góc đáy: s = v*t; v = s/t; t = s/v.",
+                micro_hint="Em hãy hình dung tam giác với quãng đường ở đỉnh, tốc độ và thời gian ở hai góc đáy nhé.",
                 quick_replies=["s = v*t, v = s/t, t = s/v", "Nhớ s ở trên cùng, v và t ở dưới", "Ghi nhớ bộ ba đại lượng s, v, t"]
             )
         }
@@ -136,35 +136,35 @@ OFFLINE_SAMPLE_PROBLEMS: Dict[str, OfflineSampleProblem] = {
                 phase_name="clarify",
                 feedback="Chào em! Bài toán này gắn liền với đời sống hàng ngày của chúng mình.",
                 question="Đề bài cho biết khối lượng của bao gạo là bao nhiêu và hỏi đại lượng nào?",
-                micro_hint="Khối lượng m = 45 kg, đề bài hỏi trọng lượng P.",
+                micro_hint="Em hãy tìm con số kèm đơn vị kg trong đề bài và đọc lại câu hỏi xem cần tìm đại lượng nào nhé.",
                 quick_replies=["Khối lượng m = 45 kg, hỏi trọng lượng P", "Cho m = 45 kg, tìm P", "Tìm trọng lượng của bao gạo"]
             ),
             "recall": SocraticPhaseDialogue(
                 phase_name="recall",
                 feedback="Chính xác! Đề bài hỏi trọng lượng P của bao gạo.",
                 question="Ở gần bề mặt Trái Đất, trọng lượng P và khối lượng m của một vật liên hệ với nhau qua hệ thức nào?",
-                micro_hint="Hệ thức gần đúng trong SGK KHTN 7: P = 10 * m.",
+                micro_hint="Ở Trái Đất, trung bình mỗi 1 kg khối lượng sẽ chịu lực hút tương đương khoảng 10 lần tác dụng lên nó.",
                 quick_replies=["P = 10m", "P = 10 * m", "Trọng lượng bằng 10 lần khối lượng"]
             ),
             "reason": SocraticPhaseDialogue(
                 phase_name="reason",
                 feedback="Rất chuẩn! P = 10m là công thức cốt lõi.",
                 question="Khối lượng m của vật bắt buộc phải có đơn vị là gì thì mới áp dụng được công thức P = 10m?",
-                micro_hint="Trong hệ đo lường quốc tế, khối lượng m phải tính bằng kilôgam (kg).",
+                micro_hint="Em hãy nhớ lại đơn vị khối lượng chuẩn trong hệ đo lường KHTN (gam hay kilôgam) nhé.",
                 quick_replies=["Bắt buộc là kilôgam (kg)", "Đơn vị chuẩn là kg", "Khối lượng phải là kg"]
             ),
             "check": SocraticPhaseDialogue(
                 phase_name="check",
                 feedback="Rất chính xác! Đề bài đã cho sẵn đơn vị kg nên không cần đổi nữa.",
                 question="Đơn vị chuẩn của trọng lượng (và mọi loại lực) trong hệ đo lường KHTN là gì?",
-                micro_hint="Được đặt theo tên nhà bác học Isaac Newton, ký hiệu là N.",
+                micro_hint="Đơn vị lực được đặt theo tên nhà bác học người Anh đã phát hiện ra lực vạn vật hấp dẫn.",
                 quick_replies=["Newton (kí hiệu N)", "Đơn vị Newton (N)", "Kí hiệu là N"]
             ),
             "generalize": SocraticPhaseDialogue(
                 phase_name="generalize",
                 feedback="Em làm rất tốt! Phân biệt rành mạch giữa khối lượng và trọng lượng là nền tảng quan trọng.",
                 question="Em hãy nêu sự khác nhau cơ bản nhất giữa khối lượng (kg) và trọng lượng (N)?",
-                micro_hint="Khối lượng chỉ lượng chất chứa trong vật; trọng lượng là lực hút Trái Đất tác dụng lên vật.",
+                micro_hint="Em hãy chú ý: một đại lượng đo lượng chất trong vật, đại lượng kia là lực hút của Trái Đất.",
                 quick_replies=["Khối lượng là lượng chất (kg), trọng lượng là lực hút (N)", "Một cái là chất (kg), một cái là lực (N)"]
             )
         }
@@ -187,35 +187,35 @@ OFFLINE_SAMPLE_PROBLEMS: Dict[str, OfflineSampleProblem] = {
                 phase_name="clarify",
                 feedback="Chào em! Đây là thí nghiệm đo lực ma sát rất quen thuộc trong phòng thực hành KHTN.",
                 question="Trong đề bài, cụm từ nào mô tả trạng thái chuyển động của khối gỗ khi đang bị kéo?",
-                micro_hint="Chú ý từ khóa: 'chuyển động thẳng đều'.",
+                micro_hint="Em hãy tìm cụm từ mô tả vận tốc không đổi và đường đi thẳng của khối gỗ nhé.",
                 quick_replies=["Chuyển động thẳng đều", "Khối gỗ trượt thẳng đều", "F_kéo = 15 N và thẳng đều"]
             ),
             "recall": SocraticPhaseDialogue(
                 phase_name="recall",
                 feedback="Rất tinh tế! Từ khóa 'chuyển động thẳng đều' là chìa khóa mở bài toán.",
                 question="Khi một vật đang chuyển động thẳng đều dưới tác dụng của hai lực nằm ngang, hai lực đó có quan hệ gì với nhau?",
-                micro_hint="Đó là hai lực cân bằng (cùng phương, ngược chiều, cùng độ lớn).",
+                micro_hint="Hai lực cùng phương, ngược chiều mà triệt tiêu tác dụng của nhau thì gọi là hai lực gì nhỉ?",
                 quick_replies=["Hai lực cân bằng", "Hai lực có độ lớn bằng nhau", "Cùng độ lớn, ngược chiều"]
             ),
             "reason": SocraticPhaseDialogue(
                 phase_name="reason",
                 feedback="Chính xác! Lực kéo và lực ma sát trượt là hai lực cân bằng nhau.",
-                question="Vì hai lực này cân bằng, em hãy suy luận xem độ lớn của lực ma sát trượt so với lực kéo 15 N như thế nào?",
-                micro_hint="Hai lực cân bằng có cùng độ lớn, nên F_ms = F_kéo.",
+                question="Vì hai lực này cân bằng, em hãy suy luận xem độ lớn của lực ma sát trượt so với lực kéo của vật có quan hệ như thế nào?",
+                micro_hint="Hai lực cân bằng nhau thì độ lớn của chúng sẽ có quan hệ bằng nhau hay lớn hơn/nhỏ hơn?",
                 quick_replies=["Bằng nhau, F_ms = 15 N", "F_ms có cùng độ lớn với F_kéo", "Độ lớn bằng 15 N"]
             ),
             "check": SocraticPhaseDialogue(
                 phase_name="check",
                 feedback="Lập luận rất logic và chặt chẽ!",
                 question="Nếu bề mặt bàn được bôi một lớp dầu trơn nhẵn, em dự đoán lực kéo cần thiết để khối gỗ trượt đều sẽ tăng hay giảm?",
-                micro_hint="Dầu làm giảm ma sát tiếp xúc, nên lực kéo cần thiết sẽ giảm đi.",
+                micro_hint="Dầu nhớt làm bề mặt tiếp xúc trơn láng hơn, giúp cản trở chuyển động ít hơn.",
                 quick_replies=["Lực kéo sẽ giảm vì ma sát giảm", "Giảm đi vì bề mặt trơn hơn", "Ma sát giảm nên kéo nhẹ hơn"]
             ),
             "generalize": SocraticPhaseDialogue(
                 phase_name="generalize",
                 feedback="Tuyệt vời! Em đã hiểu sâu sắc bản chất của lực cản trở và lực cân bằng.",
                 question="Trong đời sống, em hãy kể tên một ví dụ lực ma sát có ích và một ví dụ ma sát có hại?",
-                micro_hint="Có ích: đế giày giúp không trượt té; Có hại: làm mòn lốp xe, nóng trục quay.",
+                micro_hint="Em hãy nghĩ đến việc đi giày không bị trượt ngã và hiện tượng lốp xe bị mòn theo thời gian nhé.",
                 quick_replies=["Có ích giúp đi lại không ngã; Có hại làm mòn lốp xe", "Ma sát ở phanh xe có ích; mòn xích xe có hại"]
             )
         }
@@ -242,35 +242,35 @@ OFFLINE_SAMPLE_PROBLEMS: Dict[str, OfflineSampleProblem] = {
                 phase_name="clarify",
                 feedback="Chào em! Chúng mình cùng tìm hiểu định luật quan trọng nhất của hóa học nhé.",
                 question="Trước phản ứng có những chất tham gia nào và sau phản ứng sinh ra chất sản phẩm nào?",
-                micro_hint="Chất tham gia: Carbon và Oxygen. Sản phẩm: Khí Carbon dioxide (CO₂).",
+                micro_hint="Chất tham gia là chất ban đầu trước khi cháy, sản phẩm là chất mới sinh ra sau khi đốt than.",
                 quick_replies=["Tham gia: Carbon + Oxygen; Sản phẩm: CO₂", "Carbon cháy trong Oxygen tạo ra CO₂", "Chất phản ứng là C và O₂"]
             ),
             "recall": SocraticPhaseDialogue(
                 phase_name="recall",
                 feedback="Rất chính xác! Em đã xác định đúng chất tham gia và sản phẩm.",
                 question="Nội dung chính của Định luật bảo toàn khối lượng phát biểu về mối liên hệ giữa khối lượng chất tham gia và sản phẩm như thế nào?",
-                micro_hint="Tổng khối lượng các chất tham gia bằng tổng khối lượng các sản phẩm: m_tham_gia = m_san_pham.",
+                micro_hint="Theo định luật bảo toàn, khối lượng của các chất trước và sau phản ứng có bị hao hụt hay tăng thêm không?",
                 quick_replies=["Tổng m chất tham gia = Tổng m sản phẩm", "m_Carbon + m_Oxygen = m_CO₂", "Khối lượng trước và sau phản ứng bằng nhau"]
             ),
             "reason": SocraticPhaseDialogue(
                 phase_name="reason",
                 feedback="Chuẩn xác! Biểu thức m_C + m_O₂ = m_CO₂ là chìa khóa của bài toán.",
                 question="Muốn tìm khối lượng khí oxygen đã phản ứng (m_O₂), em thực hiện phép tính biến đổi như thế nào từ biểu thức trên?",
-                micro_hint="Chuyển vế: m_O₂ = m_CO₂ - m_C.",
+                micro_hint="Khi đã biết tổng khối lượng sản phẩm và khối lượng một chất tham gia, ta dùng phép toán nào để tìm chất còn lại?",
                 quick_replies=["m_O₂ = m_CO₂ - m_C", "Lấy khối lượng CO₂ trừ đi khối lượng Carbon", "Lấy 44 trừ đi 12"]
             ),
             "check": SocraticPhaseDialogue(
                 phase_name="check",
                 feedback="Lập luận toán học trong hóa học rất chặt chẽ!",
                 question="Nếu thực hiện phản ứng này trong một cái chén để hở ngoài không khí, khối lượng còn lại trong chén sẽ nặng hơn hay nhẹ hơn ban đầu, vì sao?",
-                micro_hint="Khí CO₂ sinh ra sẽ bay vào không khí, nên phần còn lại trong chén sẽ giảm đi.",
+                micro_hint="Em hãy chú ý xem sản phẩm tạo thành ở thể rắn hay thể khí và nó có bay vào không khí không nhé.",
                 quick_replies=["Nhẹ hơn vì khí CO₂ bay đi mất", "Giảm khối lượng do khí thoát ra", "Khí bay mất nên chén nhẹ hơn"]
             ),
             "generalize": SocraticPhaseDialogue(
                 phase_name="generalize",
                 feedback="Tuyệt vời! Em đã nắm rất vững định luật bảo toàn khối lượng của Lomonosov - Lavoisier.",
                 question="Em hãy rút ra kết luận: Khi áp dụng định luật bảo toàn khối lượng, cần chú ý điều gì đối với các chất khí sinh ra?",
-                micro_hint="Phải tính cả khối lượng của chất khí bay lên hoặc chất kết tủa, không được bỏ sót.",
+                micro_hint="Em hãy lưu ý: dù chất khí nhẹ và bay lên không khí, ta có được bỏ qua nó trong phương trình khối lượng không?",
                 quick_replies=["Phải tính đủ cả chất khí bay ra", "Không được bỏ qua chất khí", "Tính toàn bộ các chất tham gia và sản phẩm"]
             )
         }
@@ -294,35 +294,35 @@ OFFLINE_SAMPLE_PROBLEMS: Dict[str, OfflineSampleProblem] = {
                 phase_name="clarify",
                 feedback="Chào em! Nung đá vôi là quy trình sản xuất vôi tôi lâu đời trong dân gian.",
                 question="Chất ban đầu đem nung là chất nào và sinh ra hai chất mới nào sau phản ứng?",
-                micro_hint="Ban đầu: CaCO₃ (100 g). Sinh ra: CaO (56 g) và khí CO₂.",
+                micro_hint="Em hãy tìm tên chất rắn ban đầu đem nung và hai chất được tạo thành ghi trong đề bài nhé.",
                 quick_replies=["Ban đầu là đá vôi CaCO₃, sinh ra CaO và CO₂", "CaCO₃ phân hủy thành CaO và CO₂", "Chất phản ứng: CaCO₃, sản phẩm: CaO + CO₂"]
             ),
             "recall": SocraticPhaseDialogue(
                 phase_name="recall",
                 feedback="Đúng rồi! Phản ứng xảy ra là: Đá vôi → Vôi sống + Khí carbon dioxide.",
                 question="Theo định luật bảo toàn khối lượng, tổng khối lượng của sản phẩm (CaO + CO₂) có bằng khối lượng đá vôi ban đầu không?",
-                micro_hint="Định luật bảo toàn khối lượng luôn đúng: m_CaCO₃ = m_CaO + m_CO₂.",
+                micro_hint="Định luật bảo toàn khối lượng khẳng định tổng khối lượng vật chất trước và sau phản ứng có quan hệ thế nào?",
                 quick_replies=["Bằng nhau: m_CaCO₃ = m_CaO + m_CO₂", "Luôn bằng nhau", "Tổng khối lượng sản phẩm bằng khối lượng chất ban đầu"]
             ),
             "reason": SocraticPhaseDialogue(
                 phase_name="reason",
                 feedback="Rất chính xác! m_CaCO₃ = m_CaO + m_CO₂.",
                 question="Để tìm khối lượng khí CO₂ thoát ra ngoài, em làm thế nào từ khối lượng 100 g và 56 g?",
-                micro_hint="Khối lượng CO₂ = m_CaCO₃ - m_CaO.",
+                micro_hint="Tổng khối lượng tạo thành bằng 100 g. Đã có 56 g vôi sống thì lượng khí bay đi chiếm phần còn lại như thế nào?",
                 quick_replies=["Lấy m_CaCO₃ trừ m_CaO", "m_CO₂ = 100 - 56", "Lấy tổng trừ đi chất đã biết"]
             ),
             "check": SocraticPhaseDialogue(
                 phase_name="check",
                 feedback="Lập luận rất sắc bén và chuẩn xác!",
                 question="Em hãy cộng lại khối lượng của CaO và CO₂ xem có đúng bằng 100 g ban đầu không?",
-                micro_hint="Cộng khối lượng CaO và CO₂ xem có đúng bằng 100 g đá vôi ban đầu không nhé.",
+                micro_hint="Cộng khối lượng chất rắn còn lại và khí thoát ra xem có khớp với số liệu ban đầu không nhé.",
                 quick_replies=["56 + 44 = 100 g, hoàn toàn trùng khớp", "Đúng bằng 100 g", "Đã kiểm tra lại và đúng"]
             ),
             "generalize": SocraticPhaseDialogue(
                 phase_name="generalize",
                 feedback="Xuất sắc! Em đã chứng minh rằng vật chất không tự nhiên sinh ra hay mất đi.",
                 question="Tại sao khi đốt cháy hay nung chất ngoài trời, người ta hay có cảm giác khối lượng bị 'hao hụt'?",
-                micro_hint="Do có các chất khí nhẹ hơn bay lên không khí mà mắt thường khó nhìn thấy.",
+                micro_hint="Em hãy chú ý trạng thái của các chất mới sinh ra, chúng có dễ bay lơ lửng vào không khí không?",
                 quick_replies=["Vì chất khí sinh ra bay vào không khí", "Khí bay mất nên tưởng hao hụt", "Do khí thoát ra môi trường"]
             )
         }
@@ -345,35 +345,35 @@ OFFLINE_SAMPLE_PROBLEMS: Dict[str, OfflineSampleProblem] = {
                 phase_name="clarify",
                 feedback="Chào em! Pha chế nước muối sinh lý là một ứng dụng rất phổ biến trong y tế.",
                 question="Đề bài cho biết chất tan là gì, dung môi là gì và khối lượng của từng chất là bao nhiêu?",
-                micro_hint="Chất tan là muối ăn (15 g), dung môi là nước (185 g).",
+                micro_hint="Chất bị hòa tan là chất tan, còn chất lỏng dùng để hòa tan được gọi là dung môi.",
                 quick_replies=["Chất tan: muối 15 g; Dung môi: nước 185 g", "m_ct = 15 g, m_dm = 185 g", "Muối 15 g và nước 185 g"]
             ),
             "recall": SocraticPhaseDialogue(
                 phase_name="recall",
                 feedback="Đúng rồi! Em đã phân biệt rất rõ giữa chất tan và dung môi.",
                 question="Dung dịch là hỗn hợp của chất tan và dung môi. Vậy khối lượng dung dịch (m_dd) được tính bằng công thức nào?",
-                micro_hint="m_dd = m_ct + m_dm (khối lượng dung dịch = khối lượng chất tan + khối lượng dung môi).",
+                micro_hint="Dung dịch gồm cả chất tan và dung môi hòa quyện, nên khối lượng tổng sẽ là tổng của hai thành phần này.",
                 quick_replies=["m_dd = m_ct + m_dm", "Khối lượng dung dịch = chất tan + nước", "m_dd bằng tổng chất tan và dung môi"]
             ),
             "reason": SocraticPhaseDialogue(
                 phase_name="reason",
                 feedback="Chính xác! m_dd = 15 + 185 = 200 g.",
                 question="Công thức chuẩn để tính nồng độ phần trăm C% của dung dịch trong SGK KHTN 7 là gì?",
-                micro_hint="C% = (m_ct / m_dd) * 100%.",
+                micro_hint="Nồng độ phần trăm là tỷ lệ khối lượng chất tan chiếm trong toàn bộ khối lượng dung dịch nhân 100%.",
                 quick_replies=["C% = (m_ct / m_dd) * 100%", "C% = chất tan chia dung dịch nhân 100", "Lấy m_ct chia m_dd rồi nhân 100%"]
             ),
             "check": SocraticPhaseDialogue(
                 phase_name="check",
                 feedback="Rất xuất sắc! Nhớ chia cho m_dd chứ không chia cho m_dm nhé!",
                 question="Theo em, nếu ta cho thêm nước vào dung dịch trên thì nồng độ phần trăm C% sẽ tăng lên hay giảm đi?",
-                micro_hint="Thêm dung môi nước thì dung dịch bị pha loãng ra, nên C% sẽ giảm đi.",
+                micro_hint="Thêm dung môi nước thì dung dịch bị pha loãng hơn, nồng độ sẽ thay đổi theo hướng nào?",
                 quick_replies=["C% sẽ giảm đi vì dung dịch bị loãng", "Giảm nồng độ vì thêm nước", "Dung dịch loãng hơn nên C% giảm"]
             ),
             "generalize": SocraticPhaseDialogue(
                 phase_name="generalize",
                 feedback="Tuyệt vời! Em đã tránh được lỗi sai kinh điển nhất của học sinh khi tính nồng độ.",
                 question="Lỗi sai phổ biến nhất khi tính C% là gì và cách phòng tránh như thế nào?",
-                micro_hint="Lỗi sai là lấy chất tan chia cho nước. Phải luôn cộng m_dd trước khi tính C%.",
+                micro_hint="Em hãy lưu ý: mẫu số trong công thức tính C% là khối lượng của nước hay của cả dung dịch?",
                 quick_replies=["Quên cộng khối lượng dung môi để ra m_dd", "Lấy nhầm m_dm thay vì m_dd", "Phải tính m_dd = m_ct + m_dm trước"]
             )
         }
@@ -404,28 +404,28 @@ OFFLINE_SAMPLE_PROBLEMS: Dict[str, OfflineSampleProblem] = {
                 phase_name="recall",
                 feedback="Rất đúng! Chất cồn không hề mất đi mà chỉ hóa hơi.",
                 question="Dấu hiệu then chốt nhất để khẳng định một quá trình là hiện tượng hóa học là gì?",
-                micro_hint="Phải có sự biến đổi chất này thành chất khác (có chất mới sinh ra).",
+                micro_hint="Em hãy chú ý xem sau quá trình biến đổi có chất mới nào được tạo thành hay vẫn là chất ban đầu.",
                 quick_replies=["Có chất mới tạo thành", "Tạo ra chất mới khác chất ban đầu", "Biến đổi thành chất khác"]
             ),
             "reason": SocraticPhaseDialogue(
                 phase_name="reason",
                 feedback="Hoàn toàn chính xác! 'Có sinh ra chất mới' là tiêu chí duy nhất.",
                 question="Ở hiện tượng (2), khi đốt cồn, những chất mới nào đã xuất hiện mà ban đầu không có?",
-                micro_hint="Xuất hiện khí carbon dioxide (CO₂) và hơi nước (H₂O).",
+                micro_hint="Đọc lại vế thứ hai của đề bài để xem có những chất mới nào xuất hiện sau khi châm lửa đốt nhé.",
                 quick_replies=["Sinh ra CO₂ và hơi nước H₂O", "Tạo thành chất mới là CO₂ và nước", "Khí CO₂ và nước"]
             ),
             "check": SocraticPhaseDialogue(
                 phase_name="check",
                 feedback="Lập luận rất sắc bén! Em đã liên kết hiện tượng với bản chất phân tử rất tốt.",
                 question="Từ hai lập luận trên, em kết luận: Hiện tượng (1) và hiện tượng (2) thuộc loại hiện tượng nào?",
-                micro_hint="(1) là hiện tượng vật lý; (2) là hiện tượng hóa học.",
+                micro_hint="Hiện tượng chỉ đổi thể là vật lý, hiện tượng sinh ra chất mới là hóa học.",
                 quick_replies=["(1) là vật lý, (2) là hóa học", "1: Hiện tượng vật lý; 2: Hiện tượng hóa học"]
             ),
             "generalize": SocraticPhaseDialogue(
                 phase_name="generalize",
                 feedback="Tuyệt đỉnh! Em đã phân biệt rành rẽ giữa biến đổi vật lý và phản ứng hóa học.",
                 question="Khi em xé vụn một tờ giấy và khi em châm lửa đốt tờ giấy, hai hành động đó khác nhau thế nào?",
-                micro_hint="Xé giấy: chỉ đổi kích thước (vật lý). Đốt giấy: cháy thành tro và khói (hóa học).",
+                micro_hint="Em hãy xem hành động nào chỉ đổi kích thước và hành động nào tạo ra chất mới dạng tro than nhé.",
                 quick_replies=["Xé giấy là vật lý, đốt giấy là hóa học", "Xé là đổi hình dạng, đốt tạo ra tro than mới"]
             )
         }
@@ -451,28 +451,28 @@ OFFLINE_SAMPLE_PROBLEMS: Dict[str, OfflineSampleProblem] = {
                 phase_name="clarify",
                 feedback="Chào em! Lá cây được ví như những nhà máy xanh kỳ diệu của Trái Đất.",
                 question="Để quang hợp được, cây xanh phải hấp thụ những chất gì từ đất và không khí xung quanh?",
-                micro_hint="Lấy nước từ rễ hút trong đất và lấy khí carbon dioxide (CO₂) từ không khí qua khí khổng.",
+                micro_hint="Em hãy nhớ lại cây hút chất lỏng gì dưới đất qua rễ và hấp thụ chất khí nào trong không khí qua lá nhé.",
                 quick_replies=["Lấy nước từ rễ và khí CO₂ từ không khí", "Nước và Carbon dioxide", "Hút nước từ đất, hấp thụ CO₂"]
             ),
             "recall": SocraticPhaseDialogue(
                 phase_name="recall",
                 feedback="Chính xác! Đó chính là hai nguyên liệu đầu vào.",
                 question="Để biến đổi hai nguyên liệu đó thành chất hữu cơ, cây xanh cần có hai điều kiện bắt buộc nào?",
-                micro_hint="Cần có năng lượng ánh sáng mặt trời và chất diệp lục trong bào quan lục lạp.",
+                micro_hint="Quá trình này cần nguồn năng lượng tự nhiên trên cao và sắc tố màu xanh đặc trưng của lá cây.",
                 quick_replies=["Ánh sáng và chất diệp lục", "Cần ánh sáng mặt trời và lục lạp", "Ánh sáng + diệp lục"]
             ),
             "reason": SocraticPhaseDialogue(
                 phase_name="reason",
                 feedback="Rất chuẩn! Không có ánh sáng và diệp lục thì không thể quang hợp.",
                 question="Sau khi tổng hợp, quang hợp tạo ra chất hữu cơ chính nào nuôi cây và giải phóng ra khí gì cho sinh giới?",
-                micro_hint="Tạo ra chất hữu cơ (glucose/tinh bột) và giải phóng khí oxygen (O₂).",
+                micro_hint="Cây tạo ra chất dinh dưỡng nuôi cơ thể và giải phóng chất khí duy trì sự hô hấp cho mọi sinh vật.",
                 quick_replies=["Tạo chất hữu cơ (glucose) và khí Oxygen", "Sinh ra tinh bột và khí O₂", "Chất hữu cơ + Khí oxygen"]
             ),
             "check": SocraticPhaseDialogue(
                 phase_name="check",
                 feedback="Em trả lời rất chuẩn xác! Các thành phần đều đã đầy đủ.",
                 question="Em hãy ghép lại thành phương trình chữ hoàn chỉnh dạng: Nguyên liệu --(Điều kiện)--> Sản phẩm?",
-                micro_hint="Nước + Khí carbon dioxide --(Ánh sáng, Diệp lục)--> Chất hữu cơ + Khí oxygen.",
+                micro_hint="Sắp xếp theo thứ tự chuẩn: Chất lấy vào --(Điều kiện ánh sáng, sắc tố)--> Chất mới tạo thành.",
                 quick_replies=[
                     "Nước + Carbon dioxide → Chất hữu cơ + Oxygen",
                     "Nước + CO₂ --(Ánh sáng/Diệp lục)--> Glucose + O₂"
@@ -482,7 +482,7 @@ OFFLINE_SAMPLE_PROBLEMS: Dict[str, OfflineSampleProblem] = {
                 phase_name="generalize",
                 feedback="Tuyệt vời! Em đã nắm vững cơ chế nuôi sống cả sinh quyển của cây xanh.",
                 question="Tại sao người ta thường khuyên không nên để nhiều chậu cây xanh trong phòng ngủ đóng kín cửa vào ban đêm?",
-                micro_hint="Ban đêm không có ánh sáng, cây không quang hợp mà chỉ hô hấp lấy O₂ và thải CO₂.",
+                micro_hint="Ban đêm khi không có ánh sáng, cây xanh có còn quang hợp được không hay chuyển sang quá trình khác?",
                 quick_replies=["Vì ban đêm cây không quang hợp mà hô hấp lấy oxy", "Cây hô hấp thải CO₂ gây ngạt thở vào ban đêm"]
             )
         }
@@ -505,35 +505,35 @@ OFFLINE_SAMPLE_PROBLEMS: Dict[str, OfflineSampleProblem] = {
                 phase_name="clarify",
                 feedback="Chào em! Hạt nảy mầm là một hiện tượng thú vị biểu hiện sự sống mãnh liệt.",
                 question="Hiện tượng đống hạt nóng lên và lượng khí O₂ giảm chứng tỏ hạt đang hấp thụ khí gì và giải phóng gì?",
-                micro_hint="Hạt đang hấp thụ khí oxygen (O₂) và tỏa năng lượng nhiệt ra ngoài.",
+                micro_hint="Nhiệt độ tăng chứng tỏ có nhiệt lượng tỏa ra, và lượng khí sụt giảm phản ánh hạt đang hấp thụ khí đó.",
                 quick_replies=["Hạt hút khí oxygen và tỏa nhiệt", "Hấp thụ O₂ và sinh nhiệt", "Hạt đang lấy O₂ để thở"]
             ),
             "recall": SocraticPhaseDialogue(
                 phase_name="recall",
                 feedback="Rất chính xác! Hiện tượng đó gắn liền với sự chuyển hóa năng lượng.",
                 question="Quá trình tế bào sử dụng oxygen để phân giải chất hữu cơ giải phóng năng lượng được gọi là gì?",
-                micro_hint="Đó là quá trình 'Hô hấp tế bào' (diễn ra trong bào quan ty thể).",
+                micro_hint="Quá trình này ngược lại với quang hợp, giúp mọi tế bào sống phân giải chất để lấy năng lượng hoạt động.",
                 quick_replies=["Hô hấp tế bào", "Quá trình hô hấp tế bào", "Hô hấp ở thực vật"]
             ),
             "reason": SocraticPhaseDialogue(
                 phase_name="reason",
                 feedback="Đúng rồi! Đó chính là quá trình Hô hấp tế bào.",
                 question="Năng lượng giải phóng từ hô hấp tế bào được tích lũy dưới dạng phân tử nào và tỏa ra môi trường dưới dạng gì?",
-                micro_hint="Tích lũy trong các phân tử ATP (cung cấp cho hạt mọc mầm) và một phần tỏa ra dưới dạng nhiệt.",
+                micro_hint="Năng lượng được lưu trữ trong đồng tiền năng lượng sinh học của tế bào và tỏa ra làm ấm môi trường.",
                 quick_replies=["Tích lũy dạng ATP và tỏa ra dạng nhiệt", "Dạng năng lượng ATP và nhiệt năng", "ATP để lớn lên và nhiệt làm ấm"]
             ),
             "check": SocraticPhaseDialogue(
                 phase_name="check",
                 feedback="Lập luận sinh học rất chuẩn xác và sâu sắc!",
                 question="Nếu ta đậy kín nắp bình ủ hạt và không cho không khí lọt vào, chuyện gì sẽ xảy ra với các hạt mầm?",
-                micro_hint="Thiếu oxygen, hạt không hô hấp được, thiếu năng lượng sẽ bị thối và chết.",
+                micro_hint="Khi không có dưỡng khí để trao đổi chất tạo năng lượng, hạt giống có thể duy trì sự sống được không?",
                 quick_replies=["Hạt bị ngạt, không hô hấp được và chết", "Hạt không nảy mầm được do thiếu O₂", "Hạt bị thối mầm"]
             ),
             "generalize": SocraticPhaseDialogue(
                 phase_name="generalize",
                 feedback="Xuất sắc! Em đã hiểu rõ bản chất của hô hấp ở cấp độ tế bào.",
                 question="Giữa quang hợp và hô hấp tế bào có mối quan hệ qua lại như thế nào đối với cây xanh?",
-                micro_hint="Quang hợp tổng hợp chất hữu cơ và tích lũy năng lượng; Hô hấp phân giải chất hữu cơ để giải phóng năng lượng.",
+                micro_hint="Em hãy so sánh: một bên tổng hợp và tích lũy, bên kia phân giải và giải phóng năng lượng.",
                 quick_replies=["Quang hợp tích lũy năng lượng, hô hấp giải phóng năng lượng", "Hai quá trình trái ngược nhưng bổ trợ cho nhau"]
             )
         }
@@ -556,35 +556,35 @@ OFFLINE_SAMPLE_PROBLEMS: Dict[str, OfflineSampleProblem] = {
                 phase_name="clarify",
                 feedback="Chào em! Đây là cơ chế tự bảo vệ rất tài tình của thế giới thực vật.",
                 question="Lá cây làm mát cơ thể bằng cách giải phóng lượng nước trong cơ thể ra ngoài qua quá trình sinh lý nào?",
-                micro_hint="Quá trình 'Thoát hơi nước' (chủ yếu qua khí khổng ở lá).",
+                micro_hint="Hiện tượng này giống như khi cơ thể chúng mình toát mồ hôi để hạ nhiệt khi trời nắng nóng vậy.",
                 quick_replies=["Quá trình thoát hơi nước", "Thoát hơi nước qua lá", "Nhờ thoát hơi nước"]
             ),
             "recall": SocraticPhaseDialogue(
                 phase_name="recall",
                 feedback="Chính xác! Nước bốc hơi mang theo nhiệt lượng làm mát mặt lá.",
                 question="Hơi nước chủ yếu thoát ra ngoài môi trường thông qua cấu trúc nhỏ li ti nào trên bề mặt lá?",
-                micro_hint="Đó là các 'Khí khổng' nằm ở lớp biểu bì của lá (nhiều nhất ở mặt dưới).",
+                micro_hint="Trên bề mặt biểu bì lá có những lỗ nhỏ li ti có khả năng co giãn đóng mở để điều tiết hơi nước.",
                 quick_replies=["Khí khổng ở biểu bì lá", "Các lỗ khí khổng", "Qua khí khổng"]
             ),
             "reason": SocraticPhaseDialogue(
                 phase_name="reason",
                 feedback="Rất đúng! Cấu tạo đóng mở của khí khổng điều tiết lượng hơi nước thoát ra.",
                 question="Ngoài việc làm mát lá cây, lực hút do thoát hơi nước ở lá còn đóng vai trò quan trọng nào đối với hệ thống rễ?",
-                micro_hint="Tạo lực hút kéo dòng nước và muối khoáng hòa tan từ rễ đi lên thân và lá cây.",
+                micro_hint="Khi nước ở trên lá bay đi, nó sẽ tạo ra lực kéo như ống hút để hút dòng chất lỏng từ rễ lên.",
                 quick_replies=["Tạo lực hút kéo nước và muối khoáng từ rễ lên", "Giúp rễ hút nước và khoáng", "Hút dòng nước đi ngược lên ngọn"]
             ),
             "check": SocraticPhaseDialogue(
                 phase_name="check",
                 feedback="Lập luận rất chuẩn! Thoát hơi nước là động lực đầu trên của dòng mạch gỗ.",
                 question="Khi trời nắng quá gắt và đất bị khô hạn, khí khổng sẽ tự động đóng lại hay mở rộng ra? Vì sao?",
-                micro_hint="Khí khổng sẽ đóng lại để hạn chế mất nước, tránh cho cây bị héo khô.",
+                micro_hint="Để cây không bị kiệt nước và héo khô khi đất không còn nước, các lỗ thoát hơi nước cần làm gì?",
                 quick_replies=["Đóng lại để tránh mất nước gây héo", "Tự đóng lại để giữ nước", "Đóng lại bảo vệ cây khỏi mất nước"]
             ),
             "generalize": SocraticPhaseDialogue(
                 phase_name="generalize",
                 feedback="Tuyệt vời! Em đã thấu hiểu một trong những cơ chế sinh lý quan trọng nhất của thực vật.",
                 question="Em hãy tóm tắt 2 ý nghĩa to lớn nhất của quá trình thoát hơi nước đối với đời sống của cây?",
-                micro_hint="1. Làm mát lá khi trời nắng; 2. Tạo động lực kéo nước và muối khoáng từ rễ lên.",
+                micro_hint="Hãy nhớ đến hai tác dụng: một là điều hòa thân nhiệt cho lá, hai là kéo chất dinh dưỡng từ đất lên.",
                 quick_replies=["Làm mát lá và hút nước khoáng từ rễ lên", "Giảm nhiệt độ lá + hút nước từ dưới đất"]
             )
         }
@@ -607,35 +607,35 @@ OFFLINE_SAMPLE_PROBLEMS: Dict[str, OfflineSampleProblem] = {
                 phase_name="clarify",
                 feedback="Chào em! Cây cối tuy không biết đi nhưng lại có những phản ứng phản xạ rất kỳ diệu.",
                 question="Hiện tượng ngọn cây uốn cong về phía có ánh sáng là phản ứng của cây đối với tác nhân nào từ môi trường?",
-                micro_hint="Tác nhân kích thích ở đây chính là 'Ánh sáng'.",
+                micro_hint="Em hãy chú ý yếu tố môi trường chiếu vào từ cửa sổ khiến ngọn cây hướng tới nhé.",
                 quick_replies=["Tác nhân là ánh sáng chiếu từ một phía", "Ánh sáng mặt trời", "Kích thích từ ánh sáng"]
             ),
             "recall": SocraticPhaseDialogue(
                 phase_name="recall",
                 feedback="Đúng rồi! Ánh sáng là nhân tố định hướng cho sự sinh trưởng của ngọn cây.",
                 question="Khả năng cơ thể sinh vật phản ứng lại các kích thích của môi trường để thích nghi được gọi là gì?",
-                micro_hint="Đó là hiện tượng 'Cảm ứng' (ở thực vật gọi là tính hướng động).",
+                micro_hint="Đặc trưng chung của sinh vật khi nhận biết và phản hồi lại tác động từ ngoại cảnh để thích nghi.",
                 quick_replies=["Hiện tượng cảm ứng", "Cảm ứng ở thực vật", "Tính hướng động"]
             ),
             "reason": SocraticPhaseDialogue(
                 phase_name="reason",
                 feedback="Rất chính xác! Hiện tượng ngọn cây hướng về nguồn sáng được gọi cụ thể là 'Tính hướng sáng'.",
                 question="Tại sao ngọn cây lại cần uốn cong về phía có ánh sáng mạnh nhất? Điều đó giúp ích gì cho cây?",
-                micro_hint="Giúp các lá cây tiếp nhận được nhiều ánh sáng nhất để thực hiện quá trình quang hợp.",
+                micro_hint="Lá cây cần đón thật nhiều năng lượng từ môi trường để phục vụ cho quá trình tổng hợp chất dinh dưỡng.",
                 quick_replies=["Để hấp thụ nhiều ánh sáng cho quang hợp", "Thu nhận ánh sáng để quang hợp tốt hơn", "Quang hợp thuận lợi hơn"]
             ),
             "check": SocraticPhaseDialogue(
                 phase_name="check",
                 feedback="Lập luận sinh thái và sinh lý thực vật rất gắn kết!",
                 question="Nếu ngọn cây có tính hướng sáng dương (hướng về phía ánh sáng), thì bộ rễ cây dưới đất lại hướng về phía nào?",
-                micro_hint="Rễ cây hướng xuống lòng đất (hướng trọng lực dương và hướng sáng âm).",
+                micro_hint="Rễ cây sinh trưởng ngược lại với ngọn cây để cắm sâu tìm nước và chất khoáng trong lòng đất.",
                 quick_replies=["Rễ hướng xuống đất tìm nước (hướng trọng lực)", "Rễ tránh ánh sáng và tìm nguồn nước", "Hướng xuống lòng đất"]
             ),
             "generalize": SocraticPhaseDialogue(
                 phase_name="generalize",
                 feedback="Xuất sắc! Em đã hoàn thành trọn vẹn chuỗi tìm hiểu về tập tính thích nghi của thực vật.",
                 question="Trong trồng trọt, người nông dân ứng dụng tính hướng sáng của cây như thế nào khi gieo trồng cây trồng?",
-                micro_hint="Trồng cây với mật độ hợp lý, tỉa cành để cây không che khuất ánh sáng của nhau.",
+                micro_hint="Em hãy liên hệ đến khoảng cách gieo trồng và việc tỉa cành để mọi cây đều đón đủ ánh nắng.",
                 quick_replies=["Trồng đúng khoảng cách để cây nhận đủ ánh sáng", "Tỉa bớt cành lá để cây đón nắng", "Bố trí mật độ gieo trồng phù hợp"]
             )
         }

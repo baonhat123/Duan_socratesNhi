@@ -24,6 +24,7 @@ from app_tich_hop_socrates.auth_service import (
     evaluate_password_strength
 )
 from app_tich_hop_socrates.parent_service import ParentService, ParentAccount
+from app_tich_hop_socrates.dashboard_view import safe_open_dialog, safe_close_dialog
 
 AVATAR_OPTIONS = [
     {"emoji": "💡", "label": "Nhà phát minh"},
@@ -90,6 +91,61 @@ class LoginScreenView:
         if self.session_info.get("remember_me") and self.session_info.get("current_username"):
             users = AuthService.load_all_users()
             self.remembered_user = users.get(self.session_info["current_username"])
+
+        # Trạng thái hiển thị giao diện Tài khoản đã ghi nhớ (Saved Account Hub)
+        # Mặc định luôn là False để hiện trực tiếp form nhập Tên tài khoản & Mật khẩu
+        self.show_saved_account = False
+
+    def _safe_open_dialog(self, dialog: ft.AlertDialog):
+        """Mở hộp thoại an toàn tương thích 100% Flet."""
+        safe_open_dialog(self.page, dialog)
+
+    def _safe_close_dialog(self, dialog: ft.AlertDialog):
+        """Đóng hộp thoại an toàn tương thích 100% Flet."""
+        safe_close_dialog(self.page, dialog)
+
+    def _switch_to_manual_login(self):
+        """Chuyển sang form nhập tài khoản thủ công (Đăng nhập tài khoản khác)."""
+        self.show_saved_account = False
+        self.mode = "login"
+        self._update_tab_visuals()
+        self._refresh_active_form()
+        if hasattr(self, "quick_login_section") and self.quick_login_section:
+            self.quick_login_section.visible = True
+        self.page.update()
+
+    def _switch_to_saved_account(self):
+        """Quay lại màn hình tài khoản đã lưu."""
+        self.show_saved_account = True
+        self.mode = "login"
+        self._update_tab_visuals()
+        self._refresh_active_form()
+        if hasattr(self, "quick_login_section") and self.quick_login_section:
+            self.quick_login_section.visible = False
+        self.page.update()
+
+    def _forget_saved_account(self):
+        """Xóa ghi nhớ tài khoản này khỏi thiết bị."""
+        AuthService.clear_remembered_account()
+        self.remembered_user = None
+        self.show_saved_account = False
+        self._refresh_active_form()
+        if hasattr(self, "quick_login_section") and self.quick_login_section:
+            self.quick_login_section.visible = True
+
+        snack = ft.SnackBar(
+            content=ft.Row([
+                ft.Icon(ft.Icons.DELETE_OUTLINE_ROUNDED, color=ft.Colors.WHITE, size=16),
+                ft.Text("Đã xóa lưu tài khoản trên thiết bị này! Lần sau em có thể đăng nhập lại.", color=ft.Colors.WHITE, size=12)
+            ], spacing=6),
+            bgcolor=ft.Colors.GREY_900
+        )
+        if hasattr(self.page, "open"):
+            self.page.open(snack)
+        else:
+            self.page.snack_bar = snack
+            snack.open = True
+        self.page.update()
 
     def build(self) -> ft.Control:
         """Xây dựng giao diện Cổng Xác Thực chuẩn Web hiện đại."""
@@ -755,59 +811,170 @@ class LoginScreenView:
         """Nạp form tương ứng vào form_host."""
         if self.mode == "login":
             self.form_host.content = self._build_login_form()
+            if hasattr(self, "quick_login_section") and self.quick_login_section:
+                self.quick_login_section.visible = True
         elif self.mode == "register":
             self.form_host.content = self._build_register_form()
+            if hasattr(self, "quick_login_section") and self.quick_login_section:
+                self.quick_login_section.visible = True
         elif self.mode == "forgot":
             self.form_host.content = self._build_forgot_password_form()
+            if hasattr(self, "quick_login_section") and self.quick_login_section:
+                self.quick_login_section.visible = True
         elif self.mode == "guest":
             self.form_host.content = self._build_guest_mode_form()
+            if hasattr(self, "quick_login_section") and self.quick_login_section:
+                self.quick_login_section.visible = False
 
     # -------------------------------------------------------------------------
-    # FORM 1: ĐĂNG NHẬP (SIGN IN FORM)
+    # GIAO DIỆN TÀI KHOẢN ĐÃ LƯU (SAVED ACCOUNT HUB)
+    # -------------------------------------------------------------------------
+    def _build_saved_account_hub(self) -> ft.Control:
+        """
+        Màn hình Tài Khoản Đã Lưu:
+        Chỉ hiển thị thông tin học sinh đã lưu kèm nút 'VÀO HỌC TIẾP' to rõ.
+        TUYỆT ĐỐI KHÔNG hiển thị form nhập mật khẩu / username bên dưới.
+        Cho phép bấm nút 'Đổi tài khoản khác 🔄' để chuyển sang form nhập.
+        """
+        u = self.remembered_user
+        if not u:
+            return self._build_login_form()
+
+        # Tính chuỗi streak thực tế và kiểm tra hôm nay đã giải bài chưa
+        streak_info = AuthService.get_user_streak(u.username)
+        s_count = streak_info.get("streak_count", getattr(u, "streak_count", 0))
+        today_studied = streak_info.get("today_studied", False)
+        if today_studied:
+            streak_text = f"🔥 Chuỗi {s_count} ngày (Đã giải hôm nay ✓)"
+            streak_color = ft.Colors.GREEN_800
+        else:
+            if s_count > 0:
+                streak_text = f"🔥 Chuỗi {s_count} ngày (Chưa giải hôm nay ⏳)"
+                streak_color = ft.Colors.AMBER_900
+            else:
+                streak_text = "🔥 Chuỗi 0 ngày (Bắt đầu chuỗi mới 🌱)"
+                streak_color = ft.Colors.ORANGE_800
+
+        # Thẻ thông tin học sinh dạng Hero Card sang trọng
+        avatar_box = ft.Container(
+            content=ft.Text(u.avatar, size=38),
+            width=68,
+            height=68,
+            border_radius=34,
+            bgcolor=ft.Colors.WHITE,
+            alignment=ft.Alignment.CENTER,
+            border=ft.Border.all(2.5, ft.Colors.INDIGO_300),
+            shadow=ft.BoxShadow(blur_radius=14, color=ft.Colors.with_opacity(0.18, ft.Colors.INDIGO_700), offset=ft.Offset(0, 4))
+        )
+
+        user_info_col = ft.Column([
+            ft.Row([
+                ft.Text(u.display_name, size=18, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900),
+                ft.Container(
+                    content=ft.Row([
+                        ft.Icon(ft.Icons.CHECK_CIRCLE_ROUNDED, size=12, color=ft.Colors.GREEN_700),
+                        ft.Text("Đã Lưu 💾", size=9, weight=ft.FontWeight.BOLD, color=ft.Colors.GREEN_800)
+                    ], spacing=3),
+                    bgcolor=ft.Colors.GREEN_100,
+                    padding=ft.Padding(6, 2, 8, 2),
+                    border_radius=6,
+                    border=ft.Border.all(0.8, ft.Colors.GREEN_300)
+                )
+            ], spacing=6, vertical_alignment=ft.CrossAxisAlignment.CENTER),
+            ft.Text(f"{u.grade_class} • @{u.username}", size=11, color=ft.Colors.GREY_700),
+            ft.Row([
+                ft.Text(streak_text, size=11, weight=ft.FontWeight.W_500, color=streak_color),
+                ft.Text("•", size=11, color=ft.Colors.GREY_400),
+                ft.Text(f"📓 {u.physics_count + u.chemistry_count + u.biology_count} bài học trong Sổ tay", size=11, color=ft.Colors.INDIGO_800)
+            ], spacing=4)
+        ], spacing=3, expand=True)
+
+        profile_hero_card = ft.Container(
+            content=ft.Row([
+                avatar_box,
+                user_info_col
+            ], spacing=14, vertical_alignment=ft.CrossAxisAlignment.CENTER),
+            gradient=ft.LinearGradient(
+                begin=ft.Alignment.TOP_LEFT,
+                end=ft.Alignment.BOTTOM_RIGHT,
+                colors=["#EEF2FF", "#E0E7FF"]
+            ),
+            padding=ft.Padding(18, 16, 18, 16),
+            border_radius=16,
+            border=ft.Border.all(1.5, ft.Colors.INDIGO_200),
+            shadow=ft.BoxShadow(blur_radius=10, color=ft.Colors.with_opacity(0.04, ft.Colors.BLACK), offset=ft.Offset(0, 2))
+        )
+
+        btn_resume_study = ft.FilledButton(
+            f"VÀO HỌC TIẾP VỚI {u.display_name.upper()} 🚀",
+            icon=ft.Icons.ROCKET_LAUNCH_ROUNDED,
+            style=ft.ButtonStyle(
+                bgcolor=ft.Colors.INDIGO_700,
+                color=ft.Colors.WHITE,
+                padding=ft.Padding(20, 16, 20, 16),
+                shape=ft.RoundedRectangleBorder(radius=12)
+            ),
+            width=540,
+            on_click=lambda _: self._do_quick_login(u.username)
+        )
+
+        btn_switch_other = ft.OutlinedButton(
+            "Đăng nhập bằng tài khoản khác 🔄",
+            icon=ft.Icons.SWITCH_ACCOUNT_ROUNDED,
+            style=ft.ButtonStyle(
+                color=ft.Colors.INDIGO_900,
+                padding=ft.Padding(16, 12, 16, 12),
+                shape=ft.RoundedRectangleBorder(radius=10)
+            ),
+            width=540,
+            on_click=lambda _: self._switch_to_manual_login()
+        )
+
+        btn_create_new = ft.TextButton(
+            "Chưa có tài khoản? Tạo tài khoản mới ✨",
+            style=ft.ButtonStyle(color=ft.Colors.GREEN_800),
+            on_click=lambda _: self._switch_to_mode("register")
+        )
+
+        btn_forget = ft.TextButton(
+            "Xóa lưu tài khoản này khỏi máy này 🗑️",
+            style=ft.ButtonStyle(color=ft.Colors.GREY_600),
+            on_click=lambda _: self._forget_saved_account()
+        )
+
+        return ft.Column([
+            ft.Row([
+                ft.Icon(ft.Icons.LOCK_PERSON_ROUNDED, size=16, color=ft.Colors.GREEN_700),
+                ft.Text("Chào mừng trở lại! Tài khoản của em đã được ghi nhớ trên thiết bị này:", size=12, weight=ft.FontWeight.W_500, color=ft.Colors.GREY_800)
+            ], spacing=6),
+            profile_hero_card,
+            ft.Container(height=4),
+            btn_resume_study,
+            ft.Divider(height=1, color=ft.Colors.GREY_200),
+            ft.Text("Tùy chọn khác:", size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_700),
+            btn_switch_other,
+            ft.Row([btn_create_new, btn_forget], alignment=ft.MainAxisAlignment.SPACE_BETWEEN, wrap=True)
+        ], spacing=10)
+
+    # -------------------------------------------------------------------------
+    # FORM 1: ĐĂNG NHẬP THỦ CÔNG (MANUAL SIGN IN FORM)
     # -------------------------------------------------------------------------
     def _build_login_form(self) -> ft.Control:
-        """Xây dựng form đăng nhập tài khoản chuẩn web."""
-        # Thẻ chào mừng trở lại nếu có tài khoản ghi nhớ
-        resume_card = None
-        if self.remembered_user:
-            u = self.remembered_user
-            resume_card = ft.Container(
-                content=ft.Row([
-                    ft.Text(u.avatar, size=24),
-                    ft.Column([
-                        ft.Row([
-                            ft.Text(f"Chào mừng trở lại, {u.display_name}!", size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900),
-                            ft.Container(
-                                content=ft.Text("Đã ghi nhớ", size=9, weight=ft.FontWeight.BOLD, color=ft.Colors.GREEN_800),
-                                bgcolor=ft.Colors.GREEN_100,
-                                padding=ft.Padding(5, 1, 5, 1),
-                                border_radius=4
-                            )
-                        ], spacing=6),
-                        ft.Text(f"{u.grade_class} • @{u.username}", size=10, color=ft.Colors.GREY_600)
-                    ], spacing=1, expand=True),
-                    ft.FilledButton(
-                        "Vào Học Tiếp ⚡",
-                        style=ft.ButtonStyle(bgcolor=ft.Colors.INDIGO_700, color=ft.Colors.WHITE),
-                        on_click=lambda _: self._do_quick_login(u.username)
-                    )
-                ], vertical_alignment=ft.CrossAxisAlignment.CENTER),
-                bgcolor=ft.Colors.INDIGO_50,
-                padding=ft.Padding(12, 8, 12, 8),
-                border_radius=12,
-                border=ft.Border.all(1.5, ft.Colors.INDIGO_200)
-            )
+        """Xây dựng form đăng nhập tài khoản trực tiếp có Tên đăng nhập và Mật khẩu."""
+        # Tên đăng nhập và mật khẩu mặc định (ưu tiên tài khoản đã đăng nhập gần nhất)
+        default_username = self.remembered_user.username if self.remembered_user else "baonhat"
+        default_password = "123"
 
         # Trường nhập Tên đăng nhập
-        default_user = self.remembered_user.username if self.remembered_user else "baonhat"
         txt_username = ft.TextField(
             label="Tên đăng nhập (Username)",
             hint_text="Nhập tên tài khoản của em (vd: baonhat, minhtriet...)",
             prefix_icon=ft.Icons.PERSON_OUTLINE_ROUNDED,
-            value=default_user,
+            value=default_username,
             dense=True,
             border_radius=10
         )
+        self.txt_login_username = txt_username
 
         # Trường nhập Mật khẩu kèm nút hiển thị/ẩn
         txt_password = ft.TextField(
@@ -816,10 +983,11 @@ class LoginScreenView:
             prefix_icon=ft.Icons.LOCK_OUTLINE_ROUNDED,
             password=True,
             can_reveal_password=True,
-            value="123",
+            value=default_password,
             dense=True,
             border_radius=10
         )
+        self.txt_login_password = txt_password
 
         # Checkbox Ghi nhớ đăng nhập
         chk_remember = ft.Checkbox(
@@ -850,6 +1018,9 @@ class LoginScreenView:
             success, user, message = AuthService.authenticate(uname, upass, remember_me=rem)
 
             if success and user:
+                if rem:
+                    self.remembered_user = user
+                self.show_saved_account = False
                 msg_box.visible = True
                 msg_box.bgcolor = ft.Colors.GREEN_50
                 msg_box.border = ft.Border.all(1, ft.Colors.GREEN_300)
@@ -892,11 +1063,7 @@ class LoginScreenView:
             )
         ], alignment=ft.MainAxisAlignment.CENTER, spacing=2)
 
-        items = []
-        if resume_card:
-            items.extend([resume_card, ft.Container(height=2)])
-
-        items.extend([
+        items = [
             ft.Text("Nhập thông tin tài khoản học sinh để bắt đầu:", size=12, color=ft.Colors.GREY_700),
             txt_username,
             txt_password,
@@ -904,7 +1071,7 @@ class LoginScreenView:
             msg_box,
             btn_submit,
             link_to_register
-        ])
+        ]
 
         return ft.Column(items, spacing=10)
 
@@ -1076,7 +1243,7 @@ class LoginScreenView:
                 avatar=self.selected_avatar,
                 security_question=sec_q,
                 security_answer=sec_ans,
-                remember_me=True
+                remember_me=False
             )
 
             if success and new_user:
@@ -1088,8 +1255,8 @@ class LoginScreenView:
                     ft.Text(message, size=12, color=ft.Colors.GREEN_900, weight=ft.FontWeight.W_500, expand=True)
                 ], spacing=6)
                 self.page.update()
-                # Kích hoạt callback vào app chính
-                self.on_login_success(new_user)
+                # Hiển thị Hộp thoại hỏi người dùng có muốn LƯU tài khoản trên máy không
+                self._show_ask_save_account_dialog(new_user)
             else:
                 reg_msg_box.visible = True
                 reg_msg_box.bgcolor = ft.Colors.RED_50
@@ -1143,6 +1310,70 @@ class LoginScreenView:
             btn_reg_submit,
             link_to_login
         ], spacing=9)
+
+    def _show_ask_save_account_dialog(self, new_user: UserAccount):
+        """Hộp thoại hỏi người dùng có muốn LƯU tài khoản trên thiết bị này không sau khi tạo tài khoản."""
+        def on_save_confirm(_):
+            self._safe_close_dialog(dialog)
+            AuthService.set_current_user(new_user, remember_me=True)
+            self.remembered_user = new_user
+            self.show_saved_account = True
+            self.on_login_success(new_user)
+
+        def on_skip_save(_):
+            self._safe_close_dialog(dialog)
+            AuthService.set_current_user(new_user, remember_me=False)
+            self.remembered_user = None
+            self.show_saved_account = False
+            self.on_login_success(new_user)
+
+        dialog = ft.AlertDialog(
+            modal=True,
+            title=ft.Row([
+                ft.Text(new_user.avatar, size=24),
+                ft.Text("LƯU TÀI KHOẢN TRÊN THIẾT BỊ NÀY? 💾", size=15, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900)
+            ], spacing=8),
+            content=ft.Container(
+                content=ft.Column([
+                    ft.Text(f"🎉 Chúc mừng em {new_user.display_name} đã tạo tài khoản thành công!", size=13, weight=ft.FontWeight.BOLD, color=ft.Colors.GREEN_900),
+                    ft.Container(height=4),
+                    ft.Text("Em có muốn LƯU tài khoản này trên máy tính để lần sau mở lên là tự động vào học tiếp không?", size=12, color=ft.Colors.GREY_800),
+                    ft.Container(
+                        content=ft.Column([
+                            ft.Row([
+                                ft.Icon(ft.Icons.CHECK_CIRCLE_ROUNDED, size=15, color=ft.Colors.GREEN_700),
+                                ft.Text("Nếu chọn LƯU: Lần sau chỉ cần bấm 'Vào Học Tiếp' là vào học ngay.", size=11, color=ft.Colors.GREY_700)
+                            ], spacing=6),
+                            ft.Row([
+                                ft.Icon(ft.Icons.SWITCH_ACCOUNT_ROUNDED, size=15, color=ft.Colors.INDIGO_700),
+                                ft.Text("Em vẫn có thể đổi sang tài khoản khác bất kỳ lúc nào!", size=11, color=ft.Colors.GREY_700)
+                            ], spacing=6),
+                        ], spacing=4),
+                        bgcolor=ft.Colors.INDIGO_50,
+                        padding=10,
+                        border_radius=8,
+                        border=ft.Border.all(1, ft.Colors.INDIGO_200)
+                    )
+                ], spacing=8),
+                width=460,
+                padding=6
+            ),
+            actions=[
+                ft.OutlinedButton(
+                    "Không lưu, chỉ dùng phiên này ⏳",
+                    on_click=on_skip_save,
+                    style=ft.ButtonStyle(color=ft.Colors.GREY_700)
+                ),
+                ft.FilledButton(
+                    "LƯU TÀI KHOẢN NÀY 💾",
+                    icon=ft.Icons.SAVE_ROUNDED,
+                    on_click=on_save_confirm,
+                    style=ft.ButtonStyle(bgcolor=ft.Colors.GREEN_700, color=ft.Colors.WHITE)
+                )
+            ],
+            actions_alignment=ft.MainAxisAlignment.END
+        )
+        self._safe_open_dialog(dialog)
 
     # -------------------------------------------------------------------------
     # FORM 3: QUÊN MẬT KHẨU / KHÔI PHỤC (FORGOT PASSWORD FORM)
@@ -1343,7 +1574,17 @@ class LoginScreenView:
                 continue
 
             def make_quick_handler(u=user):
-                return lambda _: self._do_quick_login(u.username)
+                def _handle_click(_):
+                    if hasattr(self, "txt_login_username") and self.txt_login_username:
+                        self.txt_login_username.value = u.username
+                    if hasattr(self, "txt_login_password") and self.txt_login_password:
+                        self.txt_login_password.value = "123"
+                    try:
+                        self.page.update()
+                    except Exception:
+                        pass
+                    self._do_quick_login(u.username)
+                return _handle_click
 
             role_tag = "Tác giả" if user.username == "baonhat" else ("Vật lý" if "Vật" in user.grade_class else ("Sinh học" if "Sinh" in user.grade_class else ("Hóa học" if "Hóa" in user.grade_class else "Khách")))
             chip = ft.Container(
@@ -1549,12 +1790,10 @@ class AuthModalDialog:
             padding=ft.Padding(4, 4, 4, 4)
         )
 
+        from app_tich_hop_socrates.dashboard_view import safe_open_dialog, safe_close_dialog
+
         def close_dialog(_=None):
-            if hasattr(self.page, "close"):
-                self.page.close(self.dialog)
-            else:
-                self.dialog.open = False
-                self.page.update()
+            safe_close_dialog(self.page, self.dialog)
 
         def do_logout_click(_):
             close_dialog()
@@ -1583,10 +1822,7 @@ class AuthModalDialog:
             actions_alignment=ft.MainAxisAlignment.SPACE_BETWEEN
         )
 
-        if self.dialog not in self.page.overlay:
-            self.page.overlay.append(self.dialog)
-        self.dialog.open = True
-        self.page.update()
+        safe_open_dialog(self.page, self.dialog)
 
     def _switch_tab(self, new_tab: str):
         self.view_tab = new_tab
@@ -1594,11 +1830,8 @@ class AuthModalDialog:
 
     def _do_switch(self, username: str):
         """Xử lý đổi tài khoản trong hộp thoại."""
-        if hasattr(self.page, "close"):
-            self.page.close(self.dialog)
-        else:
-            self.dialog.open = False
-            self.page.update()
+        from app_tich_hop_socrates.dashboard_view import safe_close_dialog
+        safe_close_dialog(self.page, self.dialog)
 
         success, user, _ = AuthService.quick_login(username, remember_me=True)
         if success and user:

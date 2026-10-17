@@ -458,6 +458,13 @@ class ParentService:
         if parent and child_username in parent.encouragement_notes:
             encouragement = parent.encouragement_notes[child_username]
 
+        # 6. Thống kê bài kiểm tra củng cố kiến thức (Trắc nghiệm + Tự luận)
+        try:
+            from app_tich_hop_socrates.quiz_service import QuizService
+            quiz_stats = QuizService.get_student_quiz_stats(child_username)
+        except Exception:
+            quiz_stats = {"total_quizzes": 0, "average_score": 0.0, "mastery_level": "Chưa làm bài kiểm tra nào"}
+
         return {
             "child_username": child_username,
             "display_name": user.display_name,
@@ -487,13 +494,14 @@ class ParentService:
             "weekly_percent": weekly_percent,
             "detailed_week": detailed_week,
             # Chuỗi học liên tiếp (Streak)
-            "streak_count": streak_data.get("streak_count", 5),
-            "max_streak": streak_data.get("max_streak", 7),
-            # Chỉ số nâng cao (Đề xuất thêm)
+            "streak_count": streak_data.get("streak_count", 0),
+            "max_streak": streak_data.get("max_streak", 0),
+            # Chỉ số nâng cao & Bài kiểm tra
             "avg_rubric_score": progress_data.get("avg_rubric", 5.4),
             "self_reliance_percent": 88,
             "preferred_study_time": "19:30 – 20:30 (Buổi tối • Giờ vàng tập trung)",
-            "encouragement": encouragement
+            "encouragement": encouragement,
+            "quiz_stats": quiz_stats
         }
 
     @classmethod

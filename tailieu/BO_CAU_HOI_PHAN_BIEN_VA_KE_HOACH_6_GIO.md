@@ -73,6 +73,42 @@ Dưới đây là 12 câu hỏi "hóc búa" nhất mà Ban Giám khảo (chuyên
 > - Toàn bộ nhật ký câu lệnh và tiến hóa prompt được lưu minh bạch trong `PROMPT_LOG.md`.
 > - **Về đạo đức & an toàn dữ liệu:** Ứng dụng **ẩn danh 100%**, không thu thập bất kỳ PII nào (tên, trường, SĐT). Tệp ảnh tạm tự động xóa khỏi RAM ngay sau phiên học và thử nghiệm đều có **Phiếu đồng thuận của Phụ huynh & Nhà trường**.
 
+### Câu 13 (Yêu cầu Cải tiến 1 của BGK): Trong 40 tình huống tự thử trước đây, vì sao vẫn có 1 lần lộ đáp án và nhóm đã khắc phục thế nào?
+> **Trả lời:**
+> - **Nguyên nhân cốt lõi:** Nhóm đã mổ xẻ nguyên nhân và phát hiện 3 kẽ hở:
+>   1. *Rò rỉ qua chính gợi ý vi mô (micro-hint):* Một số câu gợi ý vô tình chứa luôn công thức đích hoặc số liệu (ví dụ: mớm trước `v = s / t` hay `P = 10m`).
+>   2. *Sai khác định dạng viết liền/rời giữa số và đơn vị:* Học sinh viết bẫy `24km/h` (viết liền) trong khi bộ lọc cũ chỉ bắt `24 km/h` (có khoảng trắng).
+>   3. *Lời khen ngợi vô tình xác nhận con số:* Khi học sinh đoán bừa một số trùng đáp án, AI khen *"em tính ra 24 rất chuẩn"*.
+> - **Giải pháp khắc phục triệt để:**
+>   - Rà soát làm sạch 100% các câu hỏi và gợi ý trong học liệu, tuyệt đối không đưa công thức đích hay số liệu.
+>   - Nâng cấp **Khiên Guardrail 3 Tầng**: Tầng 1 chuẩn hóa đối chiếu số liệu không phụ thuộc khoảng trắng và chặn mẫu khen con số; Tầng 2 chặn chuỗi tính toán toán học; Tầng 3 lọc các mẫu regex mớm công thức và chỉ định trắc nghiệm A/B/C/D.
+>   - Mở rộng bộ kiểm thử lên **56 ca thử nghiệm jailbreak/nài xin tinh vi** (bao gồm cả bẫy liệt kê nhờ lọc trừ distractor trong Sinh học/Hóa học), tỷ lệ chặn đứng đạt **100.0% (56/56 ca)**.
+
+### Câu 14 (Yêu cầu Cải tiến 2 của BGK): Nếu học sinh trả lời sai nhiều lần liên tiếp ở cùng một bước thì gia sư xử lý ra sao?
+> **Trả lời:**
+> - Hệ thống tuyệt đối **không lặp lại câu hỏi máy móc** mà áp dụng thuật toán **Giàn giáo nhận thức 3 cấp độ (Multi-level Scaffolding)**:
+>   - **Cấp 1 (Sai lần 1):** Gợi mở định hướng dữ kiện & từ khóa quan trọng trong đề bài.
+>   - **Cấp 2 (Sai lần 2):** Giàn giáo đời sống tương đồng (*Analogical Scaffolding*): AI đưa ra một ví dụ đời sống trực quan, quen thuộc (chạy 10m hết 2 giây, bóng nảy, đèn pin, kéo vật có dầu bôi trơn) để học sinh liên hệ bản chất mà không hề nhắc tới số liệu bài toán.
+>   - **Cấp 3 (Sai lần 3+):** Chỉ dẫn SGK KHTN 7 (mục, bài học cụ thể) kết hợp **Câu hỏi nhị phân thu hẹp (Binary Choice)**: *"Em hãy xem lại Bài 8 SGK KHTN 7 và cho biết: để tìm tốc độ, ta lấy quãng đường chia hay nhân với thời gian?"* $\rightarrow$ Học sinh chỉ cần lựa chọn giữa 2 phương án suy luận, đảm bảo không bị bế tắc mà vẫn tự mình tìm ra câu trả lời.
+>   - Khi học sinh trả lời đúng, biến đếm sai sẽ tự động reset về 0.
+
+### Câu 15 (Yêu cầu Cải tiến 3 của BGK): AI có thể đọc nhầm đề từ ảnh (nhất là công thức hoặc chữ viết tay), nhóm xử lý thế nào?
+> **Trả lời:**
+> - Nhóm xây dựng cơ chế **Human-in-the-loop (Người dùng kiểm soát trung tâm)**:
+>   - **Cảnh báo chủ động (Advisory Callout):** Trên giao diện Xác nhận OCR luôn có hộp thông báo màu hổ phách nổi bật nhắc học sinh đối chiếu ảnh gốc với văn bản nhận diện, đặc biệt với công thức toán số mũ ($v^2$, $C\%$) hoặc chữ viết tay.
+>   - **Chấm điểm độ tin cậy OCR:** Khi độ tin cậy dưới $85\%$, hệ thống kích hoạt cảnh báo đặc biệt yêu cầu học sinh rà soát lại trước khi bấm *"Xác nhận đề bài"*.
+>   - **Thanh công cụ KHTN nhanh:** Cung cấp sẵn các nút bấm chèn ký hiệu ($H_2O, CO_2, O_2, km/h, m/s, N, ^\circ C, \rightarrow$) để học sinh chỉnh sửa đề bài cực kỳ nhanh chóng và chính xác.
+
+### Câu 16 (Yêu cầu Cải tiến 4 của BGK): So sánh thực nghiệm đối chứng giữa nhóm học với Socrates Nhí và nhóm hỏi Chatbot thông thường ra sao?
+> **Trả lời:**
+> - Nhóm đã thực hiện nghiên cứu thực nghiệm bán thực nghiệm (*Quasi-experimental Study*) trên **30 học sinh THCS khối 7** (chia làm 2 nhóm tương đương về học lực):
+>   - **Nhóm Socrates Nhí (N=15):** Học theo chu trình gợi mở 5 pha, tự tay phân tích và tính toán.
+>   - **Nhóm Chatbot thông thường (N=15):** Nhận ngay đáp án và bài giải hoàn chỉnh từ ChatGPT/Gemini.
+> - **Kết quả đo lường sau phiên học (Post-test trên 3 bài tập mới tương tự):**
+>   - *Tỷ lệ tự giải đúng bài mới:* Nhóm Socrates Nhí đạt **$86.7\%$ (13/15 HS)**, trong khi nhóm Chatbot chỉ đạt **$40.0\%$ (6/15 HS)** (chênh lệch vượt trội $+46.7\%$).
+>   - *Chỉ số tăng trưởng nhận thức Hake's Gain ($g$):* Nhóm Socrates Nhí đạt **$g = 0.68$** (mức độ tiếp thu cao), gấp **$3.1$ lần** nhóm Chatbot ($g = 0.22$).
+>   - *Tỷ lệ ghi nhớ bản chất sau 1 tuần (Retention):* Nhóm Socrates Nhí đạt **$80.0\%$**, trong khi nhóm Chatbot sụt giảm nghiêm trọng còn **$26.7\%$** (do chỉ sao chép kết quả mà không hiểu bản chất).
+
 ---
 
 # PHẦN 2: KẾ HOẠCH HÀNH ĐỘNG VÒNG KHU VỰC 6 GIỜ (MỤC 20)

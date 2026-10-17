@@ -1,0 +1,1069 @@
+[
+  {
+    "quiz_id": "PRE_E342E684",
+    "username": "baonhat",
+    "student_name": "Phan Nhật",
+    "topic": "Vật lý – Ánh sáng và Định luật phản xạ ánh sáng",
+    "strand": "Cơ học / Đại lượng vật lý",
+    "quiz_type": "pre_test",
+    "created_at": "2026-10-17T09:44:31.924139",
+    "score": 3.3,
+    "total_mcq": 3,
+    "correct_mcq": 1,
+    "essay_score": 0.0,
+    "essay_feedback": "Khảo sát đầu vào hoàn tất! Socrates đã hiểu trình độ hiện tại của em.",
+    "student_essay_answer": "",
+    "badge_earned": "Mới Bắt Đầu 🌱",
+    "details": [
+      {
+        "question_id": "AI_MCQ_1",
+        "prompt": "Một tia sáng chiếu tới hợp với mặt gương phẳng một góc 30°. Góc tới (được đo theo quy ước của định luật phản xạ) bằng bao nhiêu?",
+        "q_type": "mcq",
+        "options": [
+          "A. 60°",
+          "B. 90°",
+          "C. 120°",
+          "D. 30°"
+        ],
+        "chosen_index": 0,
+        "correct_index": 0,
+        "is_correct": true,
+        "explanation": "Góc được nêu (30°) là góc giữa tia sáng và mặt gương. Theo quy ước của định luật phản xạ, góc tới là góc giữa tia tới và pháp tuyến (đường vuông góc với mặt gương). Pháp tuyến vuông góc với mặt gương nên góc giữa tia và pháp tuyến là 90° − 30° = 60°."
+      },
+      {
+        "question_id": "AI_MCQ_2",
+        "prompt": "Cho cùng tình huống: tia tới hợp với mặt gương 30°. Theo định luật phản xạ, góc phản xạ bằng bao nhiêu?",
+        "q_type": "mcq",
+        "options": [
+          "A. 30°",
+          "B. 0°",
+          "C. 60°",
+          "D. 90°"
+        ],
+        "chosen_index": 0,
+        "correct_index": 2,
+        "is_correct": false,
+        "explanation": "Định luật phản xạ: góc phản xạ bằng góc tới (đều đo so với pháp tuyến). Ở câu trước ta đã tìm góc tới là 60°, nên góc phản xạ cũng là 60°."
+      },
+      {
+        "question_id": "AI_MCQ_3",
+        "prompt": "Trong phản xạ ánh sáng trên gương phẳng, 'góc tới' được đo giữa tia tới và cái nào sau đây?",
+        "q_type": "mcq",
+        "options": [
+          "A. Tia phản xạ",
+          "B. Hướng tới của nguồn sáng",
+          "C. Pháp tuyến (đường vuông góc với mặt gương)",
+          "D. Mặt gương"
+        ],
+        "chosen_index": 0,
+        "correct_index": 2,
+        "is_correct": false,
+        "explanation": "Theo định nghĩa, góc tới là góc giữa tia tới và pháp tuyến tại điểm tới trên mặt gương. Không phải là góc với mặt gương trực tiếp; góc với mặt gương là bù của góc tới."
+      }
+    ],
+    "pre_test_score": null,
+    "learning_gain": null,
+    "gain_percent": null
+  },
+  {
+    "quiz_id": "PRE_6B5D360D",
+    "username": "baonhat",
+    "student_name": "Phan Nhật",
+    "topic": "Sinh học – Quá trình quang hợp ở thực vật",
+    "strand": "Cơ thể sống / Môi trường",
+    "quiz_type": "pre_test",
+    "created_at": "2026-10-17T09:44:00.266557",
+    "score": 3.3,
+    "total_mcq": 3,
+    "correct_mcq": 1,
+    "essay_score": 0.0,
+    "essay_feedback": "Khảo sát đầu vào hoàn tất! Socrates đã hiểu trình độ hiện tại của em.",
+    "student_essay_answer": "",
+    "badge_earned": "Mới Bắt Đầu 🌱",
+    "details": [
+      {
+        "question_id": "AI_MCQ_1",
+        "prompt": "Trong phương trình chữ của quang hợp: H₂O + CO₂ → C₆H₁₂O₆ + O₂, những chất nào là chất tham gia (đầu vào) của phản ứng?",
+        "q_type": "mcq",
+        "options": [
+          "A. H₂O và CO₂",
+          "B. C₆H₁₂O₆ và O₂",
+          "C. CO₂ và C₆H₁₂O₆",
+          "D. H₂O và O₂"
+        ],
+        "chosen_index": 1,
+        "correct_index": 0,
+        "is_correct": false,
+        "explanation": "Chất tham gia (chất đầu vào) là những chất đứng ở vế trái của phương trình phản ứng. Ở đây H₂O (nước) và CO₂ (khí cacbonic) là hai chất được cây hấp thụ để tiến hành quang hợp."
+      },
+      {
+        "question_id": "AI_MCQ_2",
+        "prompt": "Trong cùng phương trình quang hợp trên, những chất nào là sản phẩm (kết quả) của phản ứng?",
+        "q_type": "mcq",
+        "options": [
+          "A. H₂O và CO₂",
+          "B. C₆H₁₂O₆ và O₂",
+          "C. CO₂ và O₂",
+          "D. H₂O và O₂"
+        ],
+        "chosen_index": 1,
+        "correct_index": 1,
+        "is_correct": true,
+        "explanation": "Sản phẩm của phản ứng là những chất nằm ở vế phải của phương trình. Ở đây glucose (C₆H₁₂O₆) và oxy (O₂) là sản phẩm do quá trình quang hợp tạo ra."
+      },
+      {
+        "question_id": "AI_MCQ_3",
+        "prompt": "Trong quang hợp, vai trò của CO₂ và O₂ là gì theo phương trình H₂O + CO₂ → C₆H₁₂O₆ + O₂?",
+        "q_type": "mcq",
+        "options": [
+          "A. CO₂ là sản phẩm; O₂ là chất tham gia",
+          "B. Cả CO₂ và O₂ đều là chất tham gia",
+          "C. CO₂ là chất tham gia; O₂ là sản phẩm",
+          "D. Cả CO₂ và O₂ đều là sản phẩm"
+        ],
+        "chosen_index": 1,
+        "correct_index": 2,
+        "is_correct": false,
+        "explanation": "CO₂ (carbon dioxide) được cây dùng làm nguyên liệu (chất tham gia) để tổng hợp đường, còn O₂ (oxygen) được giải phóng ra ngoài là sản phẩm của quá trình quang hợp."
+      }
+    ],
+    "pre_test_score": null,
+    "learning_gain": null,
+    "gain_percent": null
+  },
+  {
+    "quiz_id": "PRE_F47B2C9C",
+    "username": "baonhat",
+    "student_name": "Phan Nhật",
+    "topic": "Vật lý – Chuyển động và Tốc độ",
+    "strand": "Cơ học / Đại lượng vật lý",
+    "quiz_type": "pre_test",
+    "created_at": "2026-10-17T08:27:45.664759",
+    "score": 10.0,
+    "total_mcq": 3,
+    "correct_mcq": 3,
+    "essay_score": 0.0,
+    "essay_feedback": "Khảo sát đầu vào hoàn tất! Socrates đã hiểu trình độ hiện tại của em.",
+    "student_essay_answer": "",
+    "badge_earned": "Nền Tảng Tốt 🌟",
+    "details": [
+      {
+        "question_id": "AI_MCQ_1",
+        "prompt": "Khi mới bắt đầu kéo, học sinh thấy chiếc bàn rất nặng, nhưng sau khi bàn trượt đều thì kéo nhẹ hơn. Nguyên nhân chính giải thích hiện tượng này là gì?",
+        "q_type": "mcq",
+        "options": [
+          "A. Lực ma sát nghỉ ban đầu lớn hơn lực ma sát trượt khi bàn đã chuyển động.",
+          "B. Trọng lượng của bàn giảm khi bàn bắt đầu trượt.",
+          "C. Lực quán tính của bàn biến mất khi bàn bắt đầu trượt.",
+          "D. Lực cản do không khí tăng khi bàn chuyển động nên dễ kéo hơn."
+        ],
+        "chosen_index": 0,
+        "correct_index": 0,
+        "is_correct": true,
+        "explanation": "Khi bàn đứng yên, cần vượt qua lực ma sát nghỉ (thường lớn hơn) để bắt đầu chuyển động. Sau khi bàn trượt, lực ma sát trượt có giá trị nhỏ hơn nên lực cần tác dụng giữ cho bàn trượt đều nhỏ hơn lực cần để bắt đầu chuyển động."
+      },
+      {
+        "question_id": "AI_MCQ_2",
+        "prompt": "Khi học sinh kéo chiếc bàn trên sàn, lực nào là lực cản chủ yếu làm khó chuyển động của bàn?",
+        "q_type": "mcq",
+        "options": [
+          "A. Lực ma sát giữa mặt bàn và sàn",
+          "B. Lực nâng do tay học sinh",
+          "C. Lực hút trái đất (trọng lực) theo phương ngang",
+          "D. Lực tác dụng do không khí (lực không khí)"
+        ],
+        "chosen_index": 0,
+        "correct_index": 0,
+        "is_correct": true,
+        "explanation": "Lực ma sát giữa mặt bàn và sàn là lực cản chính chống lại sự trượt của bàn; các lựa chọn còn lại không phải là lực cản chủ yếu trong trường hợp kéo một bàn trên sàn lớp học."
+      },
+      {
+        "question_id": "AI_MCQ_3",
+        "prompt": "Khi bàn trượt đều (chuyển động không đổi về tốc độ), mối quan hệ giữa lực kéo F của học sinh và lực ma sát f giữa bàn và sàn là gì?",
+        "q_type": "mcq",
+        "options": [
+          "A. F có cùng độ lớn nhưng ngược chiều với f (F = f, chiều ngược nhau).",
+          "B. F lớn hơn f (F > f).",
+          "C. F nhỏ hơn f (F < f).",
+          "D. F và f vuông góc nhau."
+        ],
+        "chosen_index": 0,
+        "correct_index": 0,
+        "is_correct": true,
+        "explanation": "Khi chuyển động đều, vận tốc không đổi nên gia tốc bằng không. Theo định luật II Newton, tổng lực theo phương ngang phải bằng 0, do đó lực kéo cân bằng lực ma sát về phương ngang: cùng độ lớn và ngược chiều."
+      }
+    ],
+    "pre_test_score": null,
+    "learning_gain": null,
+    "gain_percent": null
+  },
+  {
+    "quiz_id": "QUIZ_B1E7D762",
+    "username": "baonhat",
+    "student_name": "Phan Nhật",
+    "topic": "Vật lý – Khối lượng và Trọng lượng",
+    "strand": "Cơ học / Đại lượng vật lý",
+    "quiz_type": "post_test",
+    "created_at": "2026-10-17T08:10:03.906961",
+    "score": 8.1,
+    "total_mcq": 3,
+    "correct_mcq": 3,
+    "essay_score": 2.1,
+    "essay_feedback": "💡 Em đã có nỗ lực tư duy! Hãy đọc kỹ phần giải thích chi tiết và đáp án mẫu của Socrates để bổ sung các ý khoa học còn thiếu nhé.",
+    "student_essay_answer": "khối lượng của phi hành gia không đổi nhưng do trọng lượng giảm đi nên phi hành gia có thể di chuyển nhẹ nhàng",
+    "badge_earned": "Cần Củng Cố Lại 🌿",
+    "details": [
+      {
+        "question_id": "KL_MCQ_1",
+        "prompt": "Ở gần bề mặt Trái Đất, mối liên hệ giữa trọng lượng P (đơn vị N) và khối lượng m (đơn vị kg) của một vật được xác định bởi công thức nào?",
+        "q_type": "mcq",
+        "options": [
+          "A. P = 10 * m",
+          "B. m = 10 * P",
+          "C. P = m / 10",
+          "D. P = m + 10"
+        ],
+        "chosen_index": 0,
+        "correct_index": 0,
+        "is_correct": true,
+        "explanation": "Gần mặt đất, lực hút Trái Đất tác dụng lên mỗi 1 kg khối lượng có độ lớn xấp xỉ 10 N, do đó P = 10m."
+      },
+      {
+        "question_id": "KL_MCQ_2",
+        "prompt": "Một thùng hàng có khối lượng m = 45 kg đặt trên mặt sàn phòng học. Trọng lượng của thùng hàng đó là:",
+        "q_type": "mcq",
+        "options": [
+          "A. 450 N",
+          "B. 45 N",
+          "C. 4,5 N",
+          "D. 4500 N"
+        ],
+        "chosen_index": 0,
+        "correct_index": 0,
+        "is_correct": true,
+        "explanation": "Áp dụng công thức P = 10 * m = 10 * 45 = 450 N."
+      },
+      {
+        "question_id": "KL_MCQ_3",
+        "prompt": "Đơn vị đo chuẩn trong hệ đo lường KHTN của khối lượng và trọng lượng lần lượt là gì?",
+        "q_type": "mcq",
+        "options": [
+          "A. Kilôgam (kg) và Newton (N)",
+          "B. Newton (N) và Kilôgam (kg)",
+          "C. Gam (g) và Jun (J)",
+          "D. Mét (m) và Giây (s)"
+        ],
+        "chosen_index": 0,
+        "correct_index": 0,
+        "is_correct": true,
+        "explanation": "Khối lượng đo bằng kilôgam (kg), còn trọng lượng là độ lớn lực hút của Trái Đất nên đo bằng Newton (N)."
+      },
+      {
+        "question_id": "KL_ESSAY_1",
+        "prompt": "Một phi hành gia khi đổ bộ lên Mặt Trăng thấy mình di chuyển rất nhẹ nhàng và có thể nhảy cao gấp 6 lần so với trên Trái Đất. Em hãy phân tích xem khối lượng (kg) và trọng lượng (N) của phi hành gia đã thay đổi như thế nào?",
+        "q_type": "essay",
+        "student_answer": "khối lượng của phi hành gia không đổi nhưng do trọng lượng giảm đi nên phi hành gia có thể di chuyển nhẹ nhàng",
+        "score": 2.1,
+        "max_score": 4.0,
+        "feedback": "💡 Em đã có nỗ lực tư duy! Hãy đọc kỹ phần giải thích chi tiết và đáp án mẫu của Socrates để bổ sung các ý khoa học còn thiếu nhé.",
+        "sample_answer": "Khối lượng của phi hành gia KHÔNG ĐỔI vì khối lượng là lượng chất chứa trong cơ thể, không phụ thuộc vào vị trí trong vũ trụ. Trong khi đó, trọng lượng của phi hành gia GIẢM đi 6 lần vì lực hút hấp dẫn của Mặt Trăng chỉ bằng khoảng 1/6 lực hút của Trái Đất. Vì thế phi hành gia cảm thấy nhẹ nhàng và nhảy cao hơn.",
+        "explanation": "Khối lượng là lượng chất cấu tạo nên cơ thể nên không đổi ở bất cứ đâu. Trọng lượng là lực hấp dẫn tác dụng lên người, do lực hút Mặt Trăng chỉ bằng 1/6 Trái Đất nên trọng lượng giảm 6 lần."
+      }
+    ],
+    "pre_test_score": 10.0,
+    "learning_gain": -1.9,
+    "gain_percent": 100.0
+  },
+  {
+    "quiz_id": "PRE_029F4A91",
+    "username": "baonhat",
+    "student_name": "Phan Nhật",
+    "topic": "Vật lý – Khối lượng và Trọng lượng",
+    "strand": "Cơ học / Đại lượng vật lý",
+    "quiz_type": "pre_test",
+    "created_at": "2026-10-17T07:55:48.305344",
+    "score": 10.0,
+    "total_mcq": 3,
+    "correct_mcq": 3,
+    "essay_score": 0.0,
+    "essay_feedback": "Khảo sát đầu vào hoàn tất! Socrates đã hiểu trình độ hiện tại của em.",
+    "student_essay_answer": "",
+    "badge_earned": "Nền Tảng Tốt 🌟",
+    "details": [
+      {
+        "question_id": "AI_MCQ_1",
+        "prompt": "Một thùng hàng có khối lượng m = 45 kg đặt nằm yên trên mặt đất. Lấy g = 10 N/kg. Trọng lượng của thùng hàng bằng bao nhiêu?",
+        "q_type": "mcq",
+        "options": [
+          "A. 450 N",
+          "B. 45 N",
+          "C. 4,5 N",
+          "D. 0,45 N"
+        ],
+        "chosen_index": 0,
+        "correct_index": 0,
+        "is_correct": true,
+        "explanation": "Trọng lượng P được tính bằng P = m · g. Thay m = 45 kg và g = 10 N/kg ta có P = 45 · 10 = 450 N."
+      },
+      {
+        "question_id": "AI_MCQ_2",
+        "prompt": "Biết cùng một vật có khối lượng 45 kg trên Trái Đất và trên Mặt Trăng. Điều nào sau đây đúng về khối lượng và trọng lượng của vật khi mang từ Trái Đất sang Mặt Trăng?",
+        "q_type": "mcq",
+        "options": [
+          "A. Khối lượng không đổi, trọng lượng giảm (do g nhỏ hơn trên Mặt Trăng)",
+          "B. Khối lượng giảm, trọng lượng không đổi",
+          "C. Cả khối lượng và trọng lượng đều giảm",
+          "D. Khối lượng không đổi, trọng lượng không đổi"
+        ],
+        "chosen_index": 0,
+        "correct_index": 0,
+        "is_correct": true,
+        "explanation": "Khối lượng là lượng chất, không phụ thuộc vào nơi đo nên giữ nguyên 45 kg. Trọng lượng là lực do trọng trường (g) gây ra; vì g trên Mặt Trăng nhỏ hơn Trái Đất nên trọng lượng giảm."
+      },
+      {
+        "question_id": "AI_MCQ_3",
+        "prompt": "Một học sinh lầm lẫn gọi trọng lượng của vật bằng đơn vị kg. Phát biểu nào sau đây chính xác?",
+        "q_type": "mcq",
+        "options": [
+          "A. Khối lượng đo bằng kg, trọng lượng đo bằng N — nên không nên ghi trọng lượng bằng kg",
+          "B. Cả khối lượng và trọng lượng đều đo bằng kg",
+          "C. Khối lượng đo bằng N, trọng lượng đo bằng kg",
+          "D. Đơn vị của trọng lượng có thể là kg hoặc N tùy thầy cô"
+        ],
+        "chosen_index": 0,
+        "correct_index": 0,
+        "is_correct": true,
+        "explanation": "Khối lượng là một đại lượng vật chất được đo bằng kilôgam (kg). Trọng lượng là một lực nên đơn vị hợp lệ là Newton (N). Ghi trọng lượng bằng kg là sai về đơn vị."
+      }
+    ],
+    "pre_test_score": null,
+    "learning_gain": null,
+    "gain_percent": null
+  },
+  {
+    "quiz_id": "PRE_23083439",
+    "username": "baonhat",
+    "student_name": "Phan Nhật",
+    "topic": "Vật lý – Chuyển động và Tốc độ",
+    "strand": "Cơ học / Đại lượng vật lý",
+    "quiz_type": "pre_test",
+    "created_at": "2026-10-16T22:03:05.782322",
+    "score": 3.3,
+    "total_mcq": 3,
+    "correct_mcq": 1,
+    "essay_score": 0.0,
+    "essay_feedback": "Khảo sát đầu vào hoàn tất! Socrates đã hiểu trình độ hiện tại của em.",
+    "student_essay_answer": "",
+    "badge_earned": "Mới Bắt Đầu 🌱",
+    "details": [
+      {
+        "question_id": "CD_MCQ_1",
+        "prompt": "Công thức nào sau đây dùng để xác định tốc độ chuyển động của một vật khi biết quãng đường s và thời gian t?",
+        "q_type": "mcq",
+        "options": [
+          "A. v = s . t",
+          "B. v = s / t",
+          "C. v = t / s",
+          "D. v = s + t"
+        ],
+        "chosen_index": 0,
+        "correct_index": 1,
+        "is_correct": false,
+        "explanation": "Tốc độ là đại lượng đặc trưng cho sự nhanh chậm của chuyển động, được tính bằng thương số giữa quãng đường đi được và khoảng thời gian đi quãng đường đó: v = s / t."
+      },
+      {
+        "question_id": "CD_MCQ_2",
+        "prompt": "Một người đi xe máy với tốc độ 36 km/h. Giá trị tốc độ này tương ứng với bao nhiêu m/s?",
+        "q_type": "mcq",
+        "options": [
+          "A. 5 m/s",
+          "B. 10 m/s",
+          "C. 15 m/s",
+          "D. 20 m/s"
+        ],
+        "chosen_index": 0,
+        "correct_index": 1,
+        "is_correct": false,
+        "explanation": "Quy tắc đổi đơn vị chuẩn KHTN: Muốn đổi từ km/h sang m/s ta chia cho 3,6. Do đó: 36 / 3,6 = 10 m/s."
+      },
+      {
+        "question_id": "CD_MCQ_3",
+        "prompt": "Một đoàn tàu đi được quãng đường 120 km trong thời gian 2 giờ 30 phút. Tốc độ của đoàn tàu là:",
+        "q_type": "mcq",
+        "options": [
+          "A. 48 km/h",
+          "B. 50 km/h",
+          "C. 60 km/h",
+          "D. 40 km/h"
+        ],
+        "chosen_index": 0,
+        "correct_index": 0,
+        "is_correct": true,
+        "explanation": "Đổi 2 giờ 30 phút = 2,5 giờ. Tốc độ của tàu là: v = s / t = 120 / 2,5 = 48 km/h."
+      }
+    ],
+    "pre_test_score": null,
+    "learning_gain": null,
+    "gain_percent": null
+  },
+  {
+    "quiz_id": "PRE_A7E3F0FB",
+    "username": "baonhat",
+    "student_name": "Phan Nhật",
+    "topic": "Vật lý – Chuyển động và Tốc độ",
+    "strand": "Cơ học / Đại lượng vật lý",
+    "quiz_type": "pre_test",
+    "created_at": "2026-10-16T21:41:29.346433",
+    "score": 3.3,
+    "total_mcq": 3,
+    "correct_mcq": 1,
+    "essay_score": 0.0,
+    "essay_feedback": "Khảo sát đầu vào hoàn tất! Socrates đã hiểu trình độ hiện tại của em.",
+    "student_essay_answer": "",
+    "badge_earned": "Mới Bắt Đầu 🌱",
+    "details": [
+      {
+        "question_id": "CD_MCQ_1",
+        "prompt": "Công thức nào sau đây dùng để xác định tốc độ chuyển động của một vật khi biết quãng đường s và thời gian t?",
+        "q_type": "mcq",
+        "options": [
+          "A. v = s . t",
+          "B. v = s / t",
+          "C. v = t / s",
+          "D. v = s + t"
+        ],
+        "chosen_index": 0,
+        "correct_index": 1,
+        "is_correct": false,
+        "explanation": "Tốc độ là đại lượng đặc trưng cho sự nhanh chậm của chuyển động, được tính bằng thương số giữa quãng đường đi được và khoảng thời gian đi quãng đường đó: v = s / t."
+      },
+      {
+        "question_id": "CD_MCQ_2",
+        "prompt": "Một người đi xe máy với tốc độ 36 km/h. Giá trị tốc độ này tương ứng với bao nhiêu m/s?",
+        "q_type": "mcq",
+        "options": [
+          "A. 5 m/s",
+          "B. 10 m/s",
+          "C. 15 m/s",
+          "D. 20 m/s"
+        ],
+        "chosen_index": 0,
+        "correct_index": 1,
+        "is_correct": false,
+        "explanation": "Quy tắc đổi đơn vị chuẩn KHTN: Muốn đổi từ km/h sang m/s ta chia cho 3,6. Do đó: 36 / 3,6 = 10 m/s."
+      },
+      {
+        "question_id": "CD_MCQ_3",
+        "prompt": "Một đoàn tàu đi được quãng đường 120 km trong thời gian 2 giờ 30 phút. Tốc độ của đoàn tàu là:",
+        "q_type": "mcq",
+        "options": [
+          "A. 48 km/h",
+          "B. 50 km/h",
+          "C. 60 km/h",
+          "D. 40 km/h"
+        ],
+        "chosen_index": 0,
+        "correct_index": 0,
+        "is_correct": true,
+        "explanation": "Đổi 2 giờ 30 phút = 2,5 giờ. Tốc độ của tàu là: v = s / t = 120 / 2,5 = 48 km/h."
+      }
+    ],
+    "pre_test_score": null,
+    "learning_gain": null,
+    "gain_percent": null
+  },
+  {
+    "quiz_id": "PRE_A9BD163F",
+    "username": "baonhat",
+    "student_name": "Phan Nhật",
+    "topic": "Vật lý – Chuyển động và Tốc độ",
+    "strand": "Cơ học / Đại lượng vật lý",
+    "quiz_type": "pre_test",
+    "created_at": "2026-10-16T20:41:56.950120",
+    "score": 3.3,
+    "total_mcq": 3,
+    "correct_mcq": 1,
+    "essay_score": 0.0,
+    "essay_feedback": "Khảo sát đầu vào hoàn tất! Socrates đã hiểu trình độ hiện tại của em.",
+    "student_essay_answer": "",
+    "badge_earned": "Mới Bắt Đầu 🌱",
+    "details": [
+      {
+        "question_id": "CD_MCQ_1",
+        "prompt": "Công thức nào sau đây dùng để xác định tốc độ chuyển động của một vật khi biết quãng đường s và thời gian t?",
+        "q_type": "mcq",
+        "options": [
+          "A. v = s . t",
+          "B. v = s / t",
+          "C. v = t / s",
+          "D. v = s + t"
+        ],
+        "chosen_index": 0,
+        "correct_index": 1,
+        "is_correct": false,
+        "explanation": "Tốc độ là đại lượng đặc trưng cho sự nhanh chậm của chuyển động, được tính bằng thương số giữa quãng đường đi được và khoảng thời gian đi quãng đường đó: v = s / t."
+      },
+      {
+        "question_id": "CD_MCQ_2",
+        "prompt": "Một người đi xe máy với tốc độ 36 km/h. Giá trị tốc độ này tương ứng với bao nhiêu m/s?",
+        "q_type": "mcq",
+        "options": [
+          "A. 5 m/s",
+          "B. 10 m/s",
+          "C. 15 m/s",
+          "D. 20 m/s"
+        ],
+        "chosen_index": 0,
+        "correct_index": 1,
+        "is_correct": false,
+        "explanation": "Quy tắc đổi đơn vị chuẩn KHTN: Muốn đổi từ km/h sang m/s ta chia cho 3,6. Do đó: 36 / 3,6 = 10 m/s."
+      },
+      {
+        "question_id": "CD_MCQ_3",
+        "prompt": "Một đoàn tàu đi được quãng đường 120 km trong thời gian 2 giờ 30 phút. Tốc độ của đoàn tàu là:",
+        "q_type": "mcq",
+        "options": [
+          "A. 48 km/h",
+          "B. 50 km/h",
+          "C. 60 km/h",
+          "D. 40 km/h"
+        ],
+        "chosen_index": 0,
+        "correct_index": 0,
+        "is_correct": true,
+        "explanation": "Đổi 2 giờ 30 phút = 2,5 giờ. Tốc độ của tàu là: v = s / t = 120 / 2,5 = 48 km/h."
+      }
+    ],
+    "pre_test_score": null,
+    "learning_gain": null,
+    "gain_percent": null
+  },
+  {
+    "quiz_id": "PRE_408DA696",
+    "username": "baonhat",
+    "student_name": "Phan Nhật",
+    "topic": "Vật lý – Ánh sáng và Định luật phản xạ ánh sáng",
+    "strand": "Cơ học / Đại lượng vật lý",
+    "quiz_type": "pre_test",
+    "created_at": "2026-10-16T20:41:19.319875",
+    "score": 0.0,
+    "total_mcq": 3,
+    "correct_mcq": 0,
+    "essay_score": 0.0,
+    "essay_feedback": "Khảo sát đầu vào hoàn tất! Socrates đã hiểu trình độ hiện tại của em.",
+    "student_essay_answer": "",
+    "badge_earned": "Mới Bắt Đầu 🌱",
+    "details": [
+      {
+        "question_id": "AS_MCQ_1",
+        "prompt": "Theo định luật phản xạ ánh sáng, nếu góc tới i = 35° thì góc phản xạ i' có độ lớn là bao nhiêu?",
+        "q_type": "mcq",
+        "options": [
+          "A. 70°",
+          "B. 55°",
+          "C. 35°",
+          "D. 90°"
+        ],
+        "chosen_index": 0,
+        "correct_index": 2,
+        "is_correct": false,
+        "explanation": "Định luật phản xạ ánh sáng khẳng định: Góc phản xạ luôn luôn bằng góc tới (i' = i). Do đó i' = 35°."
+      },
+      {
+        "question_id": "AS_MCQ_2",
+        "prompt": "Đặc điểm nào sau đây KHÔNG PHẢI là tính chất ảnh của một vật tạo bởi gương phẳng?",
+        "q_type": "mcq",
+        "options": [
+          "A. Ảnh là ảnh ảo không hứng được trên màn chắn",
+          "B. Độ lớn của ảnh luôn lớn hơn độ lớn của vật",
+          "C. Khoảng cách từ ảnh đến gương bằng khoảng cách từ vật đến gương",
+          "D. Độ lớn của ảnh bằng độ lớn của vật"
+        ],
+        "chosen_index": 0,
+        "correct_index": 1,
+        "is_correct": false,
+        "explanation": "Ảnh tạo bởi gương phẳng luôn có kích thước bằng đúng kích thước của vật, không lớn hơn cũng không nhỏ hơn."
+      },
+      {
+        "question_id": "AS_MCQ_3",
+        "prompt": "Chiếu một tia sáng vuông góc với bề mặt gương phẳng. Góc tới và góc phản xạ trong trường hợp này lần lượt là:",
+        "q_type": "mcq",
+        "options": [
+          "A. 90° và 90°",
+          "B. 0° và 0°",
+          "C. 0° và 90°",
+          "D. 45° và 45°"
+        ],
+        "chosen_index": 0,
+        "correct_index": 1,
+        "is_correct": false,
+        "explanation": "Góc tới là góc hợp bởi tia tới và pháp tuyến. Khi tia sáng vuông góc với gương, tia tới trùng với pháp tuyến nên góc tới i = 0° => góc phản xạ i' = 0°."
+      }
+    ],
+    "pre_test_score": null,
+    "learning_gain": null,
+    "gain_percent": null
+  },
+  {
+    "quiz_id": "PRE_1E8BB8EE",
+    "username": "baonhat",
+    "student_name": "Phan Nhật",
+    "topic": "Hóa học – Biến đổi chất và Hiện tượng hóa học",
+    "strand": "Biến đổi chất / Phản ứng hóa học",
+    "quiz_type": "pre_test",
+    "created_at": "2026-10-15T16:36:16.986211",
+    "score": 0.0,
+    "total_mcq": 3,
+    "correct_mcq": 0,
+    "essay_score": 0.0,
+    "essay_feedback": "Khảo sát đầu vào hoàn tất! Socrates đã hiểu trình độ hiện tại của em.",
+    "student_essay_answer": "",
+    "badge_earned": "Mới Bắt Đầu 🌱",
+    "details": [
+      {
+        "question_id": "BT_MCQ_1",
+        "prompt": "Định luật bảo toàn khối lượng khẳng định: Trong một phản ứng hóa học,",
+        "q_type": "mcq",
+        "options": [
+          "A. Tổng khối lượng các chất sản phẩm lớn hơn chất tham gia",
+          "B. Tổng khối lượng các chất sản phẩm bằng tổng khối lượng các chất tham gia",
+          "C. Tổng khối lượng các chất sản phẩm nhỏ hơn chất tham gia",
+          "D. Khối lượng luôn bị hao hụt thành năng lượng"
+        ],
+        "chosen_index": 0,
+        "correct_index": 1,
+        "is_correct": false,
+        "explanation": "Theo định luật Lomonosov - Lavoisier: Tổng khối lượng của các chất sản phẩm luôn bằng tổng khối lượng của các chất tham gia phản ứng."
+      },
+      {
+        "question_id": "BT_MCQ_2",
+        "prompt": "Đốt cháy hoàn toàn 12 gam Carbon (than đá) cần dùng vừa đủ 32 gam khí Oxygen. Khối lượng khí Carbon dioxide (CO2) sinh ra là:",
+        "q_type": "mcq",
+        "options": [
+          "A. 20 gam",
+          "B. 40 gam",
+          "C. 44 gam",
+          "D. 24 gam"
+        ],
+        "chosen_index": 0,
+        "correct_index": 2,
+        "is_correct": false,
+        "explanation": "Áp dụng định luật bảo toàn khối lượng: m(C) + m(O2) = m(CO2) => m(CO2) = 12 + 32 = 44 gam."
+      },
+      {
+        "question_id": "BT_MCQ_3",
+        "prompt": "Dấu hiệu nào sau đây CHẮC CHẮN chứng tỏ có phản ứng hóa học xảy ra?",
+        "q_type": "mcq",
+        "options": [
+          "A. Nước đá tan chảy thành nước lỏng",
+          "B. Hòa tan đường vào nước tạo thành dung dịch nước đường",
+          "C. Xuất hiện chất mới có màu sắc khác, có kết tủa hoặc sinh bọt khí",
+          "D. Xé nhỏ một tờ giấy trắng thành nhiều mảnh vụn"
+        ],
+        "chosen_index": 0,
+        "correct_index": 2,
+        "is_correct": false,
+        "explanation": "Bản chất phản ứng hóa học là biến đổi chất này thành chất khác. Sự xuất hiện chất mới (kết tủa, khí bay lên, đổi màu) là dấu hiệu nhận biết."
+      }
+    ],
+    "pre_test_score": null,
+    "learning_gain": null,
+    "gain_percent": null
+  },
+  {
+    "quiz_id": "PRE_2BC26CF6",
+    "username": "baonhat",
+    "student_name": "Phan Nhật",
+    "topic": "Hóa học – Biến đổi chất và Hiện tượng hóa học",
+    "strand": "Biến đổi chất / Phản ứng hóa học",
+    "quiz_type": "pre_test",
+    "created_at": "2026-10-15T16:12:49.572734",
+    "score": 0.0,
+    "total_mcq": 3,
+    "correct_mcq": 0,
+    "essay_score": 0.0,
+    "essay_feedback": "Khảo sát đầu vào hoàn tất! Socrates đã hiểu trình độ hiện tại của em.",
+    "student_essay_answer": "",
+    "badge_earned": "Mới Bắt Đầu 🌱",
+    "details": [
+      {
+        "question_id": "BT_MCQ_1",
+        "prompt": "Định luật bảo toàn khối lượng khẳng định: Trong một phản ứng hóa học,",
+        "q_type": "mcq",
+        "options": [
+          "A. Tổng khối lượng các chất sản phẩm lớn hơn chất tham gia",
+          "B. Tổng khối lượng các chất sản phẩm bằng tổng khối lượng các chất tham gia",
+          "C. Tổng khối lượng các chất sản phẩm nhỏ hơn chất tham gia",
+          "D. Khối lượng luôn bị hao hụt thành năng lượng"
+        ],
+        "chosen_index": 0,
+        "correct_index": 1,
+        "is_correct": false,
+        "explanation": "Theo định luật Lomonosov - Lavoisier: Tổng khối lượng của các chất sản phẩm luôn bằng tổng khối lượng của các chất tham gia phản ứng."
+      },
+      {
+        "question_id": "BT_MCQ_2",
+        "prompt": "Đốt cháy hoàn toàn 12 gam Carbon (than đá) cần dùng vừa đủ 32 gam khí Oxygen. Khối lượng khí Carbon dioxide (CO2) sinh ra là:",
+        "q_type": "mcq",
+        "options": [
+          "A. 20 gam",
+          "B. 40 gam",
+          "C. 44 gam",
+          "D. 24 gam"
+        ],
+        "chosen_index": 0,
+        "correct_index": 2,
+        "is_correct": false,
+        "explanation": "Áp dụng định luật bảo toàn khối lượng: m(C) + m(O2) = m(CO2) => m(CO2) = 12 + 32 = 44 gam."
+      },
+      {
+        "question_id": "BT_MCQ_3",
+        "prompt": "Dấu hiệu nào sau đây CHẮC CHẮN chứng tỏ có phản ứng hóa học xảy ra?",
+        "q_type": "mcq",
+        "options": [
+          "A. Nước đá tan chảy thành nước lỏng",
+          "B. Hòa tan đường vào nước tạo thành dung dịch nước đường",
+          "C. Xuất hiện chất mới có màu sắc khác, có kết tủa hoặc sinh bọt khí",
+          "D. Xé nhỏ một tờ giấy trắng thành nhiều mảnh vụn"
+        ],
+        "chosen_index": 0,
+        "correct_index": 2,
+        "is_correct": false,
+        "explanation": "Bản chất phản ứng hóa học là biến đổi chất này thành chất khác. Sự xuất hiện chất mới (kết tủa, khí bay lên, đổi màu) là dấu hiệu nhận biết."
+      }
+    ],
+    "pre_test_score": null,
+    "learning_gain": null,
+    "gain_percent": null
+  },
+  {
+    "quiz_id": "PRE_4C7380CC",
+    "username": "baonhat",
+    "student_name": "Phan Nhật",
+    "topic": "Vật lý – Ánh sáng và Định luật phản xạ ánh sáng",
+    "strand": "Cơ học / Đại lượng vật lý",
+    "quiz_type": "pre_test",
+    "created_at": "2026-10-15T14:44:41.450930",
+    "score": 3.3,
+    "total_mcq": 3,
+    "correct_mcq": 1,
+    "essay_score": 0.0,
+    "essay_feedback": "Khảo sát đầu vào hoàn tất! Socrates đã hiểu trình độ hiện tại của em.",
+    "student_essay_answer": "",
+    "badge_earned": "Mới Bắt Đầu 🌱",
+    "details": [
+      {
+        "question_id": "AS_MCQ_1",
+        "prompt": "Theo định luật phản xạ ánh sáng, nếu góc tới i = 35° thì góc phản xạ i' có độ lớn là bao nhiêu?",
+        "q_type": "mcq",
+        "options": [
+          "A. 70°",
+          "B. 55°",
+          "C. 35°",
+          "D. 90°"
+        ],
+        "chosen_index": 2,
+        "correct_index": 2,
+        "is_correct": true,
+        "explanation": "Định luật phản xạ ánh sáng khẳng định: Góc phản xạ luôn luôn bằng góc tới (i' = i). Do đó i' = 35°."
+      },
+      {
+        "question_id": "AS_MCQ_2",
+        "prompt": "Đặc điểm nào sau đây KHÔNG PHẢI là tính chất ảnh của một vật tạo bởi gương phẳng?",
+        "q_type": "mcq",
+        "options": [
+          "A. Ảnh là ảnh ảo không hứng được trên màn chắn",
+          "B. Độ lớn của ảnh luôn lớn hơn độ lớn của vật",
+          "C. Khoảng cách từ ảnh đến gương bằng khoảng cách từ vật đến gương",
+          "D. Độ lớn của ảnh bằng độ lớn của vật"
+        ],
+        "chosen_index": 0,
+        "correct_index": 1,
+        "is_correct": false,
+        "explanation": "Ảnh tạo bởi gương phẳng luôn có kích thước bằng đúng kích thước của vật, không lớn hơn cũng không nhỏ hơn."
+      },
+      {
+        "question_id": "AS_MCQ_3",
+        "prompt": "Chiếu một tia sáng vuông góc với bề mặt gương phẳng. Góc tới và góc phản xạ trong trường hợp này lần lượt là:",
+        "q_type": "mcq",
+        "options": [
+          "A. 90° và 90°",
+          "B. 0° và 0°",
+          "C. 0° và 90°",
+          "D. 45° và 45°"
+        ],
+        "chosen_index": 0,
+        "correct_index": 1,
+        "is_correct": false,
+        "explanation": "Góc tới là góc hợp bởi tia tới và pháp tuyến. Khi tia sáng vuông góc với gương, tia tới trùng với pháp tuyến nên góc tới i = 0° => góc phản xạ i' = 0°."
+      }
+    ],
+    "pre_test_score": null,
+    "learning_gain": null,
+    "gain_percent": null
+  },
+  {
+    "quiz_id": "PRE_279365AC",
+    "username": "baonhat",
+    "student_name": "Phan Nhật",
+    "topic": "Sinh học – Quá trình quang hợp ở thực vật",
+    "strand": "Cơ thể sống / Môi trường",
+    "quiz_type": "pre_test",
+    "created_at": "2026-10-15T13:56:27.658515",
+    "score": 6.7,
+    "total_mcq": 3,
+    "correct_mcq": 2,
+    "essay_score": 0.0,
+    "essay_feedback": "Khảo sát đầu vào hoàn tất! Socrates đã hiểu trình độ hiện tại của em.",
+    "student_essay_answer": "",
+    "badge_earned": "Cần Khám Phá 💡",
+    "details": [
+      {
+        "question_id": "QH_MCQ_1",
+        "prompt": "Bào quan nào trong tế bào thực vật trực tiếp thực hiện quá trình quang hợp?",
+        "q_type": "mcq",
+        "options": [
+          "A. Ti thể",
+          "B. Nhân tế bào",
+          "C. Lục lạp (chứa diệp lục)",
+          "D. Không bào"
+        ],
+        "chosen_index": 2,
+        "correct_index": 2,
+        "is_correct": true,
+        "explanation": "Lục lạp chứa chất diệp lục có khả năng hấp thụ năng lượng ánh sáng mặt trời để tổng hợp chất hữu cơ."
+      },
+      {
+        "question_id": "QH_MCQ_2",
+        "prompt": "Sản phẩm của quá trình quang hợp ở thực vật bao gồm những chất nào sau đây?",
+        "q_type": "mcq",
+        "options": [
+          "A. Nước và khí Carbon dioxide",
+          "B. Chất hữu cơ (Glucose) và khí Oxygen",
+          "C. Khí Nitrogen và muối khoáng",
+          "D. Khí Carbon dioxide và năng lượng nhiệt"
+        ],
+        "chosen_index": 1,
+        "correct_index": 1,
+        "is_correct": true,
+        "explanation": "Phương trình quang hợp: Nước + Carbon dioxide + Năng lượng ánh sáng -> Chất hữu cơ (Glucose) + Oxygen."
+      },
+      {
+        "question_id": "QH_MCQ_3",
+        "prompt": "Cấu trúc nào trên bề mặt biểu bì lá cây đóng vai trò chủ yếu trong việc trao đổi khí và thoát hơi nước?",
+        "q_type": "mcq",
+        "options": [
+          "A. Gân lá",
+          "B. Khí khổng",
+          "C. Cuống lá",
+          "D. Diệp lục"
+        ],
+        "chosen_index": 0,
+        "correct_index": 1,
+        "is_correct": false,
+        "explanation": "Khí khổng có hai tế bào hình hạt đậu có khả năng đóng mở, là cửa ngõ trao đổi khí CO2, O2 và thoát hơi nước."
+      }
+    ],
+    "pre_test_score": null,
+    "learning_gain": null,
+    "gain_percent": null
+  },
+  {
+    "quiz_id": "PRE_6578B18D",
+    "username": "baonhat",
+    "student_name": "Phan Nhật",
+    "topic": "Hóa học – Biến đổi chất và Hiện tượng hóa học",
+    "strand": "Biến đổi chất / Phản ứng hóa học",
+    "quiz_type": "pre_test",
+    "created_at": "2026-10-15T13:19:46.731123",
+    "score": 0.0,
+    "total_mcq": 3,
+    "correct_mcq": 0,
+    "essay_score": 0.0,
+    "essay_feedback": "Khảo sát đầu vào hoàn tất! Socrates đã hiểu trình độ hiện tại của em.",
+    "student_essay_answer": "",
+    "badge_earned": "Mới Bắt Đầu 🌱",
+    "details": [
+      {
+        "question_id": "BT_MCQ_1",
+        "prompt": "Định luật bảo toàn khối lượng khẳng định: Trong một phản ứng hóa học,",
+        "q_type": "mcq",
+        "options": [
+          "A. Tổng khối lượng các chất sản phẩm lớn hơn chất tham gia",
+          "B. Tổng khối lượng các chất sản phẩm bằng tổng khối lượng các chất tham gia",
+          "C. Tổng khối lượng các chất sản phẩm nhỏ hơn chất tham gia",
+          "D. Khối lượng luôn bị hao hụt thành năng lượng"
+        ],
+        "chosen_index": 2,
+        "correct_index": 1,
+        "is_correct": false,
+        "explanation": "Theo định luật Lomonosov - Lavoisier: Tổng khối lượng của các chất sản phẩm luôn bằng tổng khối lượng của các chất tham gia phản ứng."
+      },
+      {
+        "question_id": "BT_MCQ_2",
+        "prompt": "Đốt cháy hoàn toàn 12 gam Carbon (than đá) cần dùng vừa đủ 32 gam khí Oxygen. Khối lượng khí Carbon dioxide (CO2) sinh ra là:",
+        "q_type": "mcq",
+        "options": [
+          "A. 20 gam",
+          "B. 40 gam",
+          "C. 44 gam",
+          "D. 24 gam"
+        ],
+        "chosen_index": 1,
+        "correct_index": 2,
+        "is_correct": false,
+        "explanation": "Áp dụng định luật bảo toàn khối lượng: m(C) + m(O2) = m(CO2) => m(CO2) = 12 + 32 = 44 gam."
+      },
+      {
+        "question_id": "BT_MCQ_3",
+        "prompt": "Dấu hiệu nào sau đây CHẮC CHẮN chứng tỏ có phản ứng hóa học xảy ra?",
+        "q_type": "mcq",
+        "options": [
+          "A. Nước đá tan chảy thành nước lỏng",
+          "B. Hòa tan đường vào nước tạo thành dung dịch nước đường",
+          "C. Xuất hiện chất mới có màu sắc khác, có kết tủa hoặc sinh bọt khí",
+          "D. Xé nhỏ một tờ giấy trắng thành nhiều mảnh vụn"
+        ],
+        "chosen_index": 1,
+        "correct_index": 2,
+        "is_correct": false,
+        "explanation": "Bản chất phản ứng hóa học là biến đổi chất này thành chất khác. Sự xuất hiện chất mới (kết tủa, khí bay lên, đổi màu) là dấu hiệu nhận biết."
+      }
+    ],
+    "pre_test_score": null,
+    "learning_gain": null,
+    "gain_percent": null
+  },
+  {
+    "quiz_id": "PRE_93DF8E60",
+    "username": "baonhat",
+    "student_name": "Phan Nhật",
+    "topic": "Vật lý – Chuyển động và Tốc độ",
+    "strand": "Vật lý THCS",
+    "quiz_type": "pre_test",
+    "created_at": "2026-10-15T13:05:24.052790",
+    "score": 3.3,
+    "total_mcq": 3,
+    "correct_mcq": 1,
+    "essay_score": 0.0,
+    "essay_feedback": "Khảo sát đầu vào hoàn tất! Socrates đã hiểu trình độ hiện tại của em.",
+    "student_essay_answer": "",
+    "badge_earned": "Mới Bắt Đầu 🌱",
+    "details": [
+      {
+        "question_id": "CD_MCQ_1",
+        "prompt": "Công thức nào sau đây dùng để xác định tốc độ chuyển động của một vật khi biết quãng đường s và thời gian t?",
+        "q_type": "mcq",
+        "options": [
+          "A. v = s . t",
+          "B. v = s / t",
+          "C. v = t / s",
+          "D. v = s + t"
+        ],
+        "chosen_index": -1,
+        "correct_index": 1,
+        "is_correct": false,
+        "explanation": "Tốc độ là đại lượng đặc trưng cho sự nhanh chậm của chuyển động, được tính bằng thương số giữa quãng đường đi được và khoảng thời gian đi quãng đường đó: v = s / t."
+      },
+      {
+        "question_id": "CD_MCQ_2",
+        "prompt": "Một người đi xe máy với tốc độ 36 km/h. Giá trị tốc độ này tương ứng với bao nhiêu m/s?",
+        "q_type": "mcq",
+        "options": [
+          "A. 5 m/s",
+          "B. 10 m/s",
+          "C. 15 m/s",
+          "D. 20 m/s"
+        ],
+        "chosen_index": 1,
+        "correct_index": 1,
+        "is_correct": true,
+        "explanation": "Quy tắc đổi đơn vị chuẩn KHTN: Muốn đổi từ km/h sang m/s ta chia cho 3,6. Do đó: 36 / 3,6 = 10 m/s."
+      },
+      {
+        "question_id": "CD_MCQ_3",
+        "prompt": "Một đoàn tàu đi được quãng đường 120 km trong thời gian 2 giờ 30 phút. Tốc độ của đoàn tàu là:",
+        "q_type": "mcq",
+        "options": [
+          "A. 48 km/h",
+          "B. 50 km/h",
+          "C. 60 km/h",
+          "D. 40 km/h"
+        ],
+        "chosen_index": -1,
+        "correct_index": 0,
+        "is_correct": false,
+        "explanation": "Đổi 2 giờ 30 phút = 2,5 giờ. Tốc độ của tàu là: v = s / t = 120 / 2,5 = 48 km/h."
+      }
+    ],
+    "pre_test_score": null,
+    "learning_gain": null,
+    "gain_percent": null
+  },
+  {
+    "quiz_id": "PRE_BC3B90BA",
+    "username": "baonhat",
+    "student_name": "Phan Nhật",
+    "topic": "Vật lý – Chuyển động và Tốc độ",
+    "strand": "Vật lý THCS",
+    "quiz_type": "pre_test",
+    "created_at": "2026-10-15T13:05:16.256236",
+    "score": 0.0,
+    "total_mcq": 3,
+    "correct_mcq": 0,
+    "essay_score": 0.0,
+    "essay_feedback": "Khảo sát đầu vào hoàn tất! Socrates đã hiểu trình độ hiện tại của em.",
+    "student_essay_answer": "",
+    "badge_earned": "Mới Bắt Đầu 🌱",
+    "details": [
+      {
+        "question_id": "CD_MCQ_1",
+        "prompt": "Công thức nào sau đây dùng để xác định tốc độ chuyển động của một vật khi biết quãng đường s và thời gian t?",
+        "q_type": "mcq",
+        "options": [
+          "A. v = s . t",
+          "B. v = s / t",
+          "C. v = t / s",
+          "D. v = s + t"
+        ],
+        "chosen_index": -1,
+        "correct_index": 1,
+        "is_correct": false,
+        "explanation": "Tốc độ là đại lượng đặc trưng cho sự nhanh chậm của chuyển động, được tính bằng thương số giữa quãng đường đi được và khoảng thời gian đi quãng đường đó: v = s / t."
+      },
+      {
+        "question_id": "CD_MCQ_2",
+        "prompt": "Một người đi xe máy với tốc độ 36 km/h. Giá trị tốc độ này tương ứng với bao nhiêu m/s?",
+        "q_type": "mcq",
+        "options": [
+          "A. 5 m/s",
+          "B. 10 m/s",
+          "C. 15 m/s",
+          "D. 20 m/s"
+        ],
+        "chosen_index": 3,
+        "correct_index": 1,
+        "is_correct": false,
+        "explanation": "Quy tắc đổi đơn vị chuẩn KHTN: Muốn đổi từ km/h sang m/s ta chia cho 3,6. Do đó: 36 / 3,6 = 10 m/s."
+      },
+      {
+        "question_id": "CD_MCQ_3",
+        "prompt": "Một đoàn tàu đi được quãng đường 120 km trong thời gian 2 giờ 30 phút. Tốc độ của đoàn tàu là:",
+        "q_type": "mcq",
+        "options": [
+          "A. 48 km/h",
+          "B. 50 km/h",
+          "C. 60 km/h",
+          "D. 40 km/h"
+        ],
+        "chosen_index": 1,
+        "correct_index": 0,
+        "is_correct": false,
+        "explanation": "Đổi 2 giờ 30 phút = 2,5 giờ. Tốc độ của tàu là: v = s / t = 120 / 2,5 = 48 km/h."
+      }
+    ],
+    "pre_test_score": null,
+    "learning_gain": null,
+    "gain_percent": null
+  }
+]

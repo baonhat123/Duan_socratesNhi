@@ -44,6 +44,9 @@ class SessionState:
     is_socratic_completed: bool = False  # Đã hoàn thành tự đúc kết kiến thức cốt lõi chưa
     current_user: Optional[UserAccount] = None  # Tài khoản học sinh đang đăng nhập
     current_parent: Optional[ParentAccount] = None  # Tài khoản phụ huynh (nếu đăng nhập vai trò phụ huynh)
+    pre_test_record: Optional[Any] = None       # Bản ghi bài khảo sát trình độ đầu vào (Pre-test)
+    post_test_record: Optional[Any] = None      # Bản ghi bài kiểm tra lại sau bài học (Post-test)
+    is_study_session_recorded: bool = False     # Đánh dấu đã ghi nhận buổi học / chuỗi streak cho bài này chưa
 
     def reset(self):
         """Khôi phục trạng thái ban đầu."""
@@ -54,3 +57,6 @@ class SessionState:
         self.classification_result = None
         self.session_summary = None
         self.is_socratic_completed = False
+        self.pre_test_record = None
+        self.post_test_record = None
+        self.is_study_session_recorded = False

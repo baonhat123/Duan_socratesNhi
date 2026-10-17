@@ -260,6 +260,27 @@ class OcrConfirmationView:
             visible=False
         )
 
+        # Thẻ nhắc nhở học sinh kiểm tra và sửa lại đề khi AI đọc chưa chắc chắn (Yêu cầu Ban Giám khảo)
+        self.advisory_text = ft.Text(
+            "💡 Lưu ý từ Socrates Nhí: Khi chụp ảnh đề thi, công thức toán hoặc chữ viết tay có thể bị đọc chưa chuẩn. "
+            "Em hãy đối chiếu kỹ với ảnh gốc và chỉnh sửa trực tiếp trong ô bên dưới trước khi bấm Xác nhận nhé!",
+            size=11,
+            color=ft.Colors.AMBER_900
+        )
+        self.advisory_box = ft.Container(
+            content=ft.Row([
+                ft.Icon(ft.Icons.WARNING_AMBER_ROUNDED, color=ft.Colors.AMBER_800, size=20),
+                ft.Column([
+                    ft.Text("Nhắc nhở kiểm tra đề bài:", weight=ft.FontWeight.BOLD, size=12, color=ft.Colors.AMBER_900),
+                    self.advisory_text
+                ], spacing=2, expand=True)
+            ], vertical_alignment=ft.CrossAxisAlignment.START),
+            bgcolor=ft.Colors.AMBER_50,
+            border=ft.Border.all(1, ft.Colors.AMBER_300),
+            border_radius=8,
+            padding=10
+        )
+
         self.right_card = ft.Card(
             content=ft.Container(
                 content=ft.Column(
@@ -271,6 +292,7 @@ class OcrConfirmationView:
                             ],
                             alignment=ft.MainAxisAlignment.SPACE_BETWEEN
                         ),
+                        self.advisory_box,
                         self.symbol_toolbar,
                         self.txt_editor,
                         self.live_preview_box,
@@ -375,6 +397,23 @@ class OcrConfirmationView:
                     self.sharpness_badge.content.controls[1].value = f"Độ nét: {sharpness}% (Rõ nét)"
                     self.sharpness_badge.bgcolor = ft.Colors.GREEN_50
                     self.sharpness_badge.border = ft.Border.all(1, ft.Colors.GREEN_200)
+
+                    conf = getattr(ocr_res, "confidence_score", 0.92) or 0.92
+                    conf_pct = int(conf * 100) if conf <= 1.0 else int(conf)
+                    if conf_pct < 85:
+                        self.advisory_text.value = (
+                            f"⚠️ Chú ý (Độ tin cậy AI: {conf_pct}%): Đề bài có thể chứa công thức số mũ hoặc chữ viết tay phức tạp. "
+                            "Em hãy đối chiếu kỹ từng số liệu và công thức với ảnh gốc, chỉnh sửa lại đề bài bên dưới trước khi bấm Xác nhận nhé!"
+                        )
+                        self.advisory_box.bgcolor = ft.Colors.AMBER_100
+                        self.advisory_box.border = ft.Border.all(1, ft.Colors.AMBER_400)
+                    else:
+                        self.advisory_text.value = (
+                            f"💡 Độ tin cậy AI đạt {conf_pct}%. Đối với công thức toán hoặc chữ viết tay, "
+                            "em hãy đối chiếu với ảnh gốc và chỉnh sửa lại đề bài bên dưới nếu cần trước khi bắt đầu học nhé!"
+                        )
+                        self.advisory_box.bgcolor = ft.Colors.AMBER_50
+                        self.advisory_box.border = ft.Border.all(1, ft.Colors.AMBER_300)
 
                     self.alert_box.visible = False
                     self.btn_confirm.disabled = False

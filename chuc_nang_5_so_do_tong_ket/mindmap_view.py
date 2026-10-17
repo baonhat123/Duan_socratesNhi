@@ -50,7 +50,9 @@ class MindmapSummaryView:
         target_variable: str = "Tốc độ v",
         total_turns: int = 4,
         on_restart: Optional[Callable[[], None]] = None,
-        is_standalone: bool = False
+        is_standalone: bool = False,
+        pre_test_record: Optional[Any] = None,
+        post_test_record: Optional[Any] = None
     ):
         self.page = page
         self.problem_text = problem_text or "Một người đi xe đạp với tốc độ 12 km/h trong thời gian 30 phút..."
@@ -62,6 +64,24 @@ class MindmapSummaryView:
         self.total_turns = total_turns
         self.on_restart = on_restart
         self.is_standalone = is_standalone
+        self.pre_test_record = pre_test_record
+        self.post_test_record = post_test_record
+
+        # Tự động nạp kết quả kiểm tra Pre/Post từ lịch sử nếu chưa có
+        try:
+            from app_tich_hop_socrates.auth_service import AuthService
+            from app_tich_hop_socrates.quiz_service import QuizService
+            cur_user = AuthService.get_current_user()
+            if cur_user and cur_user.username:
+                hist = QuizService.get_student_records(cur_user.username)
+                for r in hist:
+                    if r.topic == self.topic or r.strand == self.strand_name:
+                        if not self.pre_test_record and r.quiz_type == "pre_test":
+                            self.pre_test_record = r
+                        elif not self.post_test_record and r.quiz_type in ["post_test", "post_lesson"]:
+                            self.post_test_record = r
+        except Exception:
+            pass
 
         # Lấy tri thức chuẩn SGK theo đúng phân môn
         self.curated_concept = get_curated_concept_details(
@@ -124,6 +144,9 @@ class MindmapSummaryView:
             border=ft.Border.all(1, ft.Colors.AMBER_200),
             shadow=ft.BoxShadow(blur_radius=10, color=ft.Colors.with_opacity(0.04, ft.Colors.BLACK), offset=ft.Offset(0, 2))
         )
+
+        # 2.5 Bảng đối chứng Tiến độ Năng lực Trước & Sau khi học (Pre vs Post)
+        self.progress_comparison_card = self._build_progress_comparison_card()
 
         # 3. THẺ KHÁI NIỆM HOÀN CHỈNH & KIẾN THỨC CỐT LÕI CẦN NHỚ (Chuẩn SGK KHTN 7)
         self.concept_card = self._build_concept_card()
@@ -315,6 +338,25 @@ class MindmapSummaryView:
             on_click=self._on_save_summary
         )
 
+        if self.post_test_record:
+            gain_val = getattr(self.post_test_record, "learning_gain", None)
+            gain_str = f" (Tiến bộ +{gain_val}đ 🚀)" if (gain_val is not None and gain_val > 0) else ""
+            self.btn_take_quiz = ft.FilledButton(
+                f"Đã kiểm tra củng cố: {self.post_test_record.score:.1f}/10đ{gain_str} ✓",
+                icon=ft.Icons.CHECK_CIRCLE_ROUNDED,
+                style=ft.ButtonStyle(bgcolor=ft.Colors.GREEN_700, color=ft.Colors.WHITE, padding=16),
+                on_click=lambda _: self._open_quiz_dialog(),
+                visible=True
+            )
+        else:
+            self.btn_take_quiz = ft.FilledButton(
+                "Kiểm Tra Lại Trình Độ Sau Bài Học 📝 (Post-test)",
+                icon=ft.Icons.ASSESSMENT_ROUNDED,
+                style=ft.ButtonStyle(bgcolor=ft.Colors.PURPLE_700, color=ft.Colors.WHITE, padding=16),
+                on_click=lambda _: self._open_quiz_dialog(),
+                visible=False
+            )
+
         self.btn_open_notebook = ft.OutlinedButton(
             "Mở Sổ tay Tự học 📖",
             icon=ft.Icons.MENU_BOOK_ROUNDED,
@@ -330,10 +372,157 @@ class MindmapSummaryView:
         )
 
         self.action_row = ft.Row(
-            [self.btn_save_notebook, self.btn_open_notebook, self.btn_new_session],
+            [self.btn_save_notebook, self.btn_take_quiz, self.btn_open_notebook, self.btn_new_session],
             alignment=ft.MainAxisAlignment.CENTER,
-            spacing=12
+            spacing=12,
+            wrap=True
         )
+
+    def _build_progress_comparison_card(self) -> ft.Container:
+        """Xây dựng thẻ hiển thị Bảng đối chứng Tiến độ Năng lực Trước & Sau khi học (Pre vs Post)."""
+        if self.post_test_record:
+            rec = self.post_test_record
+            has_pre = (self.pre_test_record is not None or getattr(rec, "pre_test_score", None) is not None)
+            if has_pre:
+                pre_score = getattr(rec, "pre_test_score", None)
+                if pre_score is None and self.pre_test_record:
+                    pre_score = getattr(self.pre_test_record, "score", 4.0)
+                pre_score = pre_score if pre_score is not None else 4.0
+
+                diff_val = getattr(rec, "learning_gain", None)
+                if diff_val is None:
+                    diff_val = round(rec.score - pre_score, 1)
+                diff_str = f"+{diff_val} điểm" if diff_val > 0 else f"{diff_val} điểm"
+                gain_color = ft.Colors.GREEN_700 if diff_val > 0 else ft.Colors.AMBER_800
+                hake_pct = getattr(rec, "gain_percent", None)
+                if hake_pct is None:
+                    hake_pct = round((diff_val / max(0.1, 10.0 - pre_score)) * 100, 1) if diff_val > 0 else 0.0
+
+                left_col = ft.Container(
+                    content=ft.Column([
+                        ft.Text("1. ĐẦU VÀO (PRE-TEST) 🎯", size=10, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_900),
+                        ft.Text(f"{pre_score:.1f} / 10đ", size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_800),
+                        ft.Text("Mức độ trước bài học", size=9.5, color=ft.Colors.GREY_600)
+                    ], spacing=2, alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+                    bgcolor=ft.Colors.BLUE_50,
+                    padding=10,
+                    border_radius=10,
+                    border=ft.Border.all(1, ft.Colors.BLUE_200),
+                    expand=True
+                )
+
+                arrow_col = ft.Container(
+                    content=ft.Column([
+                        ft.Icon(ft.Icons.ARROW_FORWARD_ROUNDED, color=gain_color, size=24),
+                        ft.Text(f"{diff_str} 🚀", size=11, weight=ft.FontWeight.BOLD, color=gain_color),
+                        ft.Text(f"Hake: {hake_pct}%", size=9, weight=ft.FontWeight.BOLD, color=gain_color)
+                    ], spacing=1, alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+                    padding=4
+                )
+
+                right_col = ft.Container(
+                    content=ft.Column([
+                        ft.Text("2. ĐẦU RA (POST-TEST) 📝", size=10, weight=ft.FontWeight.BOLD, color=ft.Colors.GREEN_900),
+                        ft.Text(f"{rec.score:.1f} / 10đ", size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.GREEN_800),
+                        ft.Text("Làm chủ sau bài học", size=9.5, color=ft.Colors.GREY_600)
+                    ], spacing=2, alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+                    bgcolor=ft.Colors.GREEN_50,
+                    padding=10,
+                    border_radius=10,
+                    border=ft.Border.all(1, ft.Colors.GREEN_200),
+                    expand=True
+                )
+
+                analysis_text = f"💡 Đánh giá tiến độ: Sau chu trình gợi mở Socrates 5 pha, tư duy của em đã bứt phá {diff_str}! Em đã nắm rất chắc bản chất khoa học để tự tay viết đúc kết 3 dòng bên dưới."
+            else:
+                baseline_est = 4.0
+                diff_val = max(0.0, round(rec.score - baseline_est, 1))
+                diff_str = f"+{diff_val} điểm" if diff_val > 0 else f"{diff_val} điểm"
+
+                left_col = ft.Container(
+                    content=ft.Column([
+                        ft.Text("1. TRƯỚC BÀI HỌC 🎯", size=10, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_900),
+                        ft.Text("~4.0 / 10đ", size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_800),
+                        ft.Text("Khởi điểm nhận biết", size=9.5, color=ft.Colors.GREY_600)
+                    ], spacing=2, alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+                    bgcolor=ft.Colors.BLUE_50,
+                    padding=10,
+                    border_radius=10,
+                    border=ft.Border.all(1, ft.Colors.BLUE_200),
+                    expand=True
+                )
+
+                arrow_col = ft.Container(
+                    content=ft.Column([
+                        ft.Icon(ft.Icons.ARROW_FORWARD_ROUNDED, color=ft.Colors.GREEN_700, size=24),
+                        ft.Text(f"+{diff_val}đ 🚀", size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.GREEN_700),
+                        ft.Text("Bứt phá", size=9, weight=ft.FontWeight.BOLD, color=ft.Colors.GREEN_700)
+                    ], spacing=1, alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+                    padding=4
+                )
+
+                right_col = ft.Container(
+                    content=ft.Column([
+                        ft.Text("2. ĐẦU RA (POST-TEST) 📝", size=10, weight=ft.FontWeight.BOLD, color=ft.Colors.GREEN_900),
+                        ft.Text(f"{rec.score:.1f} / 10đ", size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.GREEN_800),
+                        ft.Text("Làm chủ sau bài học", size=9.5, color=ft.Colors.GREY_600)
+                    ], spacing=2, alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+                    bgcolor=ft.Colors.GREEN_50,
+                    padding=10,
+                    border_radius=10,
+                    border=ft.Border.all(1, ft.Colors.GREEN_200),
+                    expand=True
+                )
+
+                analysis_text = f"💡 Đánh giá tiến độ: Em đạt {rec.score:.1f}/10đ trong bài kiểm tra sau học! Năng lực khoa học đã TĂNG TRƯỞNG RÕ RỆT và em đã đủ tự tin để viết đúc kết 3 dòng."
+
+            btn_view_answers = ft.TextButton(
+                "Xem Lại Chi Tiết Đáp Án & Lời Giải Thích 📝",
+                icon=ft.Icons.FACT_CHECK_ROUNDED,
+                on_click=lambda _: self._open_quiz_dialog(view_result_only=True)
+            )
+
+            card_content = ft.Column([
+                ft.Row([
+                    ft.Row([
+                        ft.Icon(ft.Icons.TRENDING_UP_ROUNDED, color=ft.Colors.INDIGO_700, size=20),
+                        ft.Text("BẢNG ĐỐI CHỨNG TIẾN ĐỘ NĂNG LỰC TRƯỚC & SAU KHI HỌC (PRE vs POST) 📊", size=12.5, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900),
+                    ], spacing=6),
+                    btn_view_answers
+                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+                ft.Row([left_col, arrow_col, right_col], spacing=6, vertical_alignment=ft.CrossAxisAlignment.CENTER),
+                ft.Text(analysis_text, size=11, color=ft.Colors.INDIGO_900, italic=True)
+            ], spacing=8)
+
+            return ft.Container(
+                content=card_content,
+                bgcolor=ft.Colors.WHITE,
+                padding=12,
+                border_radius=12,
+                border=ft.Border.all(1.5, ft.Colors.INDIGO_300),
+                shadow=ft.BoxShadow(blur_radius=8, color=ft.Colors.with_opacity(0.04, ft.Colors.BLACK), offset=ft.Offset(0, 2))
+            )
+        else:
+            # Chưa làm bài kiểm tra sau học
+            return ft.Container(
+                content=ft.Row([
+                    ft.Icon(ft.Icons.QUIZ_ROUNDED, color=ft.Colors.INDIGO_700, size=24),
+                    ft.Column([
+                        ft.Text("Thử thách kiểm tra củng cố & Đo độ tăng trưởng năng lực (Post-test) 📝", size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900),
+                        ft.Text("Làm 3 câu trắc nghiệm + 1 câu tự luận để XEM ĐÁP ÁN CHI TIẾT & ĐỐI CHỨNG TIẾN ĐỘ TRƯỚC/SAU KHI HỌC!", size=11, color=ft.Colors.INDIGO_800),
+                    ], spacing=2, expand=True),
+                    ft.FilledButton(
+                        "Làm Bài Kiểm Tra Ngay 📝",
+                        icon=ft.Icons.PLAY_ARROW_ROUNDED,
+                        style=ft.ButtonStyle(bgcolor=ft.Colors.INDIGO_700, color=ft.Colors.WHITE),
+                        on_click=lambda _: self._open_quiz_dialog()
+                    )
+                ], spacing=10, vertical_alignment=ft.CrossAxisAlignment.CENTER),
+                bgcolor=ft.Colors.INDIGO_50,
+                padding=12,
+                border_radius=12,
+                border=ft.Border.all(1.2, ft.Colors.INDIGO_200)
+            )
 
     def _build_concept_card(self) -> ft.Container:
         """Xây dựng thẻ hiển thị Khái niệm Hoàn chỉnh & Kiến thức Cốt lõi Cần nhớ chuẩn SGK KHTN 7."""
@@ -816,6 +1005,13 @@ class MindmapSummaryView:
         except Exception:
             pass
 
+        # Gắn thêm kết quả kiểm tra đối chứng (Pre/Post) nếu có
+        if self.pre_test_record:
+            notebook_entry["pre_test_score"] = getattr(self.pre_test_record, "score", None)
+        if self.post_test_record:
+            notebook_entry["post_test_score"] = getattr(self.post_test_record, "score", None)
+            notebook_entry["learning_gain"] = getattr(self.post_test_record, "learning_gain", None)
+
         save_notebook_entry(notebook_entry)
 
         # 1.1 Ghi nhận buổi học thực tế vào hồ sơ học sinh (Streak & Thời gian học)
@@ -827,7 +1023,8 @@ class MindmapSummaryView:
                     username=cur_user.username,
                     topic=summary.get("topic", "Bài học KHTN 7"),
                     domain=summary.get("domain", "KHTN 7"),
-                    minutes=15
+                    minutes=15,
+                    is_new_exercise=False
                 )
         except Exception:
             pass
@@ -842,7 +1039,59 @@ class MindmapSummaryView:
         self.saved_notice.visible = True
         self.btn_save_notebook.disabled = True
         self.btn_save_notebook.text = "Đã lưu vào Sổ tay Tự học ✓"
+        self.btn_take_quiz.visible = True
         self.page.update()
+
+    def _open_quiz_dialog(self, view_result_only: bool = False):
+        """Mở bài kiểm tra đánh giá lại trình độ (Post-test) sau khi học xong."""
+        try:
+            from app_tich_hop_socrates.quiz_view import QuizModalDialog
+            init_rec = self.post_test_record if view_result_only else None
+            dlg = QuizModalDialog(
+                page=self.page,
+                topic=self.topic,
+                strand=self.strand_name,
+                quiz_type="post_test",
+                problem_text=self.problem_text,
+                pre_record=self.pre_test_record,
+                on_completed=self._on_quiz_completed,
+                initial_record=init_rec
+            )
+            dlg.show()
+        except Exception as ex:
+            print(f"Error opening quiz dialog: {ex}")
+
+    def _on_quiz_completed(self, record):
+        """Xử lý sau khi học sinh hoàn thành bài kiểm tra đánh giá lại trình độ."""
+        self.post_test_record = record
+        if hasattr(self, "progress_comparison_card") and self.progress_comparison_card:
+            self.progress_comparison_card.content = self._build_progress_comparison_card().content
+            self.progress_comparison_card.bgcolor = ft.Colors.WHITE
+            self.progress_comparison_card.border = ft.Border.all(1.5, ft.Colors.INDIGO_300)
+
+        gain_val = getattr(record, "learning_gain", None)
+        gain_str = f" (Tiến bộ +{gain_val}đ 🚀)" if (gain_val is not None and gain_val > 0) else ""
+        self.btn_take_quiz.text = f"Đã kiểm tra củng cố: {record.score:.1f}/10đ{gain_str} ✓"
+        self.btn_take_quiz.style = ft.ButtonStyle(bgcolor=ft.Colors.GREEN_700, color=ft.Colors.WHITE, padding=16)
+        self.page.update()
+
+    def _retake_quiz_for_entry(self, entry: Dict[str, Any]):
+        """Mở bài kiểm tra đánh giá lại năng lực cho một bài học cũ trong Sổ tay."""
+        try:
+            from app_tich_hop_socrates.quiz_view import QuizModalDialog
+            topic = entry.get("concept_name") or entry.get("topic") or self.topic or "Khoa học Tự nhiên 7"
+            strand = entry.get("strand_name") or self.strand_name or "Khoa học Tự nhiên 7"
+            prob_text = entry.get("problem_text") or entry.get("summary") or self.problem_text or ""
+            dlg = QuizModalDialog(
+                page=self.page,
+                topic=topic,
+                strand=strand,
+                quiz_type="post_test",
+                problem_text=prob_text
+            )
+            dlg.show()
+        except Exception as ex:
+            print(f"Error opening retake quiz dialog: {ex}")
 
     def _open_notebook_dialog(self):
         """Mở Hộp thoại Sổ tay Tự học (Notebook Viewer) để học sinh tra cứu các bài học đã lưu."""
@@ -861,11 +1110,31 @@ class MindmapSummaryView:
                     ], spacing=4)
                 )
 
+            # Huy hiệu điểm kiểm tra và tiến độ nếu có
+            quiz_score_badge = ft.Container()
+            if item.get("post_test_score") is not None:
+                pre_s = item.get("pre_test_score")
+                post_s = item.get("post_test_score")
+                gain_s = item.get("learning_gain")
+                gain_text = f" (Tiến bộ +{gain_s}đ 🚀)" if (gain_s is not None and gain_s > 0) else ""
+                pre_text = f"Pre: {pre_s:.1f}đ ➔ " if pre_s is not None else ""
+                quiz_score_badge = ft.Container(
+                    content=ft.Row([
+                        ft.Icon(ft.Icons.TRENDING_UP_ROUNDED, color=ft.Colors.GREEN_800, size=15),
+                        ft.Text(f"Tiến độ kiểm tra: {pre_text}Post: {post_s:.1f}/10đ{gain_text}", size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.GREEN_900)
+                    ], spacing=4),
+                    bgcolor=ft.Colors.GREEN_50,
+                    padding=ft.Padding(8, 4, 8, 4),
+                    border_radius=8,
+                    border=ft.Border.all(1, ft.Colors.GREEN_200)
+                )
+
             detail_container.content = ft.Column([
                 ft.Row([
                     ft.Text(item.get("topic", "Khoa học Tự nhiên 7"), size=15, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900),
                     ft.Text(item.get("created_at", ""), size=11, color=ft.Colors.GREY_600)
                 ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+                quiz_score_badge,
 
                 # Đề bài
                 ft.Container(
@@ -913,7 +1182,25 @@ class MindmapSummaryView:
                 ft.Row([
                     ft.Text(f"Đánh giá: {'⭐' * item.get('rating_stars', 5)}", size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.AMBER_900),
                     ft.Text(f"Phản hồi: {item.get('feedback_comment', 'Không có')}", size=11, italic=True, color=ft.Colors.GREY_600)
-                ], spacing=10)
+                ], spacing=10),
+
+                # Nút Làm lại bài kiểm tra củng cố cho bài học này
+                ft.Container(
+                    content=ft.Row([
+                        ft.Icon(ft.Icons.REPLAY_ROUNDED, color=ft.Colors.INDIGO_700, size=18),
+                        ft.Text("Muốn thử thách lại kiến thức bài này?", size=11, color=ft.Colors.INDIGO_900, expand=True),
+                        ft.FilledButton(
+                            "Làm Lại Bài Kiểm Tra 📝",
+                            icon=ft.Icons.QUIZ_ROUNDED,
+                            style=ft.ButtonStyle(bgcolor=ft.Colors.INDIGO_700, color=ft.Colors.WHITE),
+                            on_click=lambda _, it=item: self._retake_quiz_for_entry(it)
+                        )
+                    ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN, vertical_alignment=ft.CrossAxisAlignment.CENTER),
+                    bgcolor=ft.Colors.INDIGO_50,
+                    padding=10,
+                    border_radius=8,
+                    border=ft.Border.all(1, ft.Colors.INDIGO_200)
+                )
             ], spacing=10, scroll=ft.ScrollMode.AUTO)
 
             if update_page:
@@ -929,10 +1216,13 @@ class MindmapSummaryView:
                 def make_click_handler(item_ref=entry):
                     return lambda _: display_entry_detail(item_ref)
 
+                post_score = entry.get("post_test_score")
+                score_tag = f" • Post: {post_score:.1f}đ" if post_score is not None else ""
+
                 card = ft.Container(
                     content=ft.Column([
                         ft.Text(entry.get("concept_name", entry.get("topic", "Bài học")), size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900),
-                        ft.Text(entry.get("created_at", ""), size=10, color=ft.Colors.GREY_500),
+                        ft.Text(entry.get("created_at", "") + score_tag, size=10, color=ft.Colors.GREY_500),
                         ft.Text(f"{'⭐' * entry.get('rating_stars', 5)}", size=10, color=ft.Colors.AMBER_600)
                     ], spacing=2),
                     bgcolor=ft.Colors.WHITE,
@@ -976,9 +1266,10 @@ class MindmapSummaryView:
             padding=10
         )
 
+        from app_tich_hop_socrates.dashboard_view import safe_open_dialog, safe_close_dialog
+
         def close_dialog(_):
-            dialog.open = False
-            self.page.update()
+            safe_close_dialog(self.page, dialog)
 
         dialog = ft.AlertDialog(
             title=ft.Row([
@@ -997,10 +1288,7 @@ class MindmapSummaryView:
             actions_alignment=ft.MainAxisAlignment.END
         )
 
-        if dialog not in self.page.overlay:
-            self.page.overlay.append(dialog)
-        dialog.open = True
-        self.page.update()
+        safe_open_dialog(self.page, dialog)
 
     def build(self) -> ft.Control:
         """Trả về toàn bộ giao diện của Chức năng 5."""
@@ -1009,6 +1297,7 @@ class MindmapSummaryView:
                 [
                     self.standalone_header,
                     self.mission_card,
+                    self.progress_comparison_card,
                     ft.Container(height=4),
                     self.concept_card,
                     ft.Container(height=4),

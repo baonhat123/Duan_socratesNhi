@@ -20,14 +20,24 @@ from app_tich_hop_socrates.auth_service import AuthService, UserAccount
 
 def safe_open_dialog(page: ft.Page, dialog: ft.AlertDialog):
     """Mở hộp thoại tương thích 100% với Flet 1.0.1 và các phiên bản khác."""
+    if hasattr(page, "show_dialog") and callable(getattr(page, "show_dialog")):
+        try:
+            page.show_dialog(dialog)
+            return
+        except Exception:
+            pass
+
     if hasattr(page, "overlay") and page.overlay is not None:
         if dialog not in page.overlay:
             page.overlay.append(dialog)
         dialog.open = True
         try:
-            page.update()
+            page.update(dialog)
         except Exception:
-            pass
+            try:
+                page.update()
+            except Exception:
+                pass
         return
 
     try:
@@ -46,16 +56,25 @@ def safe_open_dialog(page: ft.Page, dialog: ft.AlertDialog):
 
 def safe_close_dialog(page: ft.Page, dialog: ft.AlertDialog):
     """Đóng hộp thoại tương thích 100% với Flet 1.0.1."""
+    if hasattr(page, "pop_dialog") and callable(getattr(page, "pop_dialog")):
+        try:
+            page.pop_dialog()
+            return
+        except Exception:
+            pass
+
     dialog.open = False
     try:
-        page.update()
+        dialog.update()
     except Exception:
         pass
     try:
-        if hasattr(page, "close") and callable(getattr(page, "close")):
-            page.close(dialog)
+        page.update(dialog)
     except Exception:
-        pass
+        try:
+            page.update()
+        except Exception:
+            pass
 
 
 class StudentDashboardModal:

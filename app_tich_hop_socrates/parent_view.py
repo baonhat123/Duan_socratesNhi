@@ -341,7 +341,12 @@ class ParentPortalView:
         ], spacing=16)
 
         # -------------------------------------------------------------
-        # 4. HÀNG 3: SỔ TAY BÀI HỌC ĐÃ GIẢI & PHÂN TÍCH ĐỘC LẬP / SƯ PHẠM
+        # 4. HÀNG 3: BẢNG ĐIỂM KIỂM TRA NĂNG LỰC CON EM (TRẮC NGHIỆM & TỰ LUẬN)
+        # -------------------------------------------------------------
+        quiz_mastery_panel = self._build_quiz_mastery_panel(child, stats)
+
+        # -------------------------------------------------------------
+        # 5. HÀNG 4: SỔ TAY BÀI HỌC ĐÃ GIẢI & PHÂN TÍCH ĐỘC LẬP / SƯ PHẠM
         # -------------------------------------------------------------
         notebook_and_coaching = ft.ResponsiveRow([
             ft.Container(
@@ -360,6 +365,8 @@ class ParentPortalView:
             kpi_row,
             ft.Container(height=4),
             strand_and_calendar,
+            ft.Container(height=4),
+            quiz_mastery_panel,
             ft.Container(height=4),
             notebook_and_coaching
         ], spacing=10)
@@ -709,6 +716,134 @@ class ParentPortalView:
             border_radius=16,
             border=ft.Border.all(1, ft.Colors.GREY_200),
             shadow=ft.BoxShadow(blur_radius=8, color=ft.Colors.with_opacity(0.03, ft.Colors.BLACK), offset=ft.Offset(0, 2))
+        )
+
+    def _build_quiz_mastery_panel(self, child: UserAccount, stats: dict) -> ft.Container:
+        """Bảng Giám sát Điểm Kiểm tra Củng cố & Năng lực Lập luận của con (Trắc nghiệm + Tự luận)."""
+        quiz_stats = stats.get("quiz_stats", {})
+        total_q = quiz_stats.get("total_quizzes", 0)
+        avg_s = quiz_stats.get("average_score", 0.0)
+        mastery_lvl = quiz_stats.get("mastery_level", "Chưa làm bài kiểm tra nào")
+        recent_records = quiz_stats.get("recent_records", [])
+
+        # Thẻ tóm tắt năng lực
+        card_score = ft.Container(
+            content=ft.Column([
+                ft.Row([
+                    ft.Text("⭐", size=18),
+                    ft.Text(f"{avg_s:.1f} / 10đ" if total_q > 0 else "Chưa có điểm", size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.PURPLE_900)
+                ], spacing=6),
+                ft.Text("Điểm Kiểm Tra Trung Bình", size=11, color=ft.Colors.PURPLE_800),
+                ft.Container(
+                    content=ft.Text(mastery_lvl, size=9, weight=ft.FontWeight.BOLD, color=ft.Colors.PURPLE_900),
+                    bgcolor=ft.Colors.PURPLE_100,
+                    padding=ft.Padding(6, 2, 6, 2),
+                    border_radius=6
+                )
+            ], spacing=2),
+            bgcolor=ft.Colors.PURPLE_50,
+            padding=12,
+            border_radius=12,
+            border=ft.Border.all(1.5, ft.Colors.PURPLE_300),
+            expand=True
+        )
+
+        card_total = ft.Container(
+            content=ft.Column([
+                ft.Row([
+                    ft.Text("📝", size=18),
+                    ft.Text(f"{total_q} Bài", size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900)
+                ], spacing=6),
+                ft.Text("Số Bài Đã Kiểm Tra Củng Cố", size=11, color=ft.Colors.INDIGO_800),
+                ft.Text(f"Đạt Giỏi/Xuất sắc: {quiz_stats.get('excellent_count', 0)} bài", size=10, color=ft.Colors.GREEN_800, weight=ft.FontWeight.W_500)
+            ], spacing=2),
+            bgcolor=ft.Colors.INDIGO_50,
+            padding=12,
+            border_radius=12,
+            border=ft.Border.all(1.5, ft.Colors.INDIGO_300),
+            expand=True
+        )
+
+        # Danh sách các bài kiểm tra gần nhất
+        if not recent_records:
+            history_content = ft.Container(
+                content=ft.Row([
+                    ft.Icon(ft.Icons.LIGHTBULB_OUTLINE_ROUNDED, color=ft.Colors.AMBER_800, size=20),
+                    ft.Column([
+                        ft.Text("Con chưa làm bài kiểm tra củng cố nào gần đây.", size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.AMBER_900),
+                        ft.Text("Sau mỗi buổi học ở Trạm 5 hoặc khi bắt đầu ngày mới, con sẽ được làm bài kiểm tra 3 phút gồm 3 câu trắc nghiệm + 1 câu tự luận để đánh giá năng lực.", size=10, color=ft.Colors.AMBER_800)
+                    ], spacing=2, expand=True)
+                ], spacing=10),
+                bgcolor=ft.Colors.AMBER_50,
+                padding=12,
+                border_radius=10,
+                border=ft.Border.all(1, ft.Colors.AMBER_300)
+            )
+        else:
+            quiz_item_controls = []
+            for r in recent_records[:3]:
+                d_date = r.get("created_at", "").split("T")[0]
+                q_score = r.get("score", 0.0)
+                score_color = ft.Colors.GREEN_700 if q_score >= 8.0 else (ft.Colors.AMBER_800 if q_score >= 6.0 else ft.Colors.RED_700)
+                q_type_str = "Kiểm tra sau bài học" if r.get("quiz_type") == "post_lesson" else "Ôn tập ngày mới 🔁"
+
+                item_card = ft.Container(
+                    content=ft.Column([
+                        ft.Row([
+                            ft.Row([
+                                ft.Container(
+                                    content=ft.Text(f"{q_score:.1f}đ", size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+                                    bgcolor=score_color,
+                                    padding=ft.Padding(8, 3, 8, 3),
+                                    border_radius=8
+                                ),
+                                ft.Column([
+                                    ft.Text(r.get("topic", "KHTN 7"), size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900),
+                                    ft.Text(f"{q_type_str} • {d_date} • {r.get('badge_earned', '')}", size=10, color=ft.Colors.GREY_600)
+                                ], spacing=1)
+                            ], spacing=8),
+                            ft.Container(
+                                content=ft.Text(f"Tự luận: {r.get('essay_score', 0):.1f}/4.0đ", size=10, weight=ft.FontWeight.BOLD, color=ft.Colors.PURPLE_900),
+                                bgcolor=ft.Colors.PURPLE_50,
+                                padding=ft.Padding(6, 2, 6, 2),
+                                border_radius=6,
+                                border=ft.Border.all(1, ft.Colors.PURPLE_200)
+                            )
+                        ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+                        ft.Container(
+                            content=ft.Text(f"💬 Nhận xét của Gia sư AI: \"{r.get('essay_feedback', '')}\"", size=10.5, italic=True, color=ft.Colors.INDIGO_900),
+                            bgcolor=ft.Colors.INDIGO_50,
+                            padding=8,
+                            border_radius=8
+                        )
+                    ], spacing=6),
+                    bgcolor=ft.Colors.WHITE,
+                    padding=10,
+                    border_radius=10,
+                    border=ft.Border.all(1, ft.Colors.GREY_200)
+                )
+                quiz_item_controls.append(item_card)
+
+            history_content = ft.Column(quiz_item_controls, spacing=8)
+
+        return ft.Container(
+            content=ft.Column([
+                ft.Row([
+                    ft.Row([
+                        ft.Icon(ft.Icons.ASSIGNMENT_TURNED_IN_ROUNDED, color=ft.Colors.PURPLE_800, size=20),
+                        ft.Text("KẾT QUẢ KIỂM TRA NĂNG LỰC CON EM (TRẮC NGHIỆM & TỰ LUẬN) 📝", size=13, weight=ft.FontWeight.BOLD, color=ft.Colors.PURPLE_900)
+                    ], spacing=6),
+                    ft.Text("Đánh giá thực chất mức độ hiểu sâu kiến thức", size=10, color=ft.Colors.GREY_600, italic=True)
+                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+                ft.Row([card_score, card_total], spacing=12),
+                ft.Text("Nhật ký các bài kiểm tra củng cố gần nhất của con:", size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_800),
+                history_content
+            ], spacing=10),
+            bgcolor=ft.Colors.WHITE,
+            padding=16,
+            border_radius=16,
+            border=ft.Border.all(1, ft.Colors.INDIGO_50),
+            shadow=ft.BoxShadow(blur_radius=10, color=ft.Colors.with_opacity(0.04, ft.Colors.BLACK), offset=ft.Offset(0, 3))
         )
 
     def _build_notebook_history_panel(self, child: UserAccount, stats: dict) -> ft.Container:

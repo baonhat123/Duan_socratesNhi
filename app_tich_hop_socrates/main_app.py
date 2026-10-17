@@ -288,8 +288,23 @@ class SocratesIntegratedApp:
         cur_user = self.state.current_user or AuthService.get_current_user()
         streak_data = AuthService.get_user_streak(cur_user.username)
         s_count = streak_data.get("streak_count", 0)
+        today_done = streak_data.get("today_studied", False)
 
-        self.streak_text = ft.Text(f"{s_count} Ngày", size=10, weight=ft.FontWeight.BOLD, color=ft.Colors.AMBER_900)
+        if today_done:
+            streak_label = f"{s_count} Ngày ✓"
+            streak_color = ft.Colors.GREEN_900
+            status_tip = f"Tuyệt vời! Em đã giải bài hôm nay và đạt chuỗi {s_count} ngày! ✓"
+        elif s_count > 0:
+            streak_label = f"{s_count} Ngày ⏳"
+            streak_color = ft.Colors.AMBER_900
+            status_tip = f"Chuỗi {s_count} ngày đang chờ em! Giải 1 bài hôm nay để giữ chuỗi nhé! ⏳"
+        else:
+            streak_label = "0 Ngày"
+            streak_color = ft.Colors.GREY_700
+            status_tip = "Chưa có chuỗi ngày học. Giải 1 bài hôm nay để bắt đầu chuỗi nhé! 🌱"
+
+        self.streak_text = ft.Text(streak_label, size=10, weight=ft.FontWeight.BOLD, color=streak_color)
+
         self.streak_dashboard_btn = ft.Container(
             content=ft.Row([
                 ft.Text("🔥", size=13),
@@ -301,7 +316,7 @@ class SocratesIntegratedApp:
             padding=ft.Padding(7, 4, 7, 4),
             border_radius=10,
             border=ft.Border.all(1.5, ft.Colors.AMBER_400),
-            tooltip="Bấm để mở Bảng Theo Dõi Học Tập: Streak chuỗi ngày, tiến độ 3 mạch KHTN 7 và quản lý tài khoản",
+            tooltip=f"Chuỗi {s_count} ngày liên tiếp • {status_tip}",
             on_click=lambda _: self._open_dashboard(),
             ink=True
         )
@@ -979,7 +994,17 @@ class SocratesIntegratedApp:
             self.user_class_text.value = class_short
         if hasattr(self, "streak_text") and self.streak_text:
             s_data = AuthService.get_user_streak(user.username)
-            self.streak_text.value = f"{s_data['streak_count']} Ngày"
+            s_cnt = s_data.get("streak_count", 0)
+            today_done = s_data.get("today_studied", False)
+            if today_done:
+                self.streak_text.value = f"{s_cnt} Ngày ✓"
+                self.streak_text.color = ft.Colors.GREEN_900
+            elif s_cnt > 0:
+                self.streak_text.value = f"{s_cnt} Ngày ⏳"
+                self.streak_text.color = ft.Colors.AMBER_900
+            else:
+                self.streak_text.value = "0 Ngày"
+                self.streak_text.color = ft.Colors.GREY_700
         self.page.update()
 
     def _open_auth_dialog(self):
@@ -1292,9 +1317,89 @@ class SocratesIntegratedApp:
         )
         self._safe_open_dialog(dialog)
 
+    def _build_daily_review_banner(self, username: str) -> Optional[ft.Container]:
+        """Tạo Banner gợi ý Ôn tập ngắt quãng ngày hôm sau (Spaced Repetition)."""
+        try:
+            from app_tich_hop_socrates.quiz_service import QuizService
+            review_info = QuizService.get_pending_daily_review(username)
+            if not review_info:
+                return None
+
+            topic = review_info.get("topic", "Bài học KHTN 7")
+            strand = review_info.get("strand", "Khoa học Tự nhiên 7")
+
+            def start_review(_):
+                from app_tich_hop_socrates.quiz_view import QuizModalDialog
+                dlg = QuizModalDialog(
+                    page=self.page,
+                    topic=topic,
+                    strand=strand,
+                    quiz_type="daily_review",
+                    on_completed=lambda r: self._on_daily_review_completed(r)
+                )
+                dlg.show()
+
+            banner = ft.Container(
+                content=ft.Row([
+                    ft.Row([
+                        ft.Container(
+                            content=ft.Icon(ft.Icons.REPLAY_CIRCLE_FILLED_ROUNDED, color=ft.Colors.WHITE, size=22),
+                            bgcolor=ft.Colors.PURPLE_700,
+                            width=38,
+                            height=38,
+                            border_radius=19,
+                            alignment=ft.Alignment.CENTER
+                        ),
+                        ft.Column([
+                            ft.Row([
+                                ft.Text("THỬ THÁCH ÔN TẬP NGÀY MỚI (SPACED REPETITION) 🔁", size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.PURPLE_900),
+                                ft.Container(
+                                    content=ft.Text("3 Phút • Trắc nghiệm & Tự luận", size=10, weight=ft.FontWeight.BOLD, color=ft.Colors.PURPLE_800),
+                                    bgcolor=ft.Colors.PURPLE_100,
+                                    padding=ft.Padding(6, 2, 6, 2),
+                                    border_radius=6
+                                )
+                            ], spacing=6),
+                            ft.Text(f"Ôn tập lại bài '{topic}' để củng cố trí nhớ dài hạn và nhận huy hiệu chuyên cần!", size=11, color=ft.Colors.PURPLE_900)
+                        ], spacing=2)
+                    ], spacing=10),
+                    ft.FilledButton(
+                        "Bắt đầu ôn tập 🚀",
+                        icon=ft.Icons.PLAY_ARROW_ROUNDED,
+                        style=ft.ButtonStyle(bgcolor=ft.Colors.PURPLE_700, color=ft.Colors.WHITE),
+                        on_click=start_review
+                    )
+                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN, vertical_alignment=ft.CrossAxisAlignment.CENTER),
+                bgcolor=ft.Colors.PURPLE_50,
+                padding=ft.Padding(14, 8, 14, 8),
+                border_radius=12,
+                border=ft.Border.all(1.5, ft.Colors.PURPLE_300),
+                shadow=ft.BoxShadow(blur_radius=8, color=ft.Colors.with_opacity(0.04, ft.Colors.BLACK), offset=ft.Offset(0, 2))
+            )
+            return banner
+        except Exception:
+            return None
+
+    def _on_daily_review_completed(self, record):
+        """Xử lý sau khi học sinh hoàn thành ôn tập ngày mới."""
+        snack = ft.SnackBar(
+            content=ft.Row([
+                ft.Icon(ft.Icons.CELEBRATION_ROUNDED, color=ft.Colors.AMBER_400, size=20),
+                ft.Text(f"Tuyệt vời! Em đã hoàn thành ôn tập ngày mới: {record.score:.1f}/10đ {record.badge_earned}!", color=ft.Colors.WHITE, size=12)
+            ], spacing=8),
+            bgcolor=ft.Colors.PURPLE_900
+        )
+        if hasattr(self.page, "open"):
+            self.page.open(snack)
+        else:
+            self.page.snack_bar = snack
+            snack.open = True
+        self.navigate_to_step_1()
+
     def navigate_to_step_1(self):
-        """Hiển thị Bước 1: Tiếp nhận đề bài."""
+        """Hiển thị Bước 1: Tiếp nhận đề bài kèm Banner ôn tập ngày mới nếu có."""
         self.state.current_step = AppStep.STEP_1_INPUT
+        self.state.is_study_session_recorded = False
         self._update_stepper_visuals(AppStep.STEP_1_INPUT)
 
         view_1 = ProblemInputView(
@@ -1302,7 +1407,17 @@ class SocratesIntegratedApp:
             on_confirm=self._on_step_1_confirmed,
             is_standalone=False
         )
-        self.content_area.content = view_1.build()
+
+        cur_user = self.state.current_user or AuthService.get_current_user()
+        daily_banner = self._build_daily_review_banner(cur_user.username) if cur_user else None
+
+        if daily_banner:
+            self.content_area.content = ft.Column([
+                daily_banner,
+                view_1.build()
+            ], spacing=8, scroll=ft.ScrollMode.AUTO)
+        else:
+            self.content_area.content = view_1.build()
         self.page.update()
 
     def _on_step_1_confirmed(self, problem: ProblemInput):
@@ -1324,8 +1439,8 @@ class SocratesIntegratedApp:
             from chuc_nang_3_phan_loai_kien_thuc.classifier_engine import KnowledgeClassifier
             self.state.classification_result = KnowledgeClassifier().classify_problem(normalized_text)
 
-            # VÀO THẲNG PHÒNG TRAO ĐỔI VỚI GIA SƯ SOCRATIC!
-            self.navigate_to_step_4()
+            # Gợi ý làm khảo sát trình độ đầu vào (Pre-test) trước khi vào Trạm 4
+            self._prompt_pre_test_or_start()
 
 
     def navigate_to_step_2(self):
@@ -1362,11 +1477,122 @@ class SocratesIntegratedApp:
         self.page.update()
 
     def _on_step_2_confirmed(self, confirmed_problem: ConfirmedProblem):
-        """Khi học sinh xác nhận văn bản từ ảnh -> Vào thẳng trò chuyện với Gia sư!"""
+        """Khi học sinh xác nhận văn bản từ ảnh -> Gợi ý khảo sát đầu vào rồi vào học!"""
         self.state.confirmed_problem = confirmed_problem
         from chuc_nang_3_phan_loai_kien_thuc.classifier_engine import KnowledgeClassifier
         self.state.classification_result = KnowledgeClassifier().classify_problem(confirmed_problem.confirmed_text)
+        self._prompt_pre_test_or_start()
+
+    def _prompt_pre_test_or_start(self):
+        """Hộp thoại chào mừng trước bài học: Mời làm bài khảo sát trình độ đầu vào (Pre-test)."""
+        topic = self.state.classification_result.topic if self.state.classification_result else "Khoa học Tự nhiên 7"
+        strand = self.state.classification_result.strand.value if self.state.classification_result else "KHTN 7"
+
+        prob_text = ""
+        if self.state.confirmed_problem and self.state.confirmed_problem.confirmed_text:
+            prob_text = self.state.confirmed_problem.confirmed_text
+        elif self.state.problem_input and self.state.problem_input.text_content:
+            prob_text = self.state.problem_input.text_content
+
+        def start_pre_test(_):
+            self._safe_close_dialog(dialog)
+            from app_tich_hop_socrates.quiz_view import QuizModalDialog
+            pre_dlg = QuizModalDialog(
+                page=self.page,
+                topic=topic,
+                strand=strand,
+                quiz_type="pre_test",
+                problem_text=prob_text,
+                on_completed=self._on_pre_test_completed
+            )
+            pre_dlg.show()
+
+        def skip_to_socratic(_):
+            self._safe_close_dialog(dialog)
+            self.navigate_to_step_4()
+
+        dialog = ft.AlertDialog(
+            title=ft.Row([
+                ft.Icon(ft.Icons.CENTER_FOCUS_STRONG_ROUNDED, color=ft.Colors.BLUE_700, size=24),
+                ft.Column([
+                    ft.Text("Khảo Sát Trình Độ Đầu Vào (Pre-test) 🎯", size=15, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900),
+                    ft.Text(f"Chủ đề: {topic}", size=11, color=ft.Colors.GREY_600)
+                ], spacing=1)
+            ], spacing=8),
+            content=ft.Container(
+                content=ft.Column([
+                    ft.Text(
+                        "Trước khi bước vào trao đổi cùng Gia sư Socrates Nhí, em hãy làm nhanh bài khảo sát 3 câu trắc nghiệm (2 phút) nhé!",
+                        size=12,
+                        color=ft.Colors.GREY_800
+                    ),
+                    ft.Container(
+                        content=ft.Row([
+                            ft.Icon(ft.Icons.AUTO_AWESOME_ROUNDED, color=ft.Colors.AMBER_700, size=18),
+                            ft.Text(
+                                "Lợi ích: Giúp đo lường sự tiến bộ trước & sau bài học, và giúp Socrates biết em đang cần gợi mở ở phần nào nhất!",
+                                size=11,
+                                color=ft.Colors.AMBER_900,
+                                expand=True
+                            )
+                        ], spacing=8),
+                        bgcolor=ft.Colors.AMBER_50,
+                        padding=10,
+                        border_radius=8,
+                        border=ft.Border.all(1, ft.Colors.AMBER_200)
+                    )
+                ], spacing=10),
+                width=520,
+                padding=6
+            ),
+            actions=[
+                ft.OutlinedButton(
+                    "Vào Học Trực Tiếp 💡",
+                    on_click=skip_to_socratic,
+                    style=ft.ButtonStyle(color=ft.Colors.GREY_700)
+                ),
+                ft.FilledButton(
+                    "Làm Khảo Sát Đầu Vào (2 Phút) 🎯",
+                    icon=ft.Icons.PLAY_ARROW_ROUNDED,
+                    style=ft.ButtonStyle(bgcolor=ft.Colors.INDIGO_700, color=ft.Colors.WHITE),
+                    on_click=start_pre_test
+                )
+            ],
+            actions_alignment=ft.MainAxisAlignment.END
+        )
+        self._safe_open_dialog(dialog)
+
+    def _on_pre_test_completed(self, record):
+        """Lưu kết quả Pre-test và chuyển sang Trạm 4."""
+        self.state.pre_test_record = record
         self.navigate_to_step_4()
+
+    def refresh_streak_header(self):
+        """Làm mới chỉ số chuỗi Streak trên thanh điều hướng."""
+        try:
+            cur_user = self.state.current_user or AuthService.get_current_user()
+            if cur_user and hasattr(self, "streak_text") and self.streak_text:
+                streak_data = AuthService.get_user_streak(cur_user.username)
+                s_count = streak_data.get("streak_count", 0)
+                today_done = streak_data.get("today_studied", False)
+                if today_done:
+                    self.streak_text.value = f"{s_count} Ngày ✓"
+                    self.streak_text.color = ft.Colors.GREEN_900
+                    status_tip = f"Tuyệt vời! Em đã giải bài hôm nay và đạt chuỗi {s_count} ngày! ✓"
+                elif s_count > 0:
+                    self.streak_text.value = f"{s_count} Ngày ⏳"
+                    self.streak_text.color = ft.Colors.AMBER_900
+                    status_tip = f"Chuỗi {s_count} ngày đang chờ em! Giải 1 bài hôm nay để giữ chuỗi nhé! ⏳"
+                else:
+                    self.streak_text.value = "0 Ngày"
+                    self.streak_text.color = ft.Colors.GREY_700
+                    status_tip = "Chưa có chuỗi ngày học. Giải 1 bài hôm nay để bắt đầu chuỗi nhé! 🌱"
+
+                if hasattr(self, "streak_dashboard_btn") and self.streak_dashboard_btn:
+                    self.streak_dashboard_btn.tooltip = f"Chuỗi {s_count} ngày • {status_tip}"
+                self.page.update()
+        except Exception:
+            pass
 
     def _show_concept_map_dialog(self):
         """Mở modal Bản đồ Khái niệm & Cảnh báo lỗi thường gặp (Chức năng 3)."""
@@ -1482,14 +1708,83 @@ class SocratesIntegratedApp:
 
         self._safe_open_dialog(dialog)
 
-    def _show_congrats_unlock_dialog(self, turn_count: int = 4):
-        """Hộp thoại thông báo chúc mừng đúc kết thành công và mở khóa Sơ đồ tư duy dạng nhánh."""
+    def _show_congrats_unlock_dialog(self, turn_count: int = 4, streak_info: Optional[dict] = None):
+        """Hộp thoại thông báo chúc mừng đúc kết thành công: Cộng chuỗi Streak ngay lập tức & Mời làm bài kiểm tra trắc nghiệm củng cố (có đáp án chi tiết, so sánh tiến độ) rồi vào Sơ đồ tư duy."""
         def close_dialog(_=None):
             self._safe_close_dialog(dialog)
 
         def go_to_mindmap(_=None):
             close_dialog()
             self.navigate_to_step_5(turn_count=turn_count)
+
+        def take_post_quiz(_=None):
+            close_dialog()
+            topic = self.state.classification_result.topic if self.state.classification_result else "Khoa học Tự nhiên 7"
+            strand = self.state.classification_result.strand.value if self.state.classification_result else "KHTN 7"
+
+            # Tự động liên kết Pre-test nếu có sẵn trong state hoặc trong lịch sử
+            pre_rec = self.state.pre_test_record
+            if not pre_rec:
+                try:
+                    from app_tich_hop_socrates.quiz_service import QuizService
+                    cur_u = AuthService.get_current_user()
+                    if cur_u and cur_u.username:
+                        hist = QuizService.get_student_records(cur_u.username)
+                        for r in hist:
+                            if r.quiz_type == "pre_test" and (r.topic == topic or r.strand == strand):
+                                pre_rec = r
+                                self.state.pre_test_record = r
+                                break
+                except Exception:
+                    pass
+
+            prob_text = ""
+            if self.state.confirmed_problem and self.state.confirmed_problem.confirmed_text:
+                prob_text = self.state.confirmed_problem.confirmed_text
+            elif self.state.problem_input and self.state.problem_input.text_content:
+                prob_text = self.state.problem_input.text_content
+
+            from app_tich_hop_socrates.quiz_view import QuizModalDialog
+            dlg = QuizModalDialog(
+                page=self.page,
+                topic=topic,
+                strand=strand,
+                quiz_type="post_test",
+                problem_text=prob_text,
+                pre_record=pre_rec,
+                on_completed=lambda r: self._on_post_chat_quiz_completed(r, turn_count)
+            )
+            dlg.show()
+
+        cur_u = AuthService.get_current_user()
+        streak_data = AuthService.get_user_streak(cur_u.username) if cur_u else {}
+        s_count = streak_data.get("streak_count", 1)
+
+        streak_badge_row = ft.Container(
+            content=ft.Row([
+                ft.Text("🔥", size=26),
+                ft.Column([
+                    ft.Row([
+                        ft.Text(f"Chuỗi Học Tập: {s_count} Ngày Liên Tiếp! 🔥", size=13, weight=ft.FontWeight.BOLD, color=ft.Colors.AMBER_900),
+                        ft.Container(
+                            content=ft.Text("ĐÃ CỘNG VÀO CHUỖI ✓", size=9.5, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+                            bgcolor=ft.Colors.GREEN_700,
+                            padding=ft.Padding(6, 2, 6, 2),
+                            border_radius=4
+                        )
+                    ], spacing=6),
+                    ft.Text(
+                        "Hệ thống đã ghi nhận em hoàn thành xuất sắc buổi học và bảo toàn ngọn lửa chuỗi học tập hôm nay!",
+                        size=11,
+                        color=ft.Colors.AMBER_900
+                    )
+                ], spacing=2, expand=True)
+            ], spacing=8, vertical_alignment=ft.CrossAxisAlignment.CENTER),
+            bgcolor=ft.Colors.AMBER_50,
+            padding=10,
+            border_radius=10,
+            border=ft.Border.all(1.2, ft.Colors.AMBER_300)
+        )
 
         dialog = ft.AlertDialog(
             title=ft.Row([
@@ -1499,36 +1794,54 @@ class SocratesIntegratedApp:
             content=ft.Container(
                 content=ft.Column([
                     ft.Text(
-                        "Em đã hoàn thành trọn vẹn chu trình tự học và tự mình đúc kết kiến thức cốt lõi!",
+                        "Em đã hoàn thành trọn vẹn chu trình trao đổi 5 pha và nắm chắc bản chất khoa học!",
                         size=13,
                         weight=ft.FontWeight.BOLD,
                         color=ft.Colors.GREY_900
                     ),
-                    ft.Text(
-                        "🌿 Thầy Socrates Nhí đã chính thức mở khóa Sơ đồ Tư duy Dạng Nhánh (khái niệm cốt lõi SGK KHTN 7) cho em rồi đó!\n\n"
-                        "Em hãy bấm nút bên dưới để khám phá sơ đồ rẽ nhánh và lưu bài học vào Sổ tay Tự học nhé!",
-                        size=12,
-                        color=ft.Colors.GREY_800
+                    streak_badge_row,
+                    ft.Container(
+                        content=ft.Row([
+                            ft.Icon(ft.Icons.QUIZ_ROUNDED, color=ft.Colors.INDIGO_700, size=22),
+                            ft.Column([
+                                ft.Text("Thử thách củng cố & Đối chứng tiến độ (3 Phút):", size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_900),
+                                ft.Text("Làm 3 câu trắc nghiệm + 1 câu tự luận để XEM ĐÁP ÁN CHI TIẾT & ĐO ĐỘ TĂNG NĂNG LỰC TRƯỚC/SAU!", size=11, color=ft.Colors.INDIGO_800),
+                                ft.Text("💡 Sau khi làm xong, em sẽ thấy rõ mức độ tiến bộ và vào Sơ đồ tư duy viết đúc kết cực kỳ dễ dàng!", size=11, italic=True, color=ft.Colors.GREEN_800)
+                            ], spacing=2, expand=True)
+                        ], spacing=8),
+                        bgcolor=ft.Colors.INDIGO_50,
+                        padding=12,
+                        border_radius=10,
+                        border=ft.Border.all(1, ft.Colors.INDIGO_200)
                     )
-                ], spacing=6, tight=True),
-                width=480
+                ], spacing=10, tight=True),
+                width=540
             ),
             actions=[
                 ft.OutlinedButton(
-                    "Xem lại trao đổi 💬",
-                    on_click=close_dialog
+                    "Vào Thẳng Sơ Đồ Tư Duy 🌿",
+                    icon=ft.Icons.ACCOUNT_TREE_ROUNDED,
+                    style=ft.ButtonStyle(color=ft.Colors.GREY_700),
+                    on_click=go_to_mindmap
                 ),
                 ft.FilledButton(
-                    "Khám Phá Sơ Đồ Tư Duy Dạng Nhánh 🌿",
-                    icon=ft.Icons.WORKSPACE_PREMIUM_ROUNDED,
-                    style=ft.ButtonStyle(bgcolor=ft.Colors.GREEN_700, color=ft.Colors.WHITE),
-                    on_click=go_to_mindmap
+                    "Làm Bài Kiểm Tra Củng Cố Ngay 📝 (Xem Đáp Án & Tiến Độ)",
+                    icon=ft.Icons.CHECK_CIRCLE_ROUNDED,
+                    style=ft.ButtonStyle(bgcolor=ft.Colors.INDIGO_700, color=ft.Colors.WHITE),
+                    on_click=take_post_quiz
                 )
             ],
             actions_alignment=ft.MainAxisAlignment.END
         )
 
         self._safe_open_dialog(dialog)
+
+    def _on_post_chat_quiz_completed(self, record, turn_count: int = 4):
+        """Sau khi làm xong bài test củng cố (có đáp án chi tiết), chuyển tiếp sang Sơ đồ tư duy & Đúc kết."""
+        if record:
+            self.state.post_test_record = record
+        self.refresh_streak_header()
+        self.navigate_to_step_5(turn_count=turn_count)
 
     def navigate_to_step_4(self):
         """Hiển thị Bước 2: Chu trình đối thoại cùng Gia sư Socrates Nhí."""
@@ -1631,9 +1944,34 @@ class SocratesIntegratedApp:
         self.page.update()
 
     def _on_socratic_session_complete(self, summary_data: dict):
-        """Xử lý khi học sinh đúc kết thành công -> Đánh dấu hoàn thành, mở khóa sơ đồ và thông báo."""
+        """Xử lý khi học sinh đúc kết thành công -> Đánh dấu hoàn thành, cộng chuỗi Streak ngay lập tức, mở khóa sơ đồ và thông báo."""
         print(f"[Hoàn thành tự đúc kết] Lượt: {summary_data.get('turn_count')} - Pha: {summary_data.get('next_phase')}")
         self.state.is_socratic_completed = True
+
+        # Ghi nhận ngay phiên học tập & cộng streak ngay khi hoàn thành đối thoại Socratic
+        streak_result = {}
+        if not getattr(self.state, "is_study_session_recorded", False):
+            self.state.is_study_session_recorded = True
+            try:
+                from app_tich_hop_socrates.auth_service import AuthService
+                cur_user = AuthService.get_current_user()
+                if cur_user and cur_user.username:
+                    c_res = self.state.classification_result
+                    topic = c_res.topic if c_res else "KHTN 7"
+                    strand = c_res.strand.value if c_res else "Khoa học Tự nhiên 7"
+                    streak_result = AuthService.record_exercise_solved(
+                        username=cur_user.username,
+                        topic=topic,
+                        domain=strand,
+                        exercise_type="socratic_dialogue",
+                        score=10.0,
+                        minutes=10,
+                        is_new_exercise=True
+                    )
+                    self.refresh_streak_header()
+                    print(f"[Streak Updated] Đã cộng chuỗi: {streak_result.get('streak_count')} ngày liên tiếp!")
+            except Exception as e:
+                print(f"[Streak Record Error] {e}")
 
         # Cập nhật nút Sơ đồ tư duy dạng nhánh sang trạng thái ĐÃ MỞ KHÓA
         if hasattr(self, "btn_to_summary") and self.btn_to_summary:
@@ -1660,9 +1998,9 @@ class SocratesIntegratedApp:
         except Exception:
             pass
 
-        # Hiển thị thông báo chúc mừng & mở khóa
+        # Hiển thị thông báo chúc mừng & mở khóa kèm thông tin chuỗi đã cộng
         turn_count = summary_data.get("turn_count", 4)
-        self._show_congrats_unlock_dialog(turn_count=turn_count)
+        self._show_congrats_unlock_dialog(turn_count=turn_count, streak_info=streak_result)
 
     def navigate_to_step_5(self, turn_count: int = 4):
         """Hiển thị Bước 5: Sơ đồ Tư duy & Tổng kết Khép phiên Học tập (Chức năng 5)."""
@@ -1688,7 +2026,9 @@ class SocratesIntegratedApp:
             target_variable=target,
             total_turns=turn_count,
             on_restart=self.navigate_to_step_1,
-            is_standalone=False
+            is_standalone=False,
+            pre_test_record=self.state.pre_test_record,
+            post_test_record=self.state.post_test_record
         )
 
         btn_back_to_4 = ft.OutlinedButton(

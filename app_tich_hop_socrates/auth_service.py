@@ -23,6 +23,12 @@ USERS_FILE = AUTH_DIR / "tai_khoan_hoc_sinh.json"
 SESSION_FILE = AUTH_DIR / "phien_dang_nhap.json"
 
 
+def get_sample_study_dates(streak_days: int = 5) -> List[str]:
+    """Tạo danh sách các ngày học liên tiếp kết thúc vào ngày hôm qua để làm dữ liệu mẫu ban đầu."""
+    today = datetime.now().date()
+    return [(today - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(streak_days, 0, -1)]
+
+
 @dataclass
 class UserAccount:
     """Mô hình dữ liệu tài khoản học sinh."""
@@ -34,15 +40,18 @@ class UserAccount:
     role: str = "student"             # "student" hoặc "guest"
     created_at: str = ""              # Thời gian tạo tài khoản
     last_login: str = ""              # Thời gian đăng nhập gần nhất
-    streak_count: int = 5             # Chuỗi ngày học liên tục (Streak)
-    max_streak: int = 7               # Kỷ lục chuỗi ngày học
-    study_dates: List[str] = field(default_factory=lambda: ["2026-09-27", "2026-09-28", "2026-09-29", "2026-09-30", "2026-10-01"])
+    streak_count: int = 0             # Chuỗi ngày học liên tục (Streak) - mặc định 0!
+    max_streak: int = 0               # Kỷ lục chuỗi ngày học - mặc định 0!
+    study_dates: List[str] = field(default_factory=list) # Mặc định danh sách ngày học RỖNG []
     completed_topics: List[str] = field(default_factory=list)
-    physics_count: int = 2            # Số bài Vật lý đã hoàn thành
-    chemistry_count: int = 1          # Số bài Hóa học đã hoàn thành
-    biology_count: int = 2            # Số bài Sinh học đã hoàn thành
-    total_study_minutes: int = 45     # Tổng số phút học
+    physics_count: int = 0            # Số bài Vật lý đã hoàn thành - mặc định 0
+    chemistry_count: int = 0          # Số bài Hóa học đã hoàn thành - mặc định 0
+    biology_count: int = 0            # Số bài Sinh học đã hoàn thành - mặc định 0
+    total_study_minutes: int = 0      # Tổng số phút học - mặc định 0
     daily_study_minutes: Dict[str, int] = field(default_factory=dict) # Phân bổ số phút học từng ngày YYYY-MM-DD
+    solved_exercises_count: int = 0   # Tổng số bài tập đã giải thành công - mặc định 0!
+    streak_freeze_count: int = 0      # Bùa khiên bảo vệ chuỗi ngày học - mặc định 0
+    last_solved_date: str = ""        # Ngày giải bài tập gần nhất (YYYY-MM-DD)
     security_question: str = "Môn học KHTN em yêu thích nhất?"  # Câu hỏi bảo mật phục hồi mật khẩu
     security_answer_hash: str = ""    # Mã băm câu trả lời bảo mật
 
@@ -51,7 +60,8 @@ class UserAccount:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "UserAccount":
-        default_dates = ["2026-09-27", "2026-09-28", "2026-09-29", "2026-09-30", "2026-10-01"]
+        raw_dates = data.get("study_dates")
+        study_dates = list(raw_dates) if isinstance(raw_dates, list) else []
         return cls(
             username=data.get("username", "guest"),
             display_name=data.get("display_name", "Học sinh Ẩn Danh"),
@@ -61,15 +71,18 @@ class UserAccount:
             role=data.get("role", "student"),
             created_at=data.get("created_at", ""),
             last_login=data.get("last_login", ""),
-            streak_count=int(data.get("streak_count", 5)),
-            max_streak=int(data.get("max_streak", 7)),
-            study_dates=list(data.get("study_dates", default_dates)),
+            streak_count=int(data.get("streak_count", 0)),
+            max_streak=int(data.get("max_streak", 0)),
+            study_dates=study_dates,
             completed_topics=list(data.get("completed_topics", [])),
-            physics_count=int(data.get("physics_count", 2)),
-            chemistry_count=int(data.get("chemistry_count", 1)),
-            biology_count=int(data.get("biology_count", 2)),
-            total_study_minutes=int(data.get("total_study_minutes", 45)),
+            physics_count=int(data.get("physics_count", 0)),
+            chemistry_count=int(data.get("chemistry_count", 0)),
+            biology_count=int(data.get("biology_count", 0)),
+            total_study_minutes=int(data.get("total_study_minutes", 0)),
             daily_study_minutes=dict(data.get("daily_study_minutes", {})),
+            solved_exercises_count=int(data.get("solved_exercises_count", 0)),
+            streak_freeze_count=int(data.get("streak_freeze_count", 0)),
+            last_solved_date=data.get("last_solved_date", (study_dates[-1] if study_dates else "")),
             security_question=data.get("security_question", "Môn học KHTN em yêu thích nhất?"),
             security_answer_hash=data.get("security_answer_hash", "")
         )
@@ -237,6 +250,7 @@ class AuthService:
                 for s in SEED_USERS:
                     if s["username"] not in users:
                         users[s["username"]] = UserAccount.from_dict(s)
+
                 return users
         except Exception as e:
             print(f"[AuthService] Lỗi đọc danh sách tài khoản: {e}")
@@ -484,6 +498,11 @@ class AuthService:
             pass
 
     @classmethod
+    def clear_remembered_account(cls):
+        """Xóa hoàn toàn thông tin tài khoản đã ghi nhớ khỏi thiết bị."""
+        cls.logout(clear_remember=True)
+
+    @classmethod
     def logout_to_guest(cls) -> UserAccount:
         """Đăng xuất và chuyển về tài khoản Khách Ẩn Danh."""
         users = cls.load_all_users()
@@ -512,17 +531,67 @@ class AuthService:
         }
 
     @classmethod
+    def calculate_streak(cls, study_dates: List[str]) -> Tuple[int, bool, bool]:
+        """
+        Tính chuỗi ngày học thực tế (Streak) dựa trên ngày giải bài:
+        - QUY TẮC SƯ PHẠM: Học sinh PHẢI GIẢI BÀI TẬP trong ngày mới được tính chuỗi ngày học.
+        - Trả về: (streak_count, studied_today, studied_yesterday)
+        
+        Logic xác thực:
+        1. Hôm nay đã giải bài (today_str in study_dates):
+           Đếm chuỗi ngày liên tiếp lùi từ hôm nay: hôm nay, hôm qua, hôm kia...
+           -> streak >= 1, studied_today = True.
+        2. Hôm nay chưa giải bài (today_str not in study_dates):
+           - Nếu hôm qua có giải bài: Bảo lưu chuỗi của ngày hôm qua (đang chờ giải hôm nay để tăng +1).
+             studied_today = False, studied_yesterday = True.
+           - Nếu hôm qua KHÔNG giải bài: Đã bị đứt chuỗi do bỏ lỡ >= 1 ngày -> streak = 0.
+             studied_today = False, studied_yesterday = False.
+        """
+        today = datetime.now().date()
+        today_str = today.strftime("%Y-%m-%d")
+        yesterday_str = (today - timedelta(days=1)).strftime("%Y-%m-%d")
+
+        unique_dates = set(study_dates or [])
+        studied_today = today_str in unique_dates
+        studied_yesterday = yesterday_str in unique_dates
+
+        if studied_today:
+            streak = 0
+            cur = today
+            while cur.strftime("%Y-%m-%d") in unique_dates:
+                streak += 1
+                cur -= timedelta(days=1)
+            return streak, True, studied_yesterday
+        elif studied_yesterday:
+            streak = 0
+            cur = today - timedelta(days=1)
+            while cur.strftime("%Y-%m-%d") in unique_dates:
+                streak += 1
+                cur -= timedelta(days=1)
+            return streak, False, True
+        else:
+            return 0, False, False
+
+    @classmethod
     def get_user_streak(cls, username: str) -> Dict[str, Any]:
         """Lấy thông tin chuỗi ngày học liên tục (Streak) và lịch 7 ngày trong tuần."""
         users = cls.load_all_users()
         user = users.get(username) or cls.get_current_user()
 
-        today = datetime.now()
+        today = datetime.now().date()
         today_str = today.strftime("%Y-%m-%d")
 
-        # Kiểm tra xem hôm nay ĐÃ THỰC SỰ HỌC CHƯA (phải có trong study_dates hoặc số phút học > 0)
+        # Tính toán streak thực tế chuẩn xác
+        streak_count, today_studied, studied_yesterday = cls.calculate_streak(user.study_dates)
+
+        # Cập nhật tự động streak_count và kỷ lục max_streak nếu có biến động
+        if user.streak_count != streak_count or streak_count > user.max_streak:
+            user.streak_count = streak_count
+            user.max_streak = max(user.max_streak, streak_count)
+            users[user.username] = user
+            cls.save_all_users(users)
+
         today_mins = user.daily_study_minutes.get(today_str, 0)
-        today_studied = (today_str in user.study_dates) or (today_mins > 0)
         if today_studied and today_mins == 0:
             today_mins = min(user.total_study_minutes, 45) if user.total_study_minutes > 0 else 15
 
@@ -554,13 +623,26 @@ class AuthService:
                 "minutes": mins
             })
 
+        status_msg = (
+            f"🔥 Tuyệt vời! Em đã giải bài hôm nay và đạt chuỗi {streak_count} ngày liên tiếp!"
+            if today_studied
+            else (
+                f"⏳ Chuỗi {streak_count} ngày đang chờ em! Hãy giải 1 bài KHTN hôm nay để đạt chuỗi {streak_count + 1} ngày nhé!"
+                if studied_yesterday
+                else "🎯 Chuỗi ngày học đã ngắt. Hãy giải 1 bài hôm nay để thắp lại ngọn lửa chuỗi 1 ngày nhé!"
+            )
+        )
+
         return {
-            "streak_count": user.streak_count,
-            "max_streak": max(user.max_streak, user.streak_count),
+            "streak_count": streak_count,
+            "max_streak": max(user.max_streak, streak_count),
             "study_dates": user.study_dates,
             "week_days": week_days,
             "today_studied": today_studied,
-            "today_minutes": today_mins
+            "today_minutes": today_mins,
+            "studied_yesterday": studied_yesterday,
+            "solved_exercises_count": getattr(user, "solved_exercises_count", len(user.study_dates)),
+            "status_message": status_msg
         }
 
     @classmethod
@@ -620,41 +702,95 @@ class AuthService:
         }
 
     @classmethod
-    def record_study_session(cls, username: str, topic: str = "", domain: str = "", minutes: int = 10):
-        """Ghi nhận phiên học tập mới: cập nhật streak và tiến độ."""
+    def record_exercise_solved(
+        cls,
+        username: str,
+        topic: str = "",
+        domain: str = "",
+        exercise_type: str = "exercise",
+        score: float = 10.0,
+        minutes: int = 15,
+        is_new_exercise: bool = True
+    ) -> Dict[str, Any]:
+        """
+        Ghi nhận một bài tập đã được học sinh hoàn thành:
+        - QUY TẮC SƯ PHẠM: Học sinh PHẢI GIẢI BÀI (Quiz, Socratic, hoặc đúc kết Sổ tay) mới được cộng chuỗi.
+        - Cập nhật số bài giải, thời gian học, phân môn Lý-Hóa-Sinh.
+        - Tự động cộng chuỗi Streak ngày học và kiểm tra kỷ lục.
+        """
         users = cls.load_all_users()
         user = users.get(username)
         if not user:
-            return
+            return {"success": False, "streak_count": 0, "is_new_streak_day": False}
 
-        today = datetime.now()
+        today = datetime.now().date()
         today_str = today.strftime("%Y-%m-%d")
 
-        user.daily_study_minutes[today_str] = user.daily_study_minutes.get(today_str, 0) + minutes
+        is_new_streak_day = today_str not in user.study_dates
 
-        if today_str not in user.study_dates:
-            yesterday_str = (today - timedelta(days=1)).strftime("%Y-%m-%d")
-            if yesterday_str in user.study_dates:
-                user.streak_count += 1
-            else:
-                user.streak_count = max(user.streak_count, 1)
+        # Thêm ngày hôm nay vào danh sách ngày học nếu chưa có
+        if is_new_streak_day:
             user.study_dates.append(today_str)
-            if user.streak_count > user.max_streak:
-                user.max_streak = user.streak_count
 
+        # Cập nhật số phút học
+        user.daily_study_minutes[today_str] = user.daily_study_minutes.get(today_str, 0) + minutes
         user.total_study_minutes += minutes
 
+        # Tăng tổng số bài tập đã giải (chỉ tăng khi là phiên bài tập mới)
+        if is_new_exercise:
+            user.solved_exercises_count = getattr(user, "solved_exercises_count", 0) + 1
+        user.last_solved_date = today_str
+
+        # Tính toán lại chuỗi Streak chuẩn xác
+        streak, studied_today, studied_yesterday = cls.calculate_streak(user.study_dates)
+        user.streak_count = streak
+        if streak > user.max_streak:
+            user.max_streak = streak
+
+        # Cập nhật chủ đề và phân môn KHTN
         if topic and topic not in user.completed_topics:
             user.completed_topics.append(topic)
 
-        if any(k in domain or k in topic for k in ["Vật", "VL", "Tốc độ", "Âm"]):
-            user.physics_count += 1
-        elif any(k in domain or k in topic for k in ["Hóa", "HH", "Nguyên tử"]):
-            user.chemistry_count += 1
-        elif any(k in domain or k in topic for k in ["Sinh", "SH", "Quang hợp"]):
-            user.biology_count += 1
+        if is_new_exercise:
+            dom_lower = (domain or "").lower() + " " + (topic or "").lower()
+            if any(k in dom_lower for k in ["vật", "vl", "tốc độ", "âm", "ánh sáng", "lực", "năng lượng"]):
+                user.physics_count += 1
+            elif any(k in dom_lower for k in ["hóa", "hh", "nguyên tử", "phân tử", "nguyên tố", "hóa trị"]):
+                user.chemistry_count += 1
+            elif any(k in dom_lower for k in ["sinh", "sh", "quang hợp", "hô hấp", "tế bào", "cảm ứng"]):
+                user.biology_count += 1
 
         cls.save_all_users(users)
+        if cls.get_current_user().username == username:
+            cls.set_current_user(user)
+
+        return {
+            "success": True,
+            "username": username,
+            "streak_count": user.streak_count,
+            "max_streak": user.max_streak,
+            "is_new_streak_day": is_new_streak_day,
+            "today_studied": True,
+            "solved_exercises_count": user.solved_exercises_count,
+            "message": (
+                f"🎉 Chúc mừng em đã giải xong bài tập! Chuỗi học tập đã tăng lên {user.streak_count} ngày liên tiếp! 🔥"
+                if is_new_streak_day
+                else f"🌟 Em đã hoàn thành thêm 1 bài tập hôm nay! Chuỗi {user.streak_count} ngày đang bừng sáng! 🔥"
+            )
+        }
+
+    @classmethod
+    def record_study_session(cls, username: str, topic: str = "", domain: str = "", minutes: int = 10, is_new_exercise: bool = True):
+        """Ghi nhận phiên học tập mới (Ủy quyền sang record_exercise_solved để đồng nhất)."""
+        return cls.record_exercise_solved(
+            username=username,
+            topic=topic,
+            domain=domain,
+            exercise_type="study_session",
+            score=10.0,
+            minutes=minutes,
+            is_new_exercise=is_new_exercise
+        )
 
     @classmethod
     def update_profile(cls, username: str, display_name: str, grade_class: str, avatar: str) -> bool:
